@@ -1,0 +1,174 @@
+{% extends 'Home/base.html' %}{% load thumbnail %}{% load humanize %}
+{% load static %}
+
+{% block script %}
+  <script src="{% static 'Product/js/product_detail.js' %}" ></script>
+  <script src="{% static 'Home/jquery-ui-1.12.1.custom/jquery-ui.js' %}"></script>
+  <link rel="stylesheet" href="{% static 'Product/css/ProductDetail.css' %}" >
+
+  <script src="{% static 'Comment/commentScroll.js' %}"></script> 
+{% endblock script %}
+
+{% block content %}
+  <script>
+    /* Functions for autocomplete.*/
+    $(function(){
+        $("#tag").autocomplete({
+            source:"{% url 'Tag:autocomplete' %}",
+            minLength: 2,
+        });
+    });
+
+    window.onload = scrollToComment();
+  </script>
+
+
+    <div class="card" >
+        <div class="card-header">
+          <div class="row">
+            <div class="col">
+              <h4 class="card-title">{{product.name}} </h4>
+              <p class="text-muted my-1">Last edited by '{{product.author}}' on {{product.date_updated}}</p>
+              <a class="btn btn-info btn-sm m-0 py-0 mx-auto" href="{% url 'Follow:follow' product.id %}">Track Product<a/>
+
+            </div>
+            {% if messages %}
+              {% for message in messages %}
+                  <p {% if message.tags %} class = "{{message.tags}}{% endif %} text-warning " > {{message}} </p>
+              {% endfor %}
+            {% endif %}
+          </div>  
+        </div>
+
+        <div class="card-body m-0">
+
+          {% if product.FirstPhoto.photo %}
+          <div class="row">
+            <div class="col"></div >
+            <img  class="col-md-6 mx-auto-align" src="{{ product.FirstPhoto.photo.url }}" alt="{{product.name}}" id="busImg">
+            <div class="col"></div >
+          </div>
+          {% endif %}
+          <table class="table table-sm m-0 mb-2">
+            <tr>
+              <th class="text-self-center col-3">Price:</th>
+               <td class="col-md-9">K{{product.price|floatformat:2|intcomma}}</td> 
+            </tr>
+            <tr class="text-self-center">
+              <th class="">Description:</th>
+              <td>
+                {% if product.description %}
+                  {{product.description}}
+                {% else %}
+                  <p class="text-muted"> oooo...no data [<a href="{% url 'Product:edit' product.id %}">edit</a>]</p>
+                {% endif %}
+              </td>
+            </tr>
+            <tr>
+              <th class="">Vendor: </th>
+              <td>
+                {% if product.business %}
+                  <a class="btn btn-dark btn-sm shadow-sm ml-1 py-0 px-1 " href="{% url 'Business:detail' product.business.id %}">{{product.business.name}} </a>
+                {% else %}  
+                  <p>No info.</p> 
+                {% endif %}
+              </td>
+            </tr>
+          </table>
+          {% if request.user.is_authenticated %}
+          <div class="row">
+          </div>
+          {% endif %}
+
+          <!--  Tags --> 
+          <p>Tags for {{product.name}}:
+            {% for tag in productTags %}
+              <a class="text-decoration-none" href="{% url 'Tag:products' tag.id %}">{{tag.name}}</a> , 
+            {% endfor %}
+            <button class="btn btn-outline-primary btn-sm m-1 py-0 "
+            href="" data-bs-toggle="modal" data-bs-target="#addTag" 
+            aria-expanded="false" aria-controls="addTag">
+              + Add a tag
+            </button>
+
+          </p>
+
+          <button type="button" class="btn btn-secondary" data-bs-toggle="tooltip" data-bs-placement="top" title="Tooltip on top">
+            i
+          </button>
+          <!-- Modal for Add a tag button-->
+          <div class="modal fade " id="addTag" data-bs-backdrop="static" data-bs-keyboard="false" 
+            tabindex="-1" aria-labelledby="addTagLabel" aria-hidden="true">
+            <div class="modal-dialog">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5>Add a Tag</h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                  <form class="form" action="{% url 'Tag:prod-add' product.id %}" method="post">
+                      {% csrf_token %}
+                      <div class="form-row mx-1">
+                          <input class="form-control form-sm col" type="text" name="tag" placeholder="Enter new tag" required="required" id="tag">
+                          <button type="submit" class="btn btn-success btn-sm col-3 p-1 m-0 mt-1">Submit</button>
+                      </div>
+                  </form>
+                </div>
+              </div>
+            </div>  
+          </div>
+
+          <small class="mx-auto col text-muted">See any info that's wrong? You can change it</small>
+          <a class="btn btn-warning btn  shadow-sm   m-1 px-3 py-1" href="{% url 'Product:edit' product.id %}" >Edit</a>
+
+            {% if request.user.is_authenticated %}
+            <button data-bs-toggle="modal" data-bs-target="#confirmDelete" 
+            class="btn btn-danger btn shadow-sm p-1" > 
+              Delete
+            </button>
+            <!-- confirmation modal popup-->
+            <div class="modal fade" id="confirmDelete" tabindex="-1" aria-labelledby="confirmDeleteLabel" role="dialog" aria-hidden="true">
+              <div class="modal-dialog">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h4 class="text-center"> Are your sure?<h4>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                  </div>  
+                  <div class="modal-body">
+                    <p class="text-center">Do you want to delete this product?<br> That means no one will see this page.</p>
+                  </div> 
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-success " data-bs-dismiss="modal">No, don't delete</button>
+                    <a href="{% url 'Product:delete' product.id %}" type="button" class="btn btn-danger">Yes, delete</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+            {% endif %}
+          <a class="row" href={% url 'History:edit-list' product.id %} >View edit history</a>
+        </div>
+  </div>
+
+      <!-- Comments Section --> 
+      <h4 class="text-center my-4">{{total_comments.count}} {% if total_comments.count != 1 %}Comments{% else %}Comment{% endif %}</h4>
+      
+      <!-- Main comment form -->
+      <form class="input-group mb-3"  action="{% url 'Comment:prod-post' product.id %}" method="post" onload="scrollToComment();">
+        {% csrf_token %}
+        <input class="form-control" required="required" method="post" type="text" name="comment" placeholder="enter comment..." aria-describedby="button-addon1">
+        <input type="hidden" name="parentComment" value="none"> 
+        <button type="submit" class="btn btn-outline-info btn-md" value="submit">Post comment</button>
+      </form>
+
+      <!-- comments-->
+      {% if comments.exists %}
+      <div id="comments">
+        {% include "Comment/comment_template.html" %}
+      </div>
+      {% else %}
+      <p class="text-center">Hmmmmmmm no comments...yet </p>
+      {% endif %}
+
+      <script>      
+      </script>
+{% endblock %}

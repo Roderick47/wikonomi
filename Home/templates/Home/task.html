@@ -1,0 +1,18 @@
+{% extends 'Home/base.html' %}
+
+{% block content %}
+  <div class="">
+    <center>
+    <div class="col-4">
+      <a class="btn btn-primary m-2" href="{% url 'Task:add' %}">Create a Task</a>
+    </div>
+    <div class="col-4">
+
+    </div>
+    <div class="col-4">
+      <a class="btn btn-info" href="{% url 'Task:list' %}">View Tasks available</a>
+    </div>
+    </center>
+  </div>
+
+{% endblock %}

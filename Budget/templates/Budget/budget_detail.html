@@ -1,0 +1,13 @@
+{% extends 'Home/base.html' %}
+
+
+{% block content %}
+    <h3>{{budget.title}}</h3>
+    {% if budget %}
+        {% for product in budget.products %}
+            <p>
+                {{product.name}}
+            </p>
+        {% endfor %}
+    {% endif %}
+{% endblock content %}

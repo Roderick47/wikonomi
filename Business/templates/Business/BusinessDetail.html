@@ -1,0 +1,76 @@
+{% extends 'Home/base.html' %}
+{% load thumbnail %}
+{% load static %}
+{% load humanize %}
+{% load thumbnail %}
+
+{% block css %}
+<<link rel="stylesheet" href="{% static 'Business/css/style' %}">
+{% endblock %}
+
+
+{% block content %}
+<div class="container-fluid">
+  <div class="col-md-11 mx-auto  ">
+    <div class="card">
+      <div class="card-header">
+          <h3 class="text-center">{{business.name}}</h3>
+          <h5 class="text-center">Public Page</h5>
+
+          <ul class="nav nav-tabs card-header-tabs shadow-bottom mx-auto">
+            <li class="nav-item">
+              <a class="nav-link text-dark" href="{% url 'Product:business-list' business.id %}">View Products</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link text-dark" href="">Information</a>
+            </li>
+            <li>
+            <div class="dropdown">
+                <a class="btn btn-secondary btn-sm dropdown-toggle" role="button" data-bs-toggle="dropdown" aria-expanded="false">Add</a>
+                <ul class="dropdown-menu">
+                  <li><a class"dropdown-item" href="#"> Product </a></li>
+                  <li><hr class="dropdown-divider"></li>
+                  <li><a class"dropdown-item" href="#"> Information </a></li>
+                </ul>
+            </div>
+            </li>
+
+          </ul>
+    
+      </div>
+
+
+      {% if business.image %}
+      <div class="row">
+        <div class="col"></div>
+          <img  class="col-md-6 mx-auto" src="{{ business.image.url }}" alt="{{business.name}}" id="busImg">
+        <div class="col"></div>
+      </div>
+
+      {% endif %}
+      <ul class="list-group list-group-flush">
+          <li class="list-group-item"><h5>Description:</h5>
+            <p>{% if business.description %}{{business.description}}{% else %} No information...<a href="{% url 'Business:edit' business.id %}">edit</a>{% endif %}</p>
+          </li>
+          <li class="list-group-item"><h5>Location:</h5>
+            <p>{% if business.location %}{{business.location}}{% else %}No information... <a href="{% url 'Business:edit' business.id %}">edit.</a>{% endif %}</p>
+          </li>
+      </ul>
+      <div class="card-footer"><!--  Review Form and Review Comments-->
+        <div class="row">
+          {% if business.location and business.description %}
+            <small class=" mx-auto mb-1">Something wrong with these details? You can change it</small>
+          {% else %}
+            <small class=" mx-auto mb-1">Hang on...there's some information missing. If you can edit this page, please do.</small>
+          {% endif %}
+        </div>
+        <div class="row">
+          <a href="{% url 'Business:edit' business.id %}"  class="btn btn-warning btn-sm col-5 mx-auto shadow-sm" role="button">Edit This Business Page</a>
+          <a href="{% url 'Product:list-upload' business.id  %}" class="btn btn-primary col-5 btn-sm mx-auto shadow-sm" role="button"> Upload list of products </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

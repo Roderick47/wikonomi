@@ -1,0 +1,20 @@
+body {
+  display: flex;
+  flex-direction: column;
+  flex-wrap: wrap;
+  height: 100%;
+}
+h6{
+  color: rgb(38, 53, 255);
+}
+
+.content{
+  flex: 1 0 auto;
+  /* width: 100%; */
+  align-items: stretch;
+}
+
+.footer{
+  flex-shrink: 0;
+}
+

@@ -1,0 +1,21 @@
+{% extends 'Home/home.html' %}
+{% load thumbnail %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="card">
+  <div class="card-body">
+
+  <h2 class="text-center">You are editing 'Product - {{product.name}}' details</h2><hr>
+
+  <form class="" action="" method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{imageForm}} <hr>
+    {{form2|crispy}}
+    {{form|crispy}}
+    <button class="btn btn-info" type="submit" name="button"> Save Post</button>
+  </form>
+</div>
+
+{% endblock %}

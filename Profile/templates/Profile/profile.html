@@ -1,0 +1,75 @@
+{% extends 'Home/base.html' %}
+{% load thumbnail %}
+{% load static %}
+
+{% block profile_active %} active{% endblock %}
+{% load humanize %}
+
+{% block content %}
+<div class="col-sm-8 mx-auto">
+  <h1 class="text-center">Profile</h1>
+  <div class="card mb-2">
+    <div class="card-body">
+
+      <h3>{{request.user.username}}</h3>
+      <div class="col-sm-4 mx-auto">
+        {% thumbnail profile.image "500x500" as img %}
+          <img  class="card-img-top img" src="{{ img.url }}" alt="{{product.name}}" id="ProfImg">
+        {% empty %}
+          <img  class="img-fluid" src="{% static 'Profile/images/profile_big.png' %}" alt="profilepic" id="profThumbImg">
+        {% endthumbnail %}
+      </div>
+
+
+
+    </div>
+  </div>
+  <a class="btn btn-secondary" href="{% url 'Profile:update' profile.id %}" role="button" >Edit Profile</a>
+  <a class=" btn btn-primary" href="{% url 'Business:add-private'  %}" role="button" >Create personal business</a>
+  
+  <h2>Products Tracked</h2>
+  <table class="table">
+    <tr>
+      <th>Product </th>
+      <th>Price</th>
+      <th>Price Change</th>
+    </tr>
+    
+      {% if MySubscriptions.exists %}
+        {% for subscription in MySubscriptions %}
+        <tr class="">
+          <td>
+            {{subscription}}
+          </td>
+          <td>
+            <a href={% url 'Product:detail' subscription.product.id %}>K {{subscription.product.price|floatformat:2|intcomma}}</a>
+          </td>
+          <td>
+            K {{subscription.product.price_change|floatformat:2|intcomma}}
+          </td>
+        </tr>
+        {% endfor %}
+      {% endif %}
+   
+  </table>
+        {% if user.profile.has_business %}
+      <h2>Business you have created</h2>
+        <table class="table">
+        <ul class="list-group list-group-flush">
+        {% for business in user.business_set.all %}
+        <div class="card">
+          <li class="list-group-item ">
+            <a class="stretched-link text-decoration-none text-black" href="{% url 'Business:detail' business.id %}"> {{business.name}} </a> 
+            - {{business.description|truncatewords:15}}<br>
+          </li>
+        </div>
+        {% endfor %}
+        </ul>
+        </table>
+          
+      {% endif %}
+
+
+</div>
+
+{% endblock %}

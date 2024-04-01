@@ -1,0 +1,19 @@
+{% load i18n %}
+{% load static %}
+
+<script src="Photo/js/imageUpload.js"></script>
+{% spaceless %}
+<div class"image-preview">
+    <div class="controls">
+        {% if value %}
+            <img class="img img-thumbnail" src="{{value.url}}">
+        {% endif  %}
+        <div class="btn btn-sm">
+            {% trans "Browse" %}
+            {{imageForm.photo.input}}
+        </div>
+        <span class="btn btn-default btn-remove" {% if not value %} style="display: none;"{% endif %}>{% trans "Remove" %}</span>
+    </div>
+</div>
+{% endspaceless %}
+

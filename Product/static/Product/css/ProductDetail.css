@@ -1,0 +1,16 @@
+#profThumbImg{
+    width: 10px;
+    height: 10px;;
+}
+
+.text-responsive{
+    font-size: calc(100% + 1vw 1vh);
+}
+
+#reply-box{
+    background-color: rgba(219, 218, 240, 0.959);
+}
+
+p{
+    font-size: 15px;
+}

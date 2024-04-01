@@ -1,0 +1,75 @@
+{% extends 'Home/base.html' %}
+{% load static %}
+
+{% block script %}<link rel="stylesheet" href="{% static "Home/css/HomeStyle.css" %}">{% endblock script %}
+
+{% block content %}
+{% load thumbnail %}
+{% load humanize %}
+{% load extra_date_filters %}
+
+<div class="container-fluid ">
+
+{% if all_business %}
+  <h4 class="text-center">Your local price index</h4>
+  <h6 class="text-center">Check out what others have posted recently:</h6>
+
+  {% for business in all_business %}
+    {% if forloop.first %}
+    <div class="row">
+    {% endif %}
+        <div class="col-lg-4">
+          <div class="card my-1 shadow-sm ">
+            <div class="card-header col m-0 p-0">
+                <div class="row ">
+                  <div class="col-7">
+                    <p class="font-weight-bold m-0 p-0 ml-1" >{{business.name}}
+                      {% if business.date_created.date|isNew %}
+                      <small class="badge bg-success text-wrap ml-1">New</small></p>
+                      {% endif %}
+                  </div>
+                  <div class="col-5">
+                    <small class="float-right mr-0 p-0 mb-0  text-muted">{{business.date_updated|olderDate|naturalday }}</small>
+                    {% comment %} {% else %} {% endcomment %}
+                    {% comment %} <small class="text-right ml-3 p-0 mb-0">[{{business.date_updated.date|naturaltime}}]</small> {% endcomment %}
+                    {% comment %} {% endif %} {% endcomment %}
+                  </div>
+                </div>
+            </div>      
+            <div class="card-body pb-1 mb-0 p-1">
+                  <a href="{% url 'Business:detail' business.id %}"class="stretched-link" ></a>
+                  <div class="row">
+                    <!-- business title -->
+                    <div class="col-9">  
+                      {% comment %} <h6 class="text-responsive"style="" >{{business.name}}</h6>
+                      <p>{{business.location}}</p> {% endcomment %}
+                          <small class="text repsonsive m-0 p-0"  ><b>Vendor:</b> {% if business.name %}{{business.name}} {% else %} ...{% endif %}</small><br>
+                          <small class="text repsonsive m-0 p-0"  ><b>Location:</b>{% if business.location %} {{business.location}} {% else %} ...{% endif %}</small><br>
+                          <small class="text repsonsive m-0 p-0"  >{% if business.description %}  {{business.description|truncatewords:10}} {% else %} ...{% endif %}</small><br>
+                    </div>
+
+                    <!-- Business image -->
+                    {% if business.image  %}
+                      
+                      <div class="col-3 ">
+                        {% thumbnail business.image "50x50" as busImg %}
+                          <img class=" img img-fluid rounded float-right" src={{busImg.url}} alt={{business.name}} style="max-width:85px; margin-left:10px;">
+                        {% endthumbnail %}
+                      </div>
+                    {% endif %}
+                    
+                  </div>
+                
+              </div>    
+          </div>
+      </div>
+    {% if forloop.counter|divisibleby:3 %} </div><div class="row">{% endif %}
+    {% if forloop.last %}</div>{% endif %}    
+  {% endfor %}
+
+{% else %}
+<h1>Wikonomi Business List Page</h1>
+{% endif %}
+
+
+{% endblock %}

@@ -1,0 +1,13 @@
+body {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+main {
+    flex: 1;
+}
+
+h6{
+    color: rgb(38, 53, 255);
+}
+

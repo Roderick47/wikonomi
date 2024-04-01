@@ -1,0 +1,37 @@
+{% extends 'Home/base.html' %}
+
+{% block content %}
+
+<h1>Upload Inventory List</h1>
+<div class="container-fluid">
+   <div class="card">
+     <div class="card-body"> 
+      <p>You can do a mass post of products. Simply upload an excel/csv file of your inventory. <br><em>Please be sure to download our
+
+        excel file template (click on the button below or here) and then add the list of your product inventory according to our template and simply upload it in the form below.
+      </em> </p>
+    <ol>
+      <li> Download our excel template. You can use these template or at least copy the headers for each column: 
+        product, description,price (all in lowers case).
+        <a class="btn btn-primary btn-sm mb-1" href="{% url 'Product:template-download' %}">Download Excel Template</a> </li>
+      <li class="my-1">Add the product information only according to the column headers in the template. There should only be 3 columns. 
+        so do not add any other extra information.</li>
+      <li>Upload the file you have filled out. If there are any errors the information will not be saved.
+      <form class="form form-horizontal" method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input type="file" name="myfile">
+        <button class="btn btn-success" type="submit">Upload</button>
+      </form>
+    </li>
+    
+    </ol>
+
+
+     </div> 
+   </div>
+</div>
+
+
+
+  
+{% endblock %}

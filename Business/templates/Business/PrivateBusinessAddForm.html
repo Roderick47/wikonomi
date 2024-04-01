@@ -1,0 +1,30 @@
+{% extends 'Home/form_template.html' %}
+
+{% block content_before_form %}
+<div class="card col-8 mx-auto">
+  <div class="card-body text-center ">
+    <b>You are creating your private business page. Only you can edit or delete this business page.</b>
+    <p>If you would like to post a business page that the public can edit and maintain, use this <a href="{% url 'Business:add' %}">link</a>.<p>
+  </div>
+</div>
+{% endblock %}
+
+
+
+{% block title %}
+  Add Your Personal Business
+{% endblock %}
+
+{% block script %}
+<script>
+$(function(){
+    $("#id_name").autocomplete({
+        source:"{% url 'Business:autocomplete' %}",
+        minLength: 2,
+    });
+});
+</script>
+{% endblock %}
+
+
+{% block bis_active %}active{% endblock %}

@@ -1,0 +1,38 @@
+{% extends 'Home/base.html' %}{% load humanize %}
+
+
+
+{% block content %}
+    <table class="table table-condensed">
+        <tr>
+            <th>Average Price:</th> 
+            <td>K{{summary.price__avg|floatformat:2|intcomma}}</td>
+        </tr>
+        <tr>
+            <th>Lowest Price:</th> 
+            <td> K{{summary.price__min|floatformat:2|intcomma}}</td>
+        </tr>
+        <tr>
+            <th>Highest Price: </th>
+            <td>K{{summary.price__max|floatformat:2|intcomma}}</td>
+        </tr> 
+    </table>
+
+    <table class="table table-condensed">
+        <tr>
+            <th scope="row">Product</th>
+            <th scope="row">Price</th>
+            <th scope="row">Business</th>
+            <th scope="row">Location</th>
+        </tr>
+        {% for product in products %}
+        <tr>
+            <td>{{product.name}}</td>
+            <td>K {{product.price|floatformat:2|intcomma}}</td>
+            <td>{{product.business.name}}</td>
+            <td></td>
+            <td><a class="btn btn-warning btn-sm" href="{% url 'Product:edit' product.id %}">Edit</a></td>
+        </tr>
+        {% endfor %}
+    </table>
+{% endblock content %}

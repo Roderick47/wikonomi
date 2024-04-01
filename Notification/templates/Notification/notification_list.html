@@ -1,0 +1,33 @@
+{% extends "Home/base.html" %}
+
+{% block content %}
+    <div >
+        <h4> Notifications </h4>
+        <div class="row">
+            <p>
+            <a class="text-dark " href="{% url 'Notification:read-all' %}">Mark all as read</a>
+            <a class="text-dark mx-3"   href="{% url 'Notification:delete-all' %}">Clear All</a>
+            </p>
+        </div>
+        {% for notification in notifications %}
+            <div class="row">
+                {% if notification.product %}
+                <div class="card bg-light my-1 {% if notification.is_viewed %}text-muted{% else %}text-dark{% endif %} ">
+                    <div class="card-body">
+                            <p>{{notification.text}}</p>
+                            <a class="stretched-link" href="{% url 'Product:detail' notification.product.id %}"></a>
+                            {% comment %}
+                        {% elif notification.business %}
+                            <a class="stretched-link" href="{% url 'Business:detail' notification.business.id %}"></a>
+                        {% elif  notification.product_comment%}
+                             <a class="stretched-link" href="{% url ':detail' notification.product.id %}"></a> {% endcomment %}
+                             
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            
+        {% endfor %}
+
+    </div>
+{% endblock content %}
