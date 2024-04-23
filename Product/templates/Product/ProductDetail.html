@@ -5,6 +5,8 @@
   <script src="{% static 'Product/js/product_detail.js' %}" ></script>
   <script src="{% static 'Home/jquery-ui-1.12.1.custom/jquery-ui.js' %}"></script>
   <link rel="stylesheet" href="{% static 'Product/css/ProductDetail.css' %}" >
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
 
   <script src="{% static 'Comment/commentScroll.js' %}"></script> 
 {% endblock script %}
@@ -74,6 +76,15 @@
                 {% endif %}
               </td>
             </tr>
+            <tr>
+              <th class="">Location:</th>
+              <td>
+                {% if product.location %}
+                  <a class="btn btn-dark btn-sm shadow-sm ml-1 py-0 px-1 " href="{% url 'Location:location' product.location.id %}">{{product.location}} </a>
+                {% else %}  
+                  <p>No info.</p> 
+                {% endif %}
+                
           </table>
           {% if request.user.is_authenticated %}
           <div class="row">

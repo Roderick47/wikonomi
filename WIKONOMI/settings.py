@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     'Tag.apps.TagConfig',
     'Budget.apps.BudgetConfig',
     'Information',
+    'Location',
     
 ]
 

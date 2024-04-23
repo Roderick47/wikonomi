@@ -13,6 +13,8 @@ from Comment.models import ProductComment
 from Business.models import Business
 from .forms import ProductAddForm,GetOrCreateBusinessForm
 from Photo.forms import ProductPhotoAddForm
+from Location.forms import LocationForm
+from Location.models import Location
 from Photo.models import ProductPhoto
 from History.models import ProductHistory
 # from Comment.forms import ProductCommentAddForm
@@ -37,7 +39,8 @@ def ProductAddView(request,bus_id):
         next_url = reverse("Product:add",kwargs={"bus_id":bus_id})
         next = urlencode({"next":next_url})
         url = '{}?{}'.format(base_url,next)
-        return redirect(url)  
+        return redirect(url)
+      
     if request.method == 'POST':
         form = ProductAddForm(request.POST,request.FILES)
         imageForm = ProductPhotoAddForm(request.POST,request.FILES)
@@ -50,10 +53,12 @@ def ProductAddView(request,bus_id):
                 picForm = imageForm.save(commit=False)
                 ProductPhoto.objects.create(product=product, photo= picForm.photo)
             return redirect('Product:detail',product.id)
+        
     form = ProductAddForm()
     imageForm = ProductPhotoAddForm()
     business = Business.objects.get(id=bus_id)
     return render(request,'Product/ProductAddForm.html',{'form':form,'business':business,'imageForm':imageForm})
+
 
 
 # shows the detail of the product. 
@@ -63,8 +68,10 @@ def ProductDetailView(request,prod_id):
     comments = total_comments.filter(parent__isnull=True)
     replies = total_comments.exclude(parent=None)
     productTags = Tag.objects.filter(products = product)
-    context = {'product':product,'comments':comments,"total_comments":total_comments,"productTags":productTags}
+    context = {'product':product,'comments':comments,"total_comments":total_comments,"productTags":productTags,}
     return render(request,'Product/ProductDetail.html',context)
+
+
 
 # Edits the product details.
 def ProductEditView(request,prod_id):
@@ -80,36 +87,56 @@ def ProductEditView(request,prod_id):
         pic = ProductPhoto.objects.get(product=product)
     except ProductPhoto.DoesNotExist:
         pic = ProductPhoto.objects.none()
+
     if request.method == 'POST':
-        imageForm = ProductPhotoAddForm(request.POST,request.FILES)
-        form = ProductAddForm(request.POST,request.FILES,instance=product)
-        if form.is_valid() and imageForm.is_valid():
-            prodForm = form.save(commit=False)
-            product.author = request.user
-            prodForm.save()
-            if imageForm.is_bound:
+        locationForm = LocationForm(request.POST)
+        form = ProductAddForm(request.POST, request.FILES, instance=product)
+        imageForm = ProductPhotoAddForm(request.POST, request.FILES)
+
+        if form.is_valid() and imageForm.is_valid() and locationForm.is_valid():
+            prod_instance = form.save(commit=False)
+            if locationForm.cleaned_data.get('latitude') and locationForm.cleaned_data.get('longitude'):
+                # Check if the location already exists
+                location, created = Location.objects.get_or_create(latitude=locationForm.cleaned_data['latitude'],
+                                                                   longitude=locationForm.cleaned_data['longitude'])
+
+                # Assign the location to the product
+                prod_instance.location = location
+            prod_instance.author = request.user
+            prod_instance.location=location   
+            prod_instance.save()
+
+
+            if pic and not imageForm.cleaned_data['photo']:
+                # If no new photo is uploaded, create a new one.
+                pass
+            elif imageForm.cleaned_data['photo']:
+                # If a new photo is uploaded, update the existing one or create a new one.
                 if pic:
-                    pic.photo=imageForm.cleaned_data['photo']
+                    pic.photo = imageForm.cleaned_data['photo']
                     pic.save()
                 else:
-                    ProductPhoto.objects.create(
-                        photo = imageForm.cleaned_data['photo'],
-                        product = product
-                    )
+                    ProductPhoto.objects.create(photo=imageForm.cleaned_data['photo'], product=product)
 
             return redirect('Product:detail',prod_id)
+        
     form = ProductAddForm(instance=product)
-    if pic:
-        imageForm = ProductPhotoAddForm(instance=pic)
-    else:
-        imageForm = ProductPhotoAddForm()
-    return render(request,'Product/ProductEditForm.html',{'form':form,'product':product,'imageForm':imageForm})
+    imageForm = ProductPhotoAddForm()
+    location_instance = None
+    if product.location:
+        location_instance = {'latitude': product.location.latitude, 'longitude': product.location.longitude}
+    locationForm = LocationForm(initial=location_instance)
+    return render(request,'Product/ProductEditForm.html',{'form':form,'product':product,'imageForm':imageForm,'locationForm':locationForm})
+
+
 
 # List the product of a particular business.
 def BusinessProductListView(request,bus_id):
     business = Business.objects.get(id=bus_id)
     products = business.product_set.all().order_by('-date_created')
     return render(request,'Product/BusinessProductGallery.html',{'products':products,'business':business})
+
+
 
 # Add a product not already linked to a business - this is done in this function.
 def ProductAddGeneralView(request):
@@ -120,11 +147,13 @@ def ProductAddGeneralView(request):
         next = urlencode({"next":next_url})
         url = '{}?{}'.format(base_url,next)
         return redirect(url)
+    
     if request.method == 'POST':
         ProductAddForm()
         form = ProductAddForm(request.POST,request.FILES)
         form2 = GetOrCreateBusinessForm(request.POST)
         imageForm = ProductPhotoAddForm(request.POST,request.FILES)
+
         if form.is_valid() and form2.is_valid() and imageForm.is_valid():
             product=form.save(commit=False)
             product.image = imageForm
@@ -138,6 +167,7 @@ def ProductAddGeneralView(request):
                 business = Business.objects.create(name=form2.cleaned_data['business'])
             #Test to see of the business is already selling that product.
             product_in_business = business.product_set.all().filter(name="product.name")
+
             if product_in_business:
                 messages.add_message(request,messages.WARNING,'The product you tried to add is already sold by this business. You can edit this product if it has changed.')
                 return redirect("Product:detail",product_in_business.first().id )
@@ -146,13 +176,17 @@ def ProductAddGeneralView(request):
             product.author = request.user
             product.save()
             # create the ProductPhoto for the product if there's one.
+
             if imageForm.is_bound:
                 ProductPhoto.objects.create(product=product,photo=imageForm.cleaned_data['photo'])
             return redirect('Product:detail',product.id)
+        
     form = ProductAddForm()
     form2 = GetOrCreateBusinessForm()
     imageForm = ProductPhotoAddForm()
     return render(request,'Product/GeneralProductAddForm.html',{'form':form,'form2':form2,'imageForm':imageForm})
+
+
 
 def ProductDeleteView(request,prod_id):
     #The delete button is only rendered if the user is authenticated.
@@ -161,6 +195,8 @@ def ProductDeleteView(request,prod_id):
         product.delete()
         return redirect('Home:home')
     return redirect('Product:detail',prod_id)
+
+
 
 # Download a csv file temlate to be used in another view funciton to add a multiple products.
 def ProductListTemplateDownload(request):
@@ -171,6 +207,8 @@ def ProductListTemplateDownload(request):
     response = HttpResponse(path,content_type=mime_type)
     response['Content-Disposition'] = 'attachment; filename={}'.format(filename)
     return response
+
+
 
 # Upload a csv file with a product name,price,detail and using the file we generate new products.
 def ProductListUpload(request,bus_id):
@@ -200,7 +238,6 @@ def ProductListUpload(request,bus_id):
             imported_data.append_col(business_list, header='business')
             imported_data.append_col(is_public_list, header='is_public')
             
-
             # add the id for  business, author  and is_public ( true or 1) fields for saving.
             result = product_resource.import_data(imported_data,dry_run=True, raise_errors=True) # Test  the data import
             if not result.has_errors():

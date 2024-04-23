@@ -4,6 +4,7 @@ from datetime import datetime,timedelta
 from django.utils import timezone
 from django.urls import reverse
 from Business.models import get_image_filename,Business
+from Location.models import Location    
 #from Follow.models import ProductSubscription
 
 # Create your models here.
@@ -19,6 +20,7 @@ class Product(models.Model):
     is_public = models.BooleanField(default=True)
     date_created = models.DateTimeField(default=timezone.now)
     date_updated = models.DateTimeField(default=timezone.now)
+    location = models.ForeignKey(Location,on_delete=models.SET_NULL,null=True,blank=True)
 
     def __str__(self):
         return self.name +' ['+'K ' +str(self.price)+']'

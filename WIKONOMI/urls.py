@@ -32,7 +32,9 @@ urlpatterns = [
     path('',include('Search.urls')),
     path('',include('Notification.urls')),
     path('',include('History.urls')),
+    path('',include('Location.urls')),
     path('budget/',include('Budget.urls')),
+
 ]
 
 if settings.DEBUG:

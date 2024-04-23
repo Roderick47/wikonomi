@@ -39,7 +39,9 @@ def BusinessEditView(request,bus_id):
         next = urlencode({"next":next_url})
         url = '{}?{}'.format(base_url,next)
         return redirect(url)
+    
     business = Business.objects.get(id=bus_id)
+
     if request.method == 'POST':
         form = BusinessAddForm(request.POST,request.FILES)
         if form.is_valid():
@@ -52,14 +54,18 @@ def BusinessEditView(request,bus_id):
             business.author = request.user
             business.save()
             return redirect('Business:detail',bus_id)
+        
     form = BusinessAddForm(instance=business)
     return render(request,'Business/BusinessEditForm.html',{'form':form,'business':business})
+
+
 
 # Renders the Public Business detail page with the review form as well.
 def BusinessDetailView(request,bus_id):
     business = Business.objects.get(id=bus_id)
     products = business.product_set.all()
-    return render(request,'Business/BusinessDetail.html',{'business':business,'products':products,})
+    location = business.businesslocation_set.first()
+    return render(request,'Business/BusinessDetail.html',{'business':business,'products':products,'location':location})
 
 
 # No tests for this view yet.

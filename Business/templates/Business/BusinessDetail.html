@@ -54,6 +54,11 @@
           </li>
           <li class="list-group-item"><h5>Location:</h5>
             <p>{% if business.location %}{{business.location}}{% else %}No information... <a href="{% url 'Business:edit' business.id %}">edit.</a>{% endif %}</p>
+                {% if location %}
+                  <a class="btn btn-dark btn-sm shadow-sm ml-1 py-0 px-1 " href="{% url 'Location:business' location.id %}">{{location}} </a>
+                {% else %}  
+                  <p>No info.</p> 
+                {% endif %}
           </li>
       </ul>
       <div class="card-footer"><!--  Review Form and Review Comments-->
