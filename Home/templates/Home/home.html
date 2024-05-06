@@ -1,0 +1,94 @@
+{% extends 'Home/base.html' %}
+{% load static %}
+
+{% block script %}<link rel="stylesheet" href="{% static "Home/css/HomeStyle.css" %}">{% endblock script %}
+
+{% block content %}
+{% load thumbnail %}
+{% load humanize %}
+{% load extra_date_filters %}
+
+<div class="container-fluid ">
+
+{% if products %}
+  <h4 class="text-center">Your local price index</h4>
+  <h6 class="text-center">Check out what others have posted recently:</h6>
+
+  {% for product in products %}
+    {% if forloop.first %}
+    <div class="row">
+    {% endif %}
+        <div class="col-lg-4">
+          <div class="card my-1 shadow-sm ">
+            <div class="card-header col m-0 p-0">
+                <div class="row ">
+                  <div class="col-7">
+                    <p class="font-weight-bold m-0 p-0 ml-1" >{{product.name}}
+                      {% if product.date_created.date|isNew %}
+                      <small class="badge bg-success text-wrap ml-1">New</small></p>
+                      {% endif %}
+                      {% comment %} {% if product.is_recent_update %} {% endcomment %}
+                  </div>
+                  <div class="col-5">
+                    <small class="float-right mr-0 p-0 mb-0  text-muted">{{product.date_updated|olderDate|naturalday }}</small>
+                    {% comment %} {% else %} {% endcomment %}
+                    {% comment %} <small class="text-right ml-3 p-0 mb-0">[{{product.date_updated.date|naturaltime}}]</small> {% endcomment %}
+                    {% comment %} {% endif %} {% endcomment %}
+                  </div>
+                </div>
+            </div>      
+            <div class="card-body pb-1 mb-0 p-1">
+                  <a href="{% url 'Product:detail' product.id %}"class="stretched-link" ></a>
+                  <div class="row">
+                    <!-- business title -->
+                    <div class="col-9">  
+                      {% comment %} <h6 class="text-responsive"style="" >{{business.name}}</h6>
+                      <p>{{business.location}}</p> {% endcomment %}
+                        {% if product.price %}
+                          <small class="text-responsive m-0 pb-0"><b>Price:</b> K {{product.price|floatformat:2|intcomma}}</small><br>
+                        {% endif %}
+                        {% if product.business %}
+                          <small class="text repsonsive m-0 p-0"  ><b>Vendor:</b> {{product.business.name}}</small><br>
+                        {% endif  %}
+                        {% if product.business.location %} 
+                          <small class="text repsonsive m-0 p-0"  ><b>Location:</b> {{product.business.location}}</small><br>
+                        {% endif %}
+                    </div>
+
+                    <!-- Product image -->
+                    {% if product.FirstPhoto.photo  %}
+                      
+                      <div class="col-3 ">
+                        {% thumbnail product.FirstPhoto.photo "50x50" as prodImg %}
+                          <img class=" img img-fluid rounded float-right" src={{prodImg.url}} alt={{product.name}} style="max-width:85px; margin-left:10px;">
+                        {% endthumbnail %}
+                      </div>
+                    {% endif %}
+                    
+                  </div>
+                  <div class="text-wrap ml-1 py-0 my-0">
+                  {% if product|isCheapest == 'most-expensive' %}
+                  <small class="badge bg-dark rounded-pill">{{product|isCheapest}}</small>
+                  {% elif product|isCheapest == 'expensive' %}
+                  <small class="badge bg-danger rounded-pill">{{product|isCheapest}}</small>
+                  {% elif product|isCheapest == "cheapest-price" %}
+                  <small class="badge bg-success rounded-pill">{{product|isCheapest}}</small>
+                  {% elif product|isCheapest == "cheap" %}
+                  <small class="badge bg-info rounded-pill">{{product|isCheapest}}</small>
+                  {% endif %}
+                  </div>
+
+                
+              </div>    
+          </div>
+      </div>
+    {% if forloop.counter|divisibleby:3 %} </div><div class="row">{% endif %}
+    {% if forloop.last %}</div>{% endif %}    
+  {% endfor %}
+
+{% else %}
+<h1>Wikonomi Home Page</h1>
+{% endif %}
+
+
+{% endblock %}

@@ -1,0 +1,14 @@
+<div class="row my-3">
+    <div class="btn-group col-md-3 mx-auto">
+        <button type="button" class="btn btn-secondary btn-sm col-10">Filter</button>
+        <button type="button" class="btn btn-secondary btn-sm dropdown-toggle dropdown-toggle-split col-2" 
+        data-bs-toggle="dropdown" aria-expanded="false" >
+            <span class="visually hidden"></span>
+        </button>
+        <ul class="dropdown-menu" >
+            <li><a class="dropdown-item"  href="{% url 'Search:search-business' query %}"> Business</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item"  href="">Information</a> </li>
+        </ul>
+    </div> 
+</div>

@@ -1,0 +1,10 @@
+    <div class="card-footer m-0 p-1">
+        <form class="form" action="{% url 'Comment:prod-post' product.id %}" method="post">
+            {% csrf_token %}
+            <div class="form-row mx-1">
+                <input  type="hidden" name="parentComment" value="{{comment.id}}">
+                <input class="form-control col-9" type="text" name="comment" placeholder="Your reply here..." required="required">
+                <button type="submit" class="btn btn-info btn-sm col-3 p-1 m-0">Submit</button>
+            </div>
+        </form>
+    </div>

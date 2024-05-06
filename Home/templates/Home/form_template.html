@@ -1,0 +1,48 @@
+{% extends "Home/base.html" %}
+
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+
+{% block content_before_form %}{% endblock content_before_form %}
+
+
+{% block links %}{% endblock %}
+<script src="{% static 'Home/js/jquery-3.5.1.js' %}"></script>
+<script src="{% static 'Home/jquery-ui-1.12.1.custom/jquery-ui.js' %}"></script>
+
+<div class="row">
+  <div class="col-lg-2"></div>
+  <div class="col-lg-8">
+    <div class="card" style="margin-top:10px;">
+      <div class="card-body">
+        <!-- Title of the form -->
+        <h4 style="text-align:center;">{% block title %}{% endblock %}</h4><br>
+        <!-- Alert Messages -->
+        {% if messages %}
+          {% for message in messages %}
+              <p {% if message.tags %} class = "{{message.tags}}{% endif %} text-warning " > {{message}} </p>
+          {% endfor %}
+        {% endif %}
+        <!-- Form -->
+        {% if form.is_multipart %}
+          <form class="form-horizontal " action="" method="post" enctype="multipart/form-data">
+        {% else %}
+          <form class="form-horizontal " action="" method="post" >
+        {% endif %}
+          {% csrf_token %}
+          {{imageForm|crispy}}
+          {{form|crispy}}
+          <!-- Sumbit button of the form -->
+          <button type="submit" class="btn btn-success btn-block">{% block button %}Submit{% endblock %}</button>
+          <hr>
+          <!-- Any other additional content  at the bottom of the form -->
+          {% block formcontent %}{% endblock %}
+        </form>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-2"></div>
+</div><br>
+{% endblock %}

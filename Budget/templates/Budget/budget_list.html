@@ -1,0 +1,13 @@
+{% extends 'Home/base.html' %}
+
+
+{% block content %}
+    <h3>My Budgets</h3>
+    <a class="btn btn-primary btn-sm" href="{% url 'Budget:create' %}">Create Budget +</a>
+    {% if budgets %}
+        {% for budget in budgets %}
+            <p>
+                <a href="{% url 'Budget:detail' budget.id %}">{{budget.title}}</a></p>
+        {% endfor %}
+    {% endif %}
+{% endblock content %}

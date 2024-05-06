@@ -1,0 +1,59 @@
+{% extends 'Home/base.html' %}
+{% load humanize %}
+{% load thumbnail %}
+
+
+{% block content%}
+<h1 class="text-center">Business Search Results</h1>
+<h3 class="text-center">for <em>"{{query}}"</em></h3>
+{% include "Search/filter.html" %}
+{% if results_list.exists %}
+      <div class="row">
+        {% for business in businesses %}
+                <div class="col-lg-4">
+                <div class="card my-1 shadow-sm ">
+                    <div class="card-header col m-0 p-0">
+                        <div class="row ">
+                            <div class="col-7">
+                                <p class="font-weight-bold m-0 p-0 ml-1" >{{business.name}}</p>
+                                {% comment %} {% if product.is_recent_update %} {% endcomment %}
+                            </div>
+                            <div class="col-5">
+                                <small class="float-right mr-1 p-0 mb-0  text-muted">[{{business.date_updated|naturaltime}}]</small>
+                            </div>
+                        </div>
+                    </div>      
+                    <div class="card-body pb-1 mb-0 p-1">
+                        <a href="{% url 'Business:detail' business.id %}"class="stretched-link" ></a>
+                        <div class="row">
+                            <!-- business title -->
+                            <div class="col-9">  
+                                {% if business.location %} 
+                                <small class="text repsonsive m-0 p-0"  ><b>Location:</b> {{business.location}}</small><br>
+                                {% endif %}
+                                {% if business.description %} 
+                                <small class="text repsonsive m-0 p-0"  >{{business.description|truncatewords:15}}</small>
+                                {% endif %}
+                                
+                            </div>
+
+                            <!-- Business image -->
+                            {% if business.image  %}
+                                <div class="col-3 ">
+                                    {% thumbnail business.image "50x50" as busImg %}
+                                    <img class=" img img-fluid rounded float-right" src={{busImg.url}} alt={{business.name}} style="max-width:85px; margin-left:10px;">
+                                    {% endthumbnail %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>    
+                </div>
+            </div>
+        {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-warning">
+            <p class="text-center pt-4">Hmmm, sorry no results :(</p>
+        </div>
+    {% endif %}
+{% endblock content %}

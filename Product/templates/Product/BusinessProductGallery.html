@@ -1,0 +1,76 @@
+
+{% extends 'Home/base.html' %}
+{% load thumbnail %}
+{% load humanize %}
+{% load extra_date_filters %}
+
+
+{% block content %}
+<center><h3 >{{business.name}}</h3>
+<h4>Products</h4></center>
+
+<center>
+  <div class="col mx-auto">
+    <a href="{% url 'Product:add' business.id %}" class="btn btn-success btn-block">+ Add a Product</a>
+    <a href="{% url 'Product:list-upload' business.id %}" class="btn btn-info btn-block">Add file list of products</a>
+
+
+  </div>
+
+</center>
+
+        <div class="row mx-1">
+        {% for product in products %}
+          <div class="col-lg-4 mx-auto">
+            <div class="card my-1 shadow-sm">
+              <div class="card-header col my-0 py-0">
+                <div class="row">
+                  <div class="col-7">
+                    <p class="font-weight-bold m-0 p-0 ml-1" >{{product.name}}
+                    {% if product.date_created.date|isNew %}
+                    <small class="badge badge-success text-wrap ml-1">New</small>
+                    {% endif %}</p>
+                    {% comment %} {% if product.is_recent_update %} {% endcomment %}
+                  </div>
+                  <div class="col-5">
+                    <small class="float-right mr-1 p-0 mb-0  text-muted">[{{product.date_updated|olderDate|naturalday }}]</small>
+                  </div>
+                </div>
+              </div>
+              <div class="card-body pb-1 mb-0 p-1">
+                    <div class="row">
+                      
+                      <a href="{% url 'Product:detail' product.id %}"class="stretched-link" ></a>
+                      <!-- business title -->
+                      <div class="col-9">  
+                          {% if product.price %}
+                            <small class="text-responsive m-0 pb-0"><b>Price:</b> K {{product.price|floatformat:2|intcomma}}</small><br>
+                          {% endif %}
+                          {% if product.business.name %}
+                            <small class="text repsonsive m-0 p-0"  ><b>Vendor:</b> {{product.business.name}} </small><br>
+                          {% endif  %}
+                          {% if product.business.location %} 
+                            <small class="text repsonsive m-0 p-0"  ><b>Location:</b> {{product.business.location}}</small><br>
+                          {% endif %}
+                      </div>
+  
+                      {% if product.FirstPhoto.photo  %}
+                        <div class="col-3 ">
+                          {% thumbnail product.FirstPhoto.photo "50x50" as prodImg %}
+                            <img class=" img img-fluid rounded float-right" src={{prodImg.url}} alt={{product.name}} style="max-width:85px; margin-left:10px;">
+                          {% endthumbnail %}
+                        </div>
+                      {% endif %}
+
+                    </div>
+                </div>
+            </div>
+          </div>
+        {% empty %}
+        <p>No products added for this business yet.</p>
+
+        {% endfor %}
+        </div>
+
+{% endblock %}
+

@@ -1,0 +1,79 @@
+{% extends 'Home/home.html' %}
+{% load thumbnail %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="card">
+  <div class="card-body">
+
+  <h2 class="text-center">You are editing 'Product - {{product.name}}' details</h2><hr>
+
+  <form class="" action="" method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{imageForm}} <hr>
+    {{form2|crispy}}
+    {{form|crispy}}
+    <h6>Product Location</h6>
+    {{locationForm|crispy}}
+    <label><input type="checkbox" id="use-browser-location"> Use Browser Location</label>
+    <button class="btn btn-info" type="submit" name="button"> Save Post</button>
+  </form>
+</div>
+
+<script>
+// Function to check if the user is using a mobile device
+  function isMobileDevice() {
+    return (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent));
+  }
+
+  // Function to get the browser location
+  function getLocation() {
+    if (navigator.geolocation) {
+      // If user is using a mobile device, request high accuracy location
+      var options = isMobileDevice() ? { enableHighAccuracy: true } : {};
+      
+      navigator.geolocation.getCurrentPosition(showPosition, showError, options);
+    } else {
+      alert("Geolocation is not supported by this browser.");
+    }
+  }
+
+  // Function to handle errors in getting the location
+  function showError(error) {
+    switch(error.code) {
+      case error.PERMISSION_DENIED:
+        alert("User denied the request for Geolocation.");
+        break;
+      case error.POSITION_UNAVAILABLE:
+        alert("Location information is unavailable.");
+        break;
+      case error.TIMEOUT:
+        alert("The request to get user location timed out.");
+        break;
+      case error.UNKNOWN_ERROR:
+        alert("An unknown error occurred.");
+        break;
+    }
+  }
+
+  // Function to update the form fields with the browser location
+  function showPosition(position) {
+    document.getElementById("id_latitude").value = position.coords.latitude;
+    document.getElementById("id_longitude").value = position.coords.longitude;
+  }
+
+  // Event listener for the checkbox
+  document.getElementById("use-browser-location").addEventListener("change", function() {
+    if (this.checked) {
+      // If checkbox is checked, get the browser location
+      getLocation();
+    } else {
+      // If checkbox is unchecked, clear the latitude and longitude fields
+      document.getElementById("id_latitude").value = "";
+      document.getElementById("id_longitude").value = "";
+    }
+  });
+  </script>
+
+{% endblock %}

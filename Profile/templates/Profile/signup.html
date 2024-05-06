@@ -1,0 +1,6 @@
+{% extends 'Home/form_template.html' %}
+
+{% block title %}Create an Account{% endblock %}
+{% block formcontent %}
+    <p>Already have an account? Then log in <a href="{% url 'Profile:login' %}">here</a>.</p>
+{% endblock  %}

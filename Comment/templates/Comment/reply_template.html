@@ -1,0 +1,50 @@
+{% load humanize %}
+{% load static %}
+{% load thumbnail %}
+{% load extras %}
+
+{% comment %} <link rel="stylesheet" href="{% static 'Comment/commentStyle.css' %}"> {% endcomment %}
+    <!--comments-->
+
+            {% for reply in replies %}
+                    <div class="card border-0 shadow-sm mt-1 mb-1 " id="reply-box">
+                        <div class="card-header border-0 m-0 p-0">
+                                <div class="">
+                                    {% if reply.user.profile.image %}
+                                        {% thumbnail reply.user.profile.image '60x60' as img %}
+                                        <img  class="card-img" src="{{ img.url }}" alt="profilepic" id="profThumbImg">
+                                        {% endthumbnail %}
+                                    {% else %}  
+                                        <img  class="img-fluid rounded-circle align-self-start my-0 " src="{% static 'Profile/images/profile.png' %}" alt="profilepic" id="profThumbImg">
+                                    {% endif %}
+                                </div>
+                                <div class="">
+                                <p class=" mb-0">{{reply.user.username}}
+                                    <small class="mt-0 text-muted">{{reply.date|naturaltime}}</small>
+                                </p>
+                                </div>
+                        </div>
+                        <div class="card-body border-0"> 
+                            <p id="{{reply.id}}-{{reply.body}}" class="m-0 text-sm font-weight-normal"><a class="text-decoration-none" href="{% url 'Profile:public' reply.parent.user.id %}">@{{reply.parent.user.username}} </a>{{reply.body}}</p>
+                            {% if request.user == reply.user  %}<a class="align-left text-decoration-none" href="{% url 'Comment:prod-delete' reply.id %}" ><small>delete</small></a>{% endif %}
+                            <a class=""  href="#replyBox{{reply.id}}" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="replyBox{{comment.id}}"><small class="float-right ">reply</small></a>
+                        </div>
+
+                        <div class="collapse" id="replyBox{{reply.id}}">
+                            <div class="card-footer border-0 m-0 p-1">
+                                <form class="form" action="{% url 'Comment:prod-post' product.id %}" method="post">
+                                    {% csrf_token %}
+                                    <div class="form-row mx-1">
+                                        <input  type="hidden" name="parentComment" value="{{reply.id}}">
+                                        <input class="form-control col-9" type="text" name="comment" placeholder="Your reply here...">
+                                        <button type="submit" class="btn btn-info btn-sm col-3 p-1 m-0">Submit</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+            {% if reply.replies.exists %}
+                {% include 'Comment/reply_template.html' with replies=reply.replies.all %}     
+            {% endif %}
+            {% endfor %}
+                

@@ -1,0 +1,57 @@
+{% extends 'Home/base.html' %}{% load thumbnail %}{% load humanize %}
+{% load static %}
+
+{% block script %}
+  <script src="{% static 'Product/js/product_detail.js' %}" ></script>
+  <script src="{% static 'Home/jquery-ui-1.12.1.custom/jquery-ui.js' %}"></script>
+  <link rel="stylesheet" href="{% static 'Product/css/ProductDetail.css' %}" >
+
+{% endblock script %}
+
+{% block content %}
+
+    <div class="card" >
+        <div class="card-header">
+          <div class="row">
+            <div class="col">
+              <h4 class="card-title">{{product.name}} </h4>
+              <p class="text-muted">Last edited by '{{product.current_author}}' on {{product.date_updated}}</p>
+            </div>
+          </div>
+        </div>
+        <div class="card-body">
+          {% if product.FirstPhoto.photo %}
+              <img  class="card-img-top p-2" src="{{ product.FirstPhoto.photo.url }}" alt="{{product.name}}" id="busImg">
+          {% endif %}
+          <table class="table table-sm table-bordered">
+            <tr>
+              <th class="text-self-center">Price:</th>
+               <td>K{{product.price|floatformat:2|intcomma}}</td> 
+            </tr>
+            <tr class="text-self-center">
+              <th class="">Description:</th>
+              <td>
+                {% if product.description %}
+                  {{product.description}}
+                {% else %}
+                  <p class="text-muted"> no data []</p>
+                {% endif %}
+              </td>
+            </tr>
+            <tr>
+              <th class="">Vendor: </th>
+              <td>
+                {% if product.business %}
+                  <a class="btn btn-dark btn-sm shadow-sm ml-1 py-0 px-1" href=""> {{product.business}} </a>
+                {% else %}  
+                  <p>No info.</p> 
+                {% endif %}
+              </td>
+            </tr>
+          </table>
+
+
+
+        </div>
+    </div>
+{% endblock %}

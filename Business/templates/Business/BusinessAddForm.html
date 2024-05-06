@@ -1,0 +1,29 @@
+{% extends 'Home/form_template.html' %}
+
+{% block content_before_form %}
+<div class="card col-8 mx-auto">
+  <div class="card-header text-center">
+    <b>You are creating a public business page.<br> This means that anyone can find, edit or delete this information that you are posting.</b>
+    <p>If you would like to post your own business page that can't be edited by others, follow this <a href="{% url 'Business:add-private' %}">link.</a><p>
+  </div>
+</div>
+{% endblock %}
+
+
+{% block title %}
+  Add A New Business To The Public Directory
+{% endblock %}
+
+{% block script %}
+<script>
+$(function(){
+    $("#id_name").autocomplete({
+        source:"{% url 'Business:autocomplete' %}",
+        minLength: 2,
+    });
+});
+</script>
+{% endblock %}
+
+
+{% block bis_active %}active{% endblock %}

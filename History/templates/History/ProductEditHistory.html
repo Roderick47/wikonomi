@@ -1,0 +1,27 @@
+{% extends 'home/base.html' %}
+
+{% block content %}
+    <h1>'{{product.name}}' Edit History</h1>
+    <table class="table table-condensed">
+        <theader>
+            <tr>
+                <th>Title</th>
+                <th>Price</th>
+                <th>Author</th>
+                <th>Date Updated</th>
+            </tr>
+        </theader>
+        <tbody>
+            {% for product1 in history %}
+            <tr>
+                <td><a href="{% url 'History:edit-detail' product1.id %}">{{product1.name}}</a></td>
+                <td>{{product1.price}}</td>
+                <td>{{product1.current_author}}</td>
+                <td>{{product1.date_updated}}</td>
+            </tr>
+            {% endfor %}
+        </tbody> 
+
+    </table>
+
+{% endblock content %}

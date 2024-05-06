@@ -1,0 +1,11 @@
+<!-- Messages -->
+{% if messages %}
+  <div class="card" style="width:inherit;" style="margin-bottom:100px;">
+
+  {% for message in messages %}
+
+      <p {% if message.tags %} class = "{{message.tags}}" {% endif %}>{{message}}</p>
+
+  {% endfor %}
+  </div>
+{% endif %}
