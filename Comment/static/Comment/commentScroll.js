@@ -1,13 +1,15 @@
-
-function scrollToComment(){
-
-    var data = JSON.parse({{data|escapejs}})
-
+function scrollToComment(commentId) {
     // element which needs to be scrolled to
-    var comment = document.getElementById(data[commentID]);
-    
-    // scroll to element
-    comment.scrollIntoView({ behavior: 'smooth', block: 'end'});
+    var comment = document.getElementById('comment-' + commentId);
 
+    if (comment) {
+        // scroll to element
+        comment.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
+        // Add a highlight effect
+        comment.style.backgroundColor = '#fff3cd';
+        setTimeout(() => {
+            comment.style.backgroundColor = '';
+        }, 3000);
+    }
 }

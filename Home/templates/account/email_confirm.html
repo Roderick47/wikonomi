@@ -1,0 +1,28 @@
+{% extends "account/base_allauth.html" %}
+
+{% load i18n %}
+
+{% block allauth_content %}
+    <h2 class="h3 mb-4 text-center">Confirm Email Address</h2>
+    
+    {% if confirmation %}
+        <p class="text-muted mb-4">
+            Please confirm that <a href="mailto:{{ confirmation.email_address.email }}">{{ confirmation.email_address.email }}</a> 
+            is an email address for user {{ confirmation.email_address.user.get_username }}.
+        </p>
+        
+        <form method="post" action="{% url 'account_confirm_email' confirmation.key %}">
+            {% csrf_token %}
+            <div class="d-grid">
+                <button class="btn btn-primary" type="submit">
+                    <i class="fas fa-check-circle me-2"></i>Confirm
+                </button>
+            </div>
+        </form>
+    {% else %}
+        <div class="alert alert-warning">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            This email confirmation link expired or is invalid. Please issue a new email confirmation request.
+        </div>
+        <div class="text-center mt-3">
+            <a href="{% url 'account_email' %}

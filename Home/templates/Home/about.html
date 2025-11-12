@@ -1,34 +1,269 @@
 {% extends 'Home/base.html' %}
 
+{% block title %}About WIKONOMI - Your Local Price Index{% endblock %}
 
 {% block content %}
-<h1>Welcome</h1>
-<div class="mx-auto fs-6">
-    <p class="">
+<div class="bento-container">
+  <!-- Hero Section -->
+  <div class="bento-grid">
+    <div class="bento-card" style="grid-column: span 12; background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%); color: white; border: none;">
+      <div class="bento-card-body text-center">
+        <h1 class="display-4 fw-bold mb-3">
+          <i class="fas fa-chart-line me-3"></i>What is WIKONOMI?
+        </h1>
+        <p class="lead mb-4">Empowering Papua New Guineans with transparent pricing information</p>
+      </div>
+    </div>
+  </div>
 
-        Hi, living in PNG is tough, the cost of living and prices of goods and services are going up. 
-        But what if with a click of a button you could find the cheapest and best products?
-    </p>
-    <p class="">
-        As way to help Papua New Guineans I built this site. Now you can find the best products and services at the best prices with ease.
-        <br> <b class=''>But we need your help to make this platform work.</b>
-    </p>
+  <!-- Mission Section -->
+  <div class="bento-grid">
+    <div class="bento-card" style="grid-column: span 12;">
+      <div class="bento-card-header">
+        <h3 class="mb-0">
+          <i class="fas fa-bullseye me-2 text-primary"></i>Our Mission
+        </h3>
+      </div>
+      <div class="bento-card-body">
+        <div class="row g-4">
+          <div class="col-md-6">
+            <div class="mission-card">
+              <div class="mission-icon">
+                <i class="fas fa-chart-line"></i>
+              </div>
+              <h5>Transparent Pricing</h5>
+              <p>Living in PNG is tough, with the cost of living and prices of goods and services constantly rising. We believe you deserve to find the best products at the best prices with just a click.</p>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="mission-card">
+              <div class="mission-icon">
+                <i class="fas fa-users"></i>
+              </div>
+              <h5>Community-Driven</h5>
+              <p>Built by Papua New Guineans, for Papua New Guineans. This platform helps you discover the best products and services at competitive prices, making informed purchasing decisions easier.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
-        <h2>How can you help?</h2>
-    <p>
-        The best way to help is to use this website as intended.
-        <ol>
-            <li>Search for products that you want.</li>
-            <li>Edit/curate the information of the product. if it is correct. Verify it again.</li>
-            <li>If the product is not listed. get it listed by posting it yourself.</li>
-            <li>Recommend the site to your friends so they can use it.</li>
-        </ol>
-    </p>
+  <!-- How to Help Section -->
+  <div class="bento-grid">
+    <div class="bento-card" style="grid-column: span 12;">
+      <div class="bento-card-header">
+        <h3 class="mb-0">
+          <i class="fas fa-hands-helping me-2 text-success"></i>How Can You Help?
+        </h3>
+        <p class="text-muted mb-0">We need your help to make this platform work effectively</p>
+      </div>
+      <div class="bento-card-body">
+        <div class="row g-4">
+          <div class="col-lg-3 col-md-6">
+            <div class="help-card">
+              <div class="help-icon">
+                <i class="fas fa-search"></i>
+              </div>
+              <h6>Search Products</h6>
+              <p>Look for products you want to buy and compare prices across different vendors.</p>
+            </div>
+          </div>
+          <div class="col-lg-3 col-md-6">
+            <div class="help-card">
+              <div class="help-icon">
+                <i class="fas fa-edit"></i>
+              </div>
+              <h6>Verify Information</h6>
+              <p>Edit and curate product information. If it's correct, verify it again to ensure accuracy.</p>
+            </div>
+          </div>
+          <div class="col-lg-3 col-md-6">
+            <div class="help-card">
+              <div class="help-icon">
+                <i class="fas fa-plus"></i>
+              </div>
+              <h6>Add Products</h6>
+              <p>If a product isn't listed, add it yourself to help others find it.</p>
+            </div>
+          </div>
+          <div class="col-lg-3 col-md-6">
+            <div class="help-card">
+              <div class="help-icon">
+                <i class="fas fa-share"></i>
+              </div>
+              <h6>Spread the Word</h6>
+              <p>Recommend the site to your friends so they can benefit from transparent pricing too.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
+  <!-- Features Section -->
+  <div class="bento-grid">
+    <div class="bento-card" style="grid-column: span 12;">
+      <div class="bento-card-header">
+        <h3 class="mb-0">
+          <i class="fas fa-rocket me-2 text-warning"></i>More Features Coming Soon
+        </h3>
+        <p class="text-muted mb-0">We're constantly working to improve your experience</p>
+      </div>
+      <div class="bento-card-body">
+        <div class="row g-4">
+          <div class="col-md-4">
+            <div class="feature-card">
+              <div class="feature-icon">
+                <i class="fas fa-mobile-alt"></i>
+              </div>
+              <h6>Mobile App</h6>
+              <p>Access WIKONOMI on the go with our upcoming mobile application.</p>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="feature-card">
+              <div class="feature-icon">
+                <i class="fas fa-bell"></i>
+              </div>
+              <h6>Price Alerts</h6>
+              <p>Get notified when prices drop on products you're interested in.</p>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="feature-card">
+              <div class="feature-icon">
+                <i class="fas fa-star"></i>
+              </div>
+              <h6>Reviews & Ratings</h6>
+              <p>Share your experiences and read reviews from other community members.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
-
-    <h2>More features incoming</h2>
-
+  <!-- Call to Action -->
+  <div class="bento-grid">
+    <div class="bento-card" style="grid-column: span 12; background: linear-gradient(135deg, var(--success-color) 0%, var(--accent-color) 100%); color: white; border: none;">
+      <div class="bento-card-body text-center">
+        <h3 class="mb-3">Ready to Start?</h3>
+        <p class="lead mb-4">Join our community and help build a transparent pricing ecosystem for Papua New Guinea.</p>
+        <div class="d-flex justify-content-center gap-3 flex-wrap">
+          <a href="{% url 'Product:add-general' %}" class="btn btn-light btn-bento">
+            <i class="fas fa-plus me-2"></i>Add Your First Product
+          </a>
+          <a href="{% url 'Business:add' %}" class="btn btn-outline-light btn-bento">
+            <i class="fas fa-store me-2"></i>Add a Business
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
-{% endblock content %}
+<style>
+  .mission-card {
+    text-align: center;
+    padding: 2rem 1rem;
+    height: 100%;
+  }
+
+  .mission-icon {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.5rem;
+    color: white;
+    font-size: 2rem;
+  }
+
+  .help-card {
+    text-align: center;
+    padding: 1.5rem 1rem;
+    height: 100%;
+    background: var(--gray-50);
+    border-radius: 12px;
+    transition: all 0.3s ease;
+  }
+
+  .help-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .help-icon {
+    width: 60px;
+    height: 60px;
+    background: var(--success-color);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1rem;
+    color: white;
+    font-size: 1.5rem;
+  }
+
+  .feature-card {
+    text-align: center;
+    padding: 1.5rem 1rem;
+    height: 100%;
+    background: var(--gray-50);
+    border-radius: 12px;
+    transition: all 0.3s ease;
+  }
+
+  .feature-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .feature-icon {
+    width: 60px;
+    height: 60px;
+    background: var(--warning-color);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1rem;
+    color: white;
+    font-size: 1.5rem;
+  }
+
+  .help-card h6, .feature-card h6 {
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+  }
+
+  .help-card p, .feature-card p {
+    font-size: 0.875rem;
+    color: var(--gray-600);
+    margin-bottom: 0;
+  }
+
+  @media (max-width: 767px) {
+    .bento-container {
+      padding: 0.5rem;
+    }
+    
+    .display-4 {
+      font-size: 2rem;
+    }
+    
+    .lead {
+      font-size: 1rem;
+    }
+
+    .mission-card, .help-card, .feature-card {
+      padding: 1rem;
+    }
+  }
+</style>
+{% endblock %} 

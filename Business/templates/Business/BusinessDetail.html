@@ -2,80 +2,420 @@
 {% load thumbnail %}
 {% load static %}
 {% load humanize %}
-{% load thumbnail %}
 
-{% block css %}
-<<link rel="stylesheet" href="{% static 'Business/css/style' %}">
+{% block extra_head %}
+<!-- Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+   integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/mZEZPo5RsVZpK1Z5w=="
+   crossorigin=""/>
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+   integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+   crossorigin=""></script>
+<style>
+  #business-map {
+    height: 400px;
+    width: 100%;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .map-container {
+    position: relative;
+    height: 100%;
+  }
+</style>
 {% endblock %}
 
+{% block title %}{{business.name}} - WIKONOMI{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-  <div class="col-md-11 mx-auto  ">
-    <div class="card">
-      <div class="card-header">
-          <h3 class="text-center">{{business.name}}</h3>
-          <h5 class="text-center">Public Page</h5>
-
-          <ul class="nav nav-tabs card-header-tabs shadow-bottom mx-auto">
-            <li class="nav-item">
-              <a class="nav-link text-dark" href="{% url 'Product:business-list' business.id %}">View Products</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link text-dark" href="">Information</a>
-            </li>
-            <li>
-            <div class="dropdown">
-                <a class="btn btn-secondary btn-sm dropdown-toggle" role="button" data-bs-toggle="dropdown" aria-expanded="false">Add</a>
-                <ul class="dropdown-menu">
-                  <li><a class"dropdown-item" href="#"> Product </a></li>
-                  <li><hr class="dropdown-divider"></li>
-                  <li><a class"dropdown-item" href="#"> Information </a></li>
-                </ul>
+<div class="bento-container">
+  <!-- Hero Section -->
+  <div class="bento-grid">
+    <div class="bento-card" style="grid-column: span 12; background: linear-gradient(135deg, var(--success-color) 0%, var(--accent-color) 100%); color: white; border: none;">
+      <div class="bento-card-body">
+        <div class="row align-items-center">
+          <div class="col-md-8">
+            <div class="d-flex align-items-center gap-3 mb-2">
+              <h1 class="display-4 fw-bold mb-0">{{business.name}}</h1>
+              <!-- Privacy Badge -->
+              {% if not business.is_public %}
+                <span class="badge bg-warning text-dark fs-6">
+                  <i class="fas fa-lock me-1"></i>Private Business
+                </span>
+              {% else %}
+                <span class="badge bg-info fs-6">
+                  <i class="fas fa-globe me-1"></i>Public Business
+                </span>
+              {% endif %}
             </div>
-            </li>
-
-          </ul>
-    
-      </div>
-
-
-      {% if business.image %}
-      <div class="row">
-        <div class="col"></div>
-          <img  class="col-md-6 mx-auto" src="{{ business.image.url }}" alt="{{business.name}}" id="busImg">
-        <div class="col"></div>
-      </div>
-
-      {% endif %}
-      <ul class="list-group list-group-flush">
-          <li class="list-group-item"><h5>Description:</h5>
-            <p>{% if business.description %}{{business.description}}{% else %} No information...<a href="{% url 'Business:edit' business.id %}">edit</a>{% endif %}</p>
-          </li>
-          <li class="list-group-item"><h5>Location:</h5>
-            <p>{% if business.location %}{{business.location}}{% else %}No information... <a href="{% url 'Business:edit' business.id %}">edit.</a>{% endif %}</p>
-                {% if location %}
-                  <a class="btn btn-dark btn-sm shadow-sm ml-1 py-0 px-1 " href="{% url 'Location:business' location.id %}">{{location}} </a>
-                {% else %}  
-                  <p>No info.</p> 
-                {% endif %}
-          </li>
-      </ul>
-      <div class="card-footer"><!--  Review Form and Review Comments-->
-        <div class="row">
-          {% if business.location and business.description %}
-            <small class=" mx-auto mb-1">Something wrong with these details? You can change it</small>
-          {% else %}
-            <small class=" mx-auto mb-1">Hang on...there's some information missing. If you can edit this page, please do.</small>
-          {% endif %}
+            <p class="lead mb-3">Business Profile</p>
+            <div class="d-flex gap-2 flex-wrap">
+              <a href="{% url 'Product:business-list' business.id %}" class="btn btn-light btn-bento">
+                <i class="fas fa-box me-2"></i>View Products
+              </a>
+              <a href="{% url 'Business:edit' business.id %}" class="btn btn-outline-light btn-bento">
+                <i class="fas fa-edit me-2"></i>Edit Business
+              </a>
+            </div>
+          </div>
+          <div class="col-md-4 text-center">
+            {% if business.image %}
+              <img src="{{ business.image.url }}" alt="{{business.name}}" class="img-fluid rounded" style="max-height: 200px; object-fit: cover;">
+            {% else %}
+              <div class="bg-white bg-opacity-20 rounded p-4">
+                <i class="fas fa-store fa-4x mb-3"></i>
+                <p class="mb-0">No image available</p>
+              </div>
+            {% endif %}
+          </div>
         </div>
-        <div class="row">
-          <a href="{% url 'Business:edit' business.id %}"  class="btn btn-warning btn-sm col-5 mx-auto shadow-sm" role="button">Edit This Business Page</a>
-          <a href="{% url 'Product:list-upload' business.id  %}" class="btn btn-primary col-5 btn-sm mx-auto shadow-sm" role="button"> Upload list of products </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Business Information -->
+  <div class="bento-grid">
+    <!-- Description Card -->
+    <div class="bento-card info-card">
+      <div class="bento-card-header">
+        <h5 class="mb-0">
+          <i class="fas fa-align-left me-2"></i>Description
+        </h5>
+      </div>
+      <div class="bento-card-body">
+        {% if business.description %}
+          <p class="mb-0">{{business.description}}</p>
+        {% else %}
+          <div class="empty-state">
+            <i class="fas fa-file-alt"></i>
+            <p>No description available</p>
+            <a href="{% url 'Business:edit' business.id %}" class="btn btn-primary-bento btn-bento">
+              <i class="fas fa-plus me-1"></i>Add Description
+            </a>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Location Card -->
+    <div class="bento-card info-card">
+      <div class="bento-card-header">
+        <h5 class="mb-0">
+          <i class="fas fa-map-marker-alt me-2"></i>Location
+        </h5>
+      </div>
+      <div class="bento-card-body">
+        {% if business.location %}
+          <div class="location-info mb-3">
+            <p class="fw-bold mb-2">
+              {% if business.location_description %}
+                {{ business.location_description }}
+              {% else %}
+                Location
+              {% endif %}
+            </p>
+            
+            {% if business.has_gps_location %}
+              <div class="gps-info mb-3">
+                <small class="text-muted">
+                  <i class="fas fa-crosshairs me-1"></i>GPS Coordinates: 
+                  {{ business.location.latitude|floatformat:6 }}, {{ business.location.longitude|floatformat:6 }}
+                </small>
+                <div class="mt-2">
+                  <a href="https://www.google.com/maps?q={{ business.location.latitude }},{{ business.location.longitude }}" 
+                     target="_blank" class="btn btn-primary-bento btn-bento btn-sm me-2">
+                    <i class="fas fa-map me-1"></i>View on Google Maps
+                  </a>
+                  <a href="https://www.openstreetmap.org/?mlat={{ business.location.latitude }}&mlon={{ business.location.longitude }}&zoom=15" 
+                     target="_blank" class="btn btn-secondary-bento btn-bento btn-sm">
+                    <i class="fas fa-map-marked-alt me-1"></i>View on OpenStreetMap
+                  </a>
+                </div>
+              </div>
+            {% endif %}
+          </div>
+        {% else %}
+          <div class="empty-state">
+            <i class="fas fa-map-marker-alt"></i>
+            <p>No location information</p>
+            <a href="{% url 'Business:edit' business.id %}" class="btn btn-primary-bento btn-bento">
+              <i class="fas fa-plus me-1"></i>Add Location
+            </a>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Map Card -->
+    {% if business.has_gps_location %}
+      <div class="bento-card" style="grid-column: span 12;">
+        <div class="bento-card-header">
+          <h5 class="mb-0">
+            <i class="fas fa-map me-2 text-primary"></i>GPS Location Map
+          </h5>
+          <p class="text-muted mb-0">Precise business location using GPS coordinates</p>
+        </div>
+        <div class="map-section mt-3">
+          <div id="business-map"></div>
+        </div>
+      </div>
+    {% elif business.location %}
+      <div class="bento-card" style="grid-column: span 12;">
+        <div class="bento-card-header">
+          <h5 class="mb-0">
+            <i class="fas fa-map me-2 text-primary"></i>Location Map
+          </h5>
+          <p class="text-muted mb-0">Business location (approximate)</p>
+        </div>
+        <div class="map-section mt-3">
+          <div id="business-map"></div>
+        </div>
+      </div>
+    {% endif %}
+
+    <!-- Quick Actions Card -->
+    <div class="bento-card" style="grid-column: span 12;">
+      <div class="bento-card-header">
+        <h5 class="mb-0">
+          <i class="fas fa-cogs me-2"></i>Quick Actions
+        </h5>
+      </div>
+      <div class="bento-card-body">
+        <div class="row g-3">
+          <div class="col-md-4 col-sm-6">
+            <a href="{% url 'Product:add-general' %}" class="btn btn-primary-bento btn-bento w-100 h-100 d-flex flex-column align-items-center justify-content-center">
+              <i class="fas fa-plus fa-2x mb-2"></i>
+              <span>Add Product</span>
+            </a>
+          </div>
+          <div class="col-md-4 col-sm-6">
+            <a href="{% url 'Product:list-upload' business.id %}" class="btn btn-success-bento btn-bento w-100 h-100 d-flex flex-column align-items-center justify-content-center">
+              <i class="fas fa-upload fa-2x mb-2"></i>
+              <span>Upload Product List</span>
+            </a>
+          </div>
+          <div class="col-md-4 col-sm-6">
+            <a href="{% url 'Business:edit' business.id %}" class="btn btn-warning-bento btn-bento w-100 h-100 d-flex flex-column align-items-center justify-content-center">
+              <i class="fas fa-edit fa-2x mb-2"></i>
+              <span>Edit Business</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Information Status Card -->
+    <div class="bento-card" style="grid-column: span 12;">
+      <div class="bento-card-header">
+        <h5 class="mb-0">
+          <i class="fas fa-info-circle me-2"></i>Information Status
+        </h5>
+      </div>
+      <div class="bento-card-body">
+        {% if business.location and business.description %}
+          <div class="alert alert-success d-flex align-items-center" role="alert">
+            <i class="fas fa-check-circle me-2"></i>
+            <div>
+              <strong>Complete!</strong> All business information is filled out.
+              <small class="d-block text-muted">Something wrong with these details? You can change it.</small>
+            </div>
+          </div>
+        {% else %}
+          <div class="alert alert-warning d-flex align-items-center" role="alert">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <div>
+              <strong>Incomplete Information</strong> Some details are missing.
+              <small class="d-block text-muted">If you can edit this page, please complete the missing information.</small>
+            </div>
+          </div>
+        {% endif %}
+        
+        <div class="row g-2 mt-3">
+          <div class="col-md-6">
+            <div class="info-status-item">
+              <i class="fas fa-align-left me-2"></i>
+              <span>Description:</span>
+              {% if business.description %}
+                <span class="badge bg-success">Complete</span>
+              {% else %}
+                <span class="badge bg-danger">Missing</span>
+              {% endif %}
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="info-status-item">
+              <i class="fas fa-map-marker-alt me-2"></i>
+              <span>Location:</span>
+              {% if business.location %}
+                <span class="badge bg-success">Complete</span>
+              {% else %}
+                <span class="badge bg-danger">Missing</span>
+              {% endif %}
+            </div>
+          </div>
         </div>
       </div>
     </div>
   </div>
 </div>
 
+<style>
+  .info-card {
+    grid-column: span 12;
+  }
+
+  @media (min-width: 768px) {
+    .info-card {
+      grid-column: span 6;
+    }
+  }
+
+  .location-info {
+    background: var(--gray-50);
+    padding: 1rem;
+    border-radius: 8px;
+  }
+
+  .info-status-item {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem;
+    background: var(--gray-50);
+    border-radius: 8px;
+    font-weight: 500;
+  }
+
+  .info-status-item span {
+    margin-right: 0.5rem;
+  }
+
+  .badge {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 6px;
+  }
+
+  @media (max-width: 767px) {
+    .bento-container {
+      padding: 0.5rem;
+    }
+    
+    .display-4 {
+      font-size: 2rem;
+    }
+    
+    .lead {
+      font-size: 1rem;
+    }
+  }
+</style>
+
+{% if business.has_gps_location %}
+<!-- Leaflet CSS and JS for Business Map -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+     crossorigin=""/>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+     crossorigin=""></script>
+
+<script>
+  // Global map variable
+  let businessMap;
+
+  // Initialize map with business location
+  function initMap(lat, lon, zoom = 15) {
+    const mapContainer = document.getElementById('business-map');
+    if (!mapContainer) return null;
+    
+    // Set container height
+    mapContainer.style.height = '400px';
+    
+    // Initialize the map
+    businessMap = L.map('business-map').setView([lat, lon], zoom);
+    
+    // Add tile layer
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '© OpenStreetMap contributors',
+      detectRetina: true
+    }).addTo(businessMap);
+    
+    // Add marker
+    L.marker([lat, lon], {
+      icon: L.divIcon({
+        className: 'business-marker',
+        html: '<i class="fas fa-store"></i>',
+        iconSize: [30, 30],
+        iconAnchor: [15, 30],
+        popupAnchor: [0, -30]
+      })
+    })
+    .addTo(businessMap)
+    .bindPopup('{{ business.name|escapejs }}')
+    .openPopup();
+    
+    // Ensure proper rendering
+    setTimeout(() => businessMap.invalidateSize(), 100);
+    
+    return businessMap;
+  }
+
+  // Show error message when location can't be displayed
+  function showLocationError(message) {
+    const mapContainer = document.getElementById('business-map');
+    if (!mapContainer) return;
+    
+    mapContainer.innerHTML = `
+      <div class="d-flex align-items-center justify-content-center h-100 bg-light p-3">
+        <div class="text-center">
+          <i class="fas fa-map-marker-alt fa-2x text-muted mb-3"></i>
+          <p class="text-muted">${message}</p>
+        </div>
+      </div>
+    `;
+  }
+
+  // Initialize map with business location
+  document.addEventListener('DOMContentLoaded', function() {
+    const mapContainer = document.getElementById('business-map');
+    if (!mapContainer) return;
+    
+    {% if business.has_gps_location %}
+      // If we have GPS coordinates, show the map
+      initMap({{ business.location.latitude }}, {{ business.location.longitude }}, 15);
+    {% else %}
+      // If no GPS coordinates, show a message
+      showLocationError('No GPS location available for this business');
+    {% endif %}
+  });
+</script>
+
+<style>
+  .business-marker {
+    background: var(--primary-color);
+    border: 2px solid white;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  }
+
+  .business-popup {
+    max-width: 300px;
+  }
+
+  .business-popup h6 {
+    margin-bottom: 0.5rem;
+    color: var(--primary-color);
+  }
+
+  .business-popup p {
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+  }
+</style>
+{% endif %}
 {% endblock %}

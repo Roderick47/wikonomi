@@ -9,4 +9,5 @@ urlpatterns = [
     path('Business/public/edit/<int:bus_id>',views.BusinessEditView, name='edit'),
     path('business-autocomplete',views.BusinessAutocomplete, name='autocomplete'),
     path('Business/all',views.AllBusinessListView, name='all'),
+    path('Business/my-businesses',views.MyBusinessListView, name='my-businesses'),
     ]

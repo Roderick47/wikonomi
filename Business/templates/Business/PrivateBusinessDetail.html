@@ -1,12 +1,23 @@
 {% extends 'Home/base.html' %}
 
-
 {% block content %}
 
 {% if business %}
 <div class="card">
   <div class="card-body">
-    <h3>{{business.name}}</h3>
+    <div class="d-flex align-items-center gap-3 mb-3">
+      <h3 class="mb-0">{{business.name}}</h3>
+      <!-- Privacy Badge -->
+      {% if not business.is_public %}
+        <span class="badge bg-warning text-dark">
+          <i class="fas fa-lock me-1"></i>Private Business
+        </span>
+      {% else %}
+        <span class="badge bg-info">
+          <i class="fas fa-globe me-1"></i>Public Business
+        </span>
+      {% endif %}
+    </div>
     <p class="card-text">{{business.description}}</p>
     <p>{{business.location}}</p>
     <p>{{business.tags}}</p>

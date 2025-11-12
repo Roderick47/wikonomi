@@ -17,26 +17,33 @@ class ProductPhoto(models.Model):
     photo = models.ImageField(upload_to=get_image_filename, null=True, blank=True)
 
     def save(self, *args, **kwargs):
-        # Open the image using PIL
-        img = Image.open(self.photo)
-        
-        # Convert to RGB mode if not already in that mode
-        if img.mode != "RGB":
-            img = img.convert("RGB")
-        
-        # Set the maximum dimensions for the compressed image
-        max_width = 1024
-        max_height = 768
-        
-        # Check if the image needs to be resized
-        if img.width > max_width or img.height > max_height:
-            # Resize the image while maintaining the aspect ratio
-            img.thumbnail((max_width, max_height))
-            
-            # Save the compressed image back to its original path
-            img.save(self.photo.path)
-
+        # First save the model to ensure the file is properly saved
         super().save(*args, **kwargs)
+        
+        # Only process the image if it exists and has a path
+        if self.photo and hasattr(self.photo, 'path') and self.photo.path:
+            try:
+                # Open the image using PIL
+                img = Image.open(self.photo.path)
+                
+                # Convert to RGB mode if not already in that mode
+                if img.mode != "RGB":
+                    img = img.convert("RGB")
+                
+                # Set the maximum dimensions for the compressed image
+                max_width = 1024
+                max_height = 768
+                
+                # Check if the image needs to be resized
+                if img.width > max_width or img.height > max_height:
+                    # Resize the image while maintaining the aspect ratio
+                    img.thumbnail((max_width, max_height))
+                    
+                    # Save the compressed image back to its original path
+                    img.save(self.photo.path, quality=85, optimize=True)
+            except Exception as e:
+                # Log the error but don't fail the save
+                print(f"Error processing image: {e}")
 
 class BusinessPhoto(models.Model):
     business = models.ForeignKey(Business, on_delete=models.CASCADE)
@@ -46,26 +53,33 @@ class BusinessPhoto(models.Model):
         return str(self.business.name)
 
     def save(self, *args, **kwargs):
-        # Open the image using PIL
-        img = Image.open(self.photo)
-        
-        # Convert to RGB mode if not already in that mode
-        if img.mode != "RGB":
-            img = img.convert("RGB")
-        
-        # Set the maximum dimensions for the compressed image
-        max_width = 1024
-        max_height = 768
-        
-        # Check if the image needs to be resized
-        if img.width > max_width or img.height > max_height:
-            # Resize the image while maintaining the aspect ratio
-            img.thumbnail((max_width, max_height))
-            
-            # Save the compressed image back to its original path
-            img.save(self.photo.path)
-
+        # First save the model to ensure the file is properly saved
         super().save(*args, **kwargs)
+        
+        # Only process the image if it exists and has a path
+        if self.photo and hasattr(self.photo, 'path') and self.photo.path:
+            try:
+                # Open the image using PIL
+                img = Image.open(self.photo.path)
+                
+                # Convert to RGB mode if not already in that mode
+                if img.mode != "RGB":
+                    img = img.convert("RGB")
+                
+                # Set the maximum dimensions for the compressed image
+                max_width = 1024
+                max_height = 768
+                
+                # Check if the image needs to be resized
+                if img.width > max_width or img.height > max_height:
+                    # Resize the image while maintaining the aspect ratio
+                    img.thumbnail((max_width, max_height))
+                    
+                    # Save the compressed image back to its original path
+                    img.save(self.photo.path, quality=85, optimize=True)
+            except Exception as e:
+                # Log the error but don't fail the save
+                print(f"Error processing image: {e}")
 
 @receiver(post_delete, sender=ProductPhoto)
 def submission_delete(sender, instance, **kwargs):

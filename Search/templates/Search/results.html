@@ -2,66 +2,318 @@
 {% load humanize %}
 {% load thumbnail %}
 
+{% block title %}Search Results for "{{query}}" - WIKONOMI{% endblock %}
 
-{% block content%}  
-    <h1 class="text-center">Product Search Results</h1>
-    <h3 class="text-center">for <em>"{{query}}"</em></h3>
-    {% include "Search/filter.html" %}
-    {% if results_list.exists %}
-      <div class="row">
-        {% for product in products %}
-                <div class="col-lg-4">
-                <div class="card my-1 shadow-sm ">
-                    <div class="card-header col m-0 p-0">
-                        <div class="row ">
-                        <div class="col-7">
-                            <p class="font-weight-bold m-0 p-0 ml-1" >{{product.name}}</p>
-                            {% comment %} {% if product.is_recent_update %} {% endcomment %}
-                        </div>
-                        <div class="col-5">
-                            <small class="float-right mr-1 p-0 mb-0  text-muted">[{{product.date_updated|naturaltime}}]</small>
-                            {% comment %} {% else %} {% endcomment %}
-                            {% comment %} <small class="text-right ml-3 p-0 mb-0">[{{product.date_updated.date|naturaltime}}]</small> {% endcomment %}
-                            {% comment %} {% endif %} {% endcomment %}
-                        </div>
-                        </div>
-                    </div>      
-                    <div class="card-body pb-1 mb-0 p-1">
-                        <a href="{% url 'Product:detail' product.id %}"class="stretched-link" ></a>
-                        <div class="row">
-                            <!-- business title -->
-                            <div class="col-9">  
-                            {% comment %} <h6 class="text-responsive"style="" >{{business.name}}</h6>
-                            <p>{{business.location}}</p> {% endcomment %}
-                                {% if product.price %}
-                                <small class="text-responsive m-0 pb-0"><b>Price:</b> K {{product.price|floatformat:2|intcomma}}</small><br>
-                                {% endif %}
-                                {% if product.business %}
-                                <small class="text repsonsive m-0 p-0"  ><b>Vendor:</b> {{product.business.name}}</small><br>
-                                {% endif  %}
-                                {% if product.business.location %} 
-                                <small class="text repsonsive m-0 p-0"  ><b>Location:</b> {{product.business.location}}</small><br>
-                                {% endif %}
-                            </div>
+{% block content %}
+<div class="bento-container">
+  <!-- Search Header -->
+  <div class="bento-grid">
+    <div class="bento-card" style="grid-column: span 12; background: linear-gradient(135deg, var(--warning-color) 0%, var(--accent-color) 100%); color: white; border: none;">
+      <div class="bento-card-body text-center">
+        <h1 class="display-5 fw-bold mb-2">
+          <i class="fas fa-search me-3"></i>Search Results
+        </h1>
+        <p class="lead mb-3">for <em>"{{query}}"</em></p>
+        <div class="d-flex justify-content-center gap-2 flex-wrap">
+          <a href="{% url 'Product:add-general' %}" class="btn btn-light btn-bento">
+            <i class="fas fa-plus me-2"></i>Add Product
+          </a>
+          <a href="{% url 'Search:search' %}" class="btn btn-outline-light btn-bento">
+            <i class="fas fa-search me-2"></i>New Search
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
 
-                            <!-- Product image -->
-                            {% if product.FirstPhoto.photo  %}
+  <!-- Filter Section -->
+  <div class="bento-grid">
+    <div class="bento-card" style="grid-column: span 12;">
+      <div class="bento-card-header">
+        <h5 class="mb-0">
+          <i class="fas fa-filter me-2"></i>Filters
+        </h5>
+      </div>
+      <div class="bento-card-body">
+        {% include "Search/filter.html" %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Search Results -->
+  {% if results_list.exists %}
+    <div class="bento-grid">
+      <div class="bento-card" style="grid-column: span 12;">
+        <div class="bento-card-header">
+          <h5 class="mb-0">
+            <i class="fas fa-list me-2"></i>Found {{products|length}} result{{products|length|pluralize}}
+          </h5>
+        </div>
+        <div class="bento-card-body">
+          <div class="row g-4">
+            {% for product in products %}
+              <div class="col-lg-4 col-md-6">
+                <div class="bento-card h-100 product-card">
+                  <div class="bento-card-body">
+                    <!-- Product Header -->
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                      <h6 class="fw-bold mb-1 text-truncate">{{product.name}}</h6>
+                      <small class="text-muted">{{product.date_updated|naturaltime}}</small>
+                    </div>
+
+                    <!-- Product Image -->
+                    {% if product.FirstPhoto.photo %}
+                      <div class="product-image-container mb-3">
+                        {% thumbnail product.FirstPhoto.photo "200x150" crop="center" as prodImg %}
+                          <img class="img-fluid rounded" src="{{prodImg.url}}" alt="{{product.name}}" style="width: 100%; height: 150px; object-fit: cover;">
+                        {% endthumbnail %}
+                      </div>
+                    {% else %}
+                      <div class="product-image-placeholder mb-3">
+                        <div class="d-flex align-items-center justify-content-center bg-light rounded" style="height: 150px;">
+                          <i class="fas fa-image fa-2x text-muted"></i>
+                        </div>
+                      </div>
+                    {% endif %}
+
+                    <!-- Product Details -->
+                    <div class="product-details">
+                      {% if product.price %}
+                        <div class="price-info mb-2">
+                          <div class="current-price-with-change">
+                            <span class="fw-bold text-primary">K{{product.price|floatformat:2|intcomma}}</span>
                             
-                            <div class="col-3 ">
-                                {% thumbnail product.FirstPhoto.photo "50x50" as prodImg %}
-                                <img class=" img img-fluid rounded float-right" src={{prodImg.url}} alt={{product.name}} style="max-width:85px; margin-left:10px;">
-                                {% endthumbnail %}
-                            </div>
+                            <!-- Price change indicator next to current price -->
+                            {% if product.get_price_change is not None %}
+                              <span class="price-change-badge ms-2">
+                                {% if product.get_price_change > 0 %}
+                                  <i class="fas fa-arrow-up text-danger"></i>
+                                  <span class="text-danger">+K{{product.get_price_change|floatformat:2|intcomma}}</span>
+                                {% elif product.get_price_change < 0 %}
+                                  <i class="fas fa-arrow-down text-success"></i>
+                                  <span class="text-success">K{{product.get_price_change|floatformat:2|intcomma}}</span>
+                                {% else %}
+                                  <i class="fas fa-minus text-secondary"></i>
+                                  <span class="text-secondary">No Change</span>
+                                {% endif %}
+                              </span>
                             {% endif %}
+                          </div>
+                          
+                          <!-- Last price below current price -->
+                          {% if product.get_last_price %}
+                            <div class="last-price-info">
+                              <small class="text-muted">
+                                <i class="fas fa-history me-1"></i>Last: K{{product.get_last_price|floatformat:2|intcomma}}
+                              </small>
+                            </div>
+                          {% endif %}
                         </div>
-                    </div>    
+                      {% endif %}
+
+                      {% if product.business %}
+                        <div class="vendor-info mb-2">
+                          <small class="text-muted">
+                            <i class="fas fa-store me-1"></i>{{product.business.name}}
+                          </small>
+                        </div>
+                      {% endif %}
+
+                      {% if product.business.location %}
+                        <div class="location-info mb-3">
+                          <small class="text-muted">
+                            <i class="fas fa-map-marker-alt me-1"></i>{{product.business.location}}
+                          </small>
+                        </div>
+                      {% endif %}
+                    </div>
+
+                    <!-- View Button -->
+                    <div class="mt-3">
+                      <a href="{% url 'Product:detail' product.id %}" class="btn btn-primary-bento btn-bento w-100">
+                        <i class="fas fa-eye me-2"></i>View Details
+                      </a>
+                    </div>
+                  </div>
                 </div>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+  {% else %}
+    <!-- No Results -->
+    <div class="bento-grid">
+      <div class="bento-card" style="grid-column: span 12;">
+        <div class="empty-state">
+          <i class="fas fa-search"></i>
+          <h2>No Results Found</h2>
+          <p class="lead">Sorry, we couldn't find any products matching "{{query}}"</p>
+          <div class="d-flex justify-content-center gap-3 flex-wrap">
+            <a href="{% url 'Product:add-general' %}" class="btn btn-primary-bento btn-bento">
+              <i class="fas fa-plus me-2"></i>Add This Product
+            </a>
+            <a href="{% url 'Search:search' %}" class="btn btn-secondary-bento btn-bento">
+              <i class="fas fa-search me-2"></i>Try Different Search
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+
+  <!-- Search Suggestions -->
+  <div class="bento-grid">
+    <div class="bento-card" style="grid-column: span 12;">
+      <div class="bento-card-header">
+        <h5 class="mb-0">
+          <i class="fas fa-lightbulb me-2 text-warning"></i>Search Tips
+        </h5>
+      </div>
+      <div class="bento-card-body">
+        <div class="row g-3">
+          <div class="col-md-4">
+            <div class="tip-card">
+              <div class="tip-icon">
+                <i class="fas fa-keyboard"></i>
+              </div>
+              <h6>Use Keywords</h6>
+              <p>Try different keywords or synonyms for better results.</p>
             </div>
-        {% endfor %}
+          </div>
+          <div class="col-md-4">
+            <div class="tip-card">
+              <div class="tip-icon">
+                <i class="fas fa-tags"></i>
+              </div>
+              <h6>Check Tags</h6>
+              <p>Browse product tags to discover related items.</p>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="tip-card">
+              <div class="tip-icon">
+                <i class="fas fa-plus"></i>
+              </div>
+              <h6>Add Products</h6>
+              <p>If you can't find what you're looking for, add it yourself!</p>
+            </div>
+          </div>
         </div>
-    {% else %}
-        <div class="alert alert-warning">
-            <p class="text-center pt-4">Hmmm, sorry no results :(</p>
-        </div>
-    {% endif %}
-{% endblock content %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .product-card {
+    transition: all 0.3s ease;
+    cursor: pointer;
+  }
+
+  .product-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-xl);
+  }
+
+  .product-image-container {
+    position: relative;
+    overflow: hidden;
+    border-radius: 8px;
+  }
+
+  .product-image-placeholder {
+    border-radius: 8px;
+  }
+
+  .price-info {
+    font-size: 1.1rem;
+  }
+
+  .current-price-with-change {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .vendor-info, .location-info {
+    font-size: 0.875rem;
+  }
+
+  .last-price-info {
+    margin-top: 0.25rem;
+    padding: 0.25rem 0;
+  }
+
+  .price-change-info {
+    margin-top: 0.25rem;
+    padding: 0.25rem 0;
+  }
+
+  .price-change-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+  }
+
+  .price-change-badge i {
+    font-size: 0.7rem;
+  }
+
+  .tip-card {
+    text-align: center;
+    padding: 1.5rem 1rem;
+    height: 100%;
+    background: var(--gray-50);
+    border-radius: 12px;
+    transition: all 0.3s ease;
+  }
+
+  .tip-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+  }
+
+  .tip-icon {
+    width: 50px;
+    height: 50px;
+    background: var(--warning-color);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1rem;
+    color: white;
+    font-size: 1.25rem;
+  }
+
+  .tip-card h6 {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+  }
+
+  .tip-card p {
+    font-size: 0.875rem;
+    color: var(--gray-600);
+    margin-bottom: 0;
+  }
+
+  @media (max-width: 767px) {
+    .bento-container {
+      padding: 0.5rem;
+    }
+    
+    .display-5 {
+      font-size: 1.75rem;
+    }
+    
+    .lead {
+      font-size: 1rem;
+    }
+  }
+</style>
+{% endblock %}

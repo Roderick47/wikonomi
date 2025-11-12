@@ -58,13 +58,15 @@ def AdvancedSearchResultsView(request):
 
 
 def SearchAutocomplete(request):
-    if 'term' in request.GET:
-        query = request.GET.get('term')
-        qs = Product.objects.filter(name__icontains=query)
-        prod_names = list()
-        for product in qs:
-            prod_names.append(product.name)
-        return JsonResponse(prod_names,safe=False)
+    if 'q' in request.GET:
+        query = request.GET.get('q')
+        if len(query) >= 2:  # Only search if query is 2+ characters
+            qs = Product.objects.filter(name__icontains=query)[:10]  # Limit to 10 results
+            return render(request, 'Search/autocomplete_suggestions.html', {
+                'products': qs,
+                'query': query
+            })
+    return render(request, 'Search/autocomplete_suggestions.html', {'products': [], 'query': ''})
 
 
 

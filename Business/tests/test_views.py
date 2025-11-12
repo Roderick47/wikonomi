@@ -5,6 +5,7 @@ from Business.forms import BusinessAddForm
 from Product.models import Product
 
 from Business.models import Business
+from Location.models import Location
 from django.contrib.auth.models import User
 from urllib.parse import urlencode
 import tempfile
@@ -15,16 +16,23 @@ from django.db.models.query import QuerySet
 class TestViews(TestCase):
     def setUp(self):
         self.client = Client()
+        # Create test location
+        self.test_location = Location.objects.create(
+            latitude=0.0,
+            longitude=0.0
+        )
+        # Create test business with Location instance
         self.test_business = Business.objects.create(
             name = 'test_business',
             description = 'business_description',
-            location = 'business_location',
+            location = self.test_location,
         )
-        self.test_user = User.objects.create(username="test_user",password="test_password")
+        self.test_user = User.objects.create_user(username="test_user", password="test_password")
         self.test_product = Product.objects.create(
             name="test_product",
             price=10,description="test_description",
             business=self.test_business,
+            author=self.test_user,
             )
         self.file = tempfile.NamedTemporaryFile()
 
@@ -32,7 +40,7 @@ class TestViews(TestCase):
     def test_BusinessAddView__GET__not_logged_in(self):
         url = reverse('Business:add')
         response = self.client.get(url)
-        redirect_url = '{}?{}'.format(reverse("Profile:login"), urlencode({"next":url}))
+        redirect_url = '{}?{}'.format(reverse("account_login"), urlencode({"next":url}))
         self.assertRedirects(response,redirect_url,302,200)
 
     # Tests for BusinessAddView
@@ -47,7 +55,7 @@ class TestViews(TestCase):
     def test_BusinessAddView__POST__not_logged_in(self):
         url = reverse("Business:add")
         response = self.client.post(url)
-        redirect_url = '{}?{}'.format(reverse("Profile:login"), urlencode({"next":url}))
+        redirect_url = '{}?{}'.format(reverse("account_login"), urlencode({"next":url}))
         self.assertRedirects(response,redirect_url,302,200)
 
     def test_BusinessAddView__POST__with_wrong_data(self):
@@ -80,7 +88,7 @@ class TestViews(TestCase):
     def test_BusinessEditView_GET_not_logged_in(self):
         url = reverse("Business:edit",kwargs={"bus_id":self.test_business.id})
         response = self.client.get(url)
-        redirect_url = '{}?{}'.format(reverse("Profile:login"), urlencode({"next":url}))
+        redirect_url = '{}?{}'.format(reverse("account_login"), urlencode({"next":url}))
         self.assertRedirects(response,redirect_url,302,200)
 
     def test_BusinessEditView_GET_logged_in(self):
@@ -132,7 +140,7 @@ class TestViews(TestCase):
     def test_PrivateBusinessAddView__GET__not_logged_in(self):
         url = reverse('Business:add-private')
         response = self.client.get(url)
-        redirect_url = '{}?{}'.format(reverse("Profile:login"), urlencode({"next":url}))
+        redirect_url = '{}?{}'.format(reverse("account_login"), urlencode({"next":url}))
         self.assertRedirects(response,redirect_url,302,200)
 
     def test_PrivateBusinessAddView__GET__logged_in(self):

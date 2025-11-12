@@ -1,71 +1,89 @@
-from django.db.models.signals import post_save
-from django.core.signals import request_started
+from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
+from django.db import transaction
+from django.utils import timezone
+
 from Product.models import Product
-from History.models import ProductHistory
-from .models import Notification
-from django.contrib.auth.models import User
 from Comment.models import ProductComment
 from Follow.models import ProductSubscription
+from .models import Notification
 
-# Notifications for products ###
+@receiver(pre_save, sender=Product)
+def track_price_changes(sender, instance, **kwargs):
+    """Track product price changes to notify followers."""
+    if not instance.pk:
+        return  # New product, no price change yet
+        
+    try:
+        old_instance = sender.objects.get(pk=instance.pk)
+        instance._old_price = old_instance.price
+    except sender.DoesNotExist:
+        pass
 
-# Notification if a product has been saved. Nothing if just created.
-@receiver(post_save,sender=Product)
-def ProductEditNotification(sender,instance,**kwargs):
-    ph = ProductHistory.objects.filter(product=instance).order_by('id').last()
-    if ph:
-        if instance.author.username != ph.current_author:
-            if instance.price != ph.price:
-                change_value = (abs(instance.price-ph.price)/ph.price)*100
-                if instance.price > ph.price:
-                    rmessage = "'{product}' increased by {change_value}% to '{product_price}'"
-                else:
-                    rmessage = "'{product}' decreased by {change_value}% to '{product_price}'"
-                    
-                try:
-                    user_to_notify = User.objects.get(username=ph.current_author)
-                    fmessage = rmessage.format(product=instance.name,change_value=change_value,product_price=instance.price)
-                    Notification.objects.create(user=user_to_notify,text=fmessage,product=instance)
-                except User.DoesNotExist: pass
-            else:
-                try:
-                    user_to_notify = User.objects.get(username=ph.current_author)
-                    rmessage = "'{product}' has been edited by '{product_author}'.click to see changes."
-                    fmessage = rmessage.format(product=instance.name,product_author=instance.author)
-                    Notification.objects.create(user=user_to_notify,text=fmessage,product=instance)
-                except User.DoesNotExist: pass
-
-
-
-@receiver(post_save,sender=Product)
-def FollowPriceChange(sender,instance,**kwargs):
-    if instance.price_change():
-        subscriptions = ProductSubscription.objects.filter(product=instance)
-        rmessage =  "'{product}' price is now'{product_price}'.click to see changes."
-        fmessage = rmessage.format(
-            product=instance.name,
-            product_price = instance.price, 
-            product_author=instance.author
+@receiver(post_save, sender=Product)
+def notify_price_changes(sender, instance, created, **kwargs):
+    """Notify followers when a product's price changes."""
+    if created or not hasattr(instance, '_old_price'):
+        return
+        
+    if instance.price != instance._old_price:
+        # Get all users who follow this product
+        followers = ProductSubscription.objects.filter(
+            product=instance
+        ).select_related('user')
+        
+        # Create notifications in bulk
+        notifications = []
+        for subscription in followers:
+            notifications.append(
+                Notification.create_price_change_notification(
+                    user=subscription.user,
+                    product=instance,
+                    old_price=instance._old_price,
+                    new_price=instance.price
+                )
             )
-        for subscription in subscriptions:
-            Notification.objects.create(user= subscription.user, text=fmessage, product=instance)
+        
+        # Clear the temporary attribute
+        del instance._old_price
 
-
-
-
-# @receiver(request_started)
-# def notification_is
-
-
-### Notifications for comments ###
-# notitification if a product has a commment.
-# @receiver(post_save,sender=ProductComment)
-# def ProductCommentNotification(sender,created,instance,**kwargs):
-#     if created:
-#         if comment.has_replies
-#         comment = instance
+@receiver(post_save, sender=ProductComment)
+def handle_comment_notifications(sender, instance, created, **kwargs):
+    """Handle notifications for new comments and replies."""
+    if not created:
+        return
     
+    # Handle comment replies
+    if instance.parent_comment:
+        # Notify the parent comment's author about the reply
+        Notification.create_comment_reply_notification(
+            comment=instance,
+            parent_comment=instance.parent_comment
+        )
+    
+    # Notify all users who follow this product about the new comment
+    # (excluding the comment author)
+    followers = ProductSubscription.objects.filter(
+        product=instance.product
+    ).exclude(
+        user=instance.author  # Don't notify the commenter about their own comment
+    ).select_related('user')
+    
+    Notification.create_new_comment_notification(
+        comment=instance,
+        product_followers=followers
+    )
 
-
-
+@receiver(post_save, sender=ProductSubscription)
+def notify_new_follower(sender, instance, created, **kwargs):
+    """(Optional) Notify product owners when someone follows their product."""
+    if created and instance.product.author != instance.user:
+        Notification.objects.create(
+            user=instance.product.author,
+            notification_type=Notification.NEW_FOLLOWER,
+            product=instance.product,
+            data={
+                'follower_username': instance.user.username,
+                'product_name': instance.product.name
+            }
+        )

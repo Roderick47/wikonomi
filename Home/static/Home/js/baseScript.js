@@ -1,12 +1,3 @@
-
-    /* Functions for autocomplete.*/
-    $(function(){
-        $("#search").autocomplete({
-            source:"{% url 'Search:autocomplete' %}",
-            minLength: 2,
-        });
-    });
-
 /* Initialize all tool tips */
 // $(function(){
 //     $('[data-toggle="tooltip"]').tooltip()

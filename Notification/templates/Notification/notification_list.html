@@ -1,33 +1,65 @@
 {% extends "Home/base.html" %}
 
 {% block content %}
-    <div >
-        <h4> Notifications </h4>
-        <div class="row">
-            <p>
-            <a class="text-dark " href="{% url 'Notification:read-all' %}">Mark all as read</a>
-            <a class="text-dark mx-3"   href="{% url 'Notification:delete-all' %}">Clear All</a>
-            </p>
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4>Notifications</h4>
+        <div>
+            <a href="{% url 'Notification:mark_all_read' %}" class="btn btn-outline-primary btn-sm me-2">
+                <i class="fas fa-check-circle me-1"></i>Mark all as read
+            </a>
+            <form action="{% url 'Notification:delete_all' %}" method="post" class="d-inline">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-outline-danger btn-sm" 
+                        onclick="return confirm('Are you sure you want to delete all notifications?')">
+                    <i class="fas fa-trash-alt me-1"></i>Clear All
+                </button>
+            </form>
         </div>
-        {% for notification in notifications %}
-            <div class="row">
-                {% if notification.product %}
-                <div class="card bg-light my-1 {% if notification.is_viewed %}text-muted{% else %}text-dark{% endif %} ">
-                    <div class="card-body">
-                            <p>{{notification.text}}</p>
-                            <a class="stretched-link" href="{% url 'Product:detail' notification.product.id %}"></a>
-                            {% comment %}
-                        {% elif notification.business %}
-                            <a class="stretched-link" href="{% url 'Business:detail' notification.business.id %}"></a>
-                        {% elif  notification.product_comment%}
-                             <a class="stretched-link" href="{% url ':detail' notification.product.id %}"></a> {% endcomment %}
-                             
-                    </div>
-                </div>
-                {% endif %}
-            </div>
-            
-        {% endfor %}
-
     </div>
-{% endblock content %}
+
+    <div class="list-group">
+        {% for notification in notifications %}
+            <a href="{% url 'Notification:mark_read' notification.id %}" 
+               class="list-group-item list-group-item-action {% if not notification.is_read %}list-group-item-primary{% endif %}">
+                <div class="d-flex w-100 justify-content-between">
+                    <h6 class="mb-1">
+                        {% if notification.notification_type == 'price_change' %}
+                            <i class="fas fa-tag me-2"></i>Price Update
+                        {% elif notification.notification_type == 'price_drop' %}
+                            <i class="fas fa-arrow-down me-2 text-danger"></i>Price Drop!
+                        {% elif notification.notification_type == 'comment_reply' %}
+                            <i class="fas fa-reply me-2"></i>New Reply
+                        {% elif notification.notification_type == 'new_comment' %}
+                            <i class="fas fa-comment me-2"></i>New Comment
+                        {% endif %}
+                    </h6>
+                    <small class="text-muted">{{ notification.created_at|timesince }} ago</small>
+                </div>
+                
+                <p class="mb-1">
+                    {% if notification.notification_type == 'price_change' or notification.notification_type == 'price_drop' %}
+                        Price of {{ notification.product.name }} changed from 
+                        ${{ notification.data.old_price }} to ${{ notification.data.new_price }}
+                        ({{ notification.data.change_percent|floatformat:2 }}%)
+                    {% elif notification.notification_type == 'comment_reply' %}
+                        {{ notification.data.replier_username }} replied to your comment on {{ notification.product.name }}
+                    {% elif notification.notification_type == 'new_comment' %}
+                        {{ notification.data.commenter_username }} commented on {{ notification.product.name }}
+                    {% endif %}
+                </p>
+                
+                {% if notification.comment and notification.comment.content %}
+                    <div class="mt-2 p-2 bg-light rounded">
+                        <small class="text-muted">"{{ notification.comment.content|truncatechars:100 }}"</small>
+                    </div>
+                {% endif %}
+            </a>
+        {% empty %}
+            <div class="alert alert-info">
+                <i class="fas fa-inbox me-2"></i>You don't have any notifications yet.
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

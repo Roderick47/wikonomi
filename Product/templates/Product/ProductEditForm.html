@@ -59,8 +59,8 @@
 
   // Function to update the form fields with the browser location
   function showPosition(position) {
-    document.getElementById("id_latitude").value = position.coords.latitude;
-    document.getElementById("id_longitude").value = position.coords.longitude;
+    document.getElementById("{{ locationForm.latitude.id_for_label }}").value = position.coords.latitude;
+    document.getElementById("{{ locationForm.longitude.id_for_label }}").value = position.coords.longitude;
   }
 
   // Event listener for the checkbox
@@ -70,8 +70,8 @@
       getLocation();
     } else {
       // If checkbox is unchecked, clear the latitude and longitude fields
-      document.getElementById("id_latitude").value = "";
-      document.getElementById("id_longitude").value = "";
+      document.getElementById("{{ locationForm.latitude.id_for_label }}").value = "";
+      document.getElementById("{{ locationForm.longitude.id_for_label }}").value = "";
     }
   });
   </script>

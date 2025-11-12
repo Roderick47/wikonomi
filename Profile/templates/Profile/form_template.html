@@ -30,9 +30,7 @@
 
           {% for field in form %}
           <p>
-
               {{field.label_tag}} {{field}}
-              {% extra_logic %}
 
               {% if field.help_text %}
               <small class="form-text text-muted" style="color:#227faa">{{ field.help_text|safe }}</small>
@@ -41,17 +39,19 @@
               {% for error in field.errors %}
               <br><span class="text-danger small">{{error}}</span>
               {% endfor %}
-
           </p>
           {% endfor %}
+
+          {% if formset %}
           {{formset.management_form}}
           <p>
           {% for form in formset %}
               {{form}}
           {% endfor %}</p>
+          {% endif %}
 
 
-          <!-- Sumbit button of the form -->
+          <!-- Submit button of the form -->
           <button type="submit" class="btn btn-success btn-block">{% block button %}Submit{% endblock %}</button>
           <hr>
 

@@ -1,5 +1,527 @@
-{% extends 'Home/form_template.html' %}
+{% extends 'Home/base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
 
-{% block title %}
-  You are editing '{{business.name}}' page details
+{% block title %}Edit {{ business.name }} - WIKONOMI{% endblock %}
+
+{% block content %}
+<div class="bento-container">
+  <!-- Hero Section -->
+  <div class="bento-grid">
+    <div class="bento-card" style="grid-column: span 12; background: linear-gradient(135deg, var(--success-color) 0%, var(--accent-color) 100%); color: white; border: none;">
+      <div class="bento-card-body text-center">
+        <h1 class="display-4 fw-bold mb-3">
+          <i class="fas fa-edit me-3"></i>Edit Business
+        </h1>
+        <p class="lead mb-4">Update your business information</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Form Section -->
+  <div class="bento-grid">
+    <div class="bento-card" style="grid-column: span 12;">
+      <div class="bento-card-header">
+        <h3 class="mb-0">
+          <i class="fas fa-edit me-2 text-primary"></i>Business Information
+        </h3>
+        <p class="text-muted mb-0">Update your business details below</p>
+      </div>
+      <div class="bento-card-body">
+        {% if messages %}
+          {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+              {{ message }}
+              <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+          {% endfor %}
+        {% endif %}
+
+        <form method="post" enctype="multipart/form-data" id="business-form">
+          {% csrf_token %}
+          
+          <!-- Business Details -->
+          <div class="row g-4">
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="{{ form.name.id_for_label }}" class="form-label">
+                  <i class="fas fa-store me-1"></i>Business Name *
+                </label>
+                {{ form.name }}
+                {% if form.name.errors %}
+                  <div class="text-danger small">{{ form.name.errors.0 }}</div>
+                {% endif %}
+              </div>
+            </div>
+            
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="{{ form.image.id_for_label }}" class="form-label">
+                  <i class="fas fa-image me-1"></i>Business Image
+                </label>
+                {{ form.image }}
+                {% if form.image.errors %}
+                  <div class="text-danger small">{{ form.image.errors.0 }}</div>
+                {% endif %}
+                {% if business.image %}
+                  <div class="mt-2">
+                    <img src="{{ business.image.url }}" alt="Current business image" class="img-thumbnail" style="max-height: 100px;">
+                  </div>
+                {% endif %}
+              </div>
+            </div>
+            
+            <div class="col-12">
+              <div class="form-group">
+                <label for="{{ form.description.id_for_label }}" class="form-label">
+                  <i class="fas fa-align-left me-1"></i>Description
+                </label>
+                {{ form.description }}
+                {% if form.description.errors %}
+                  <div class="text-danger small">{{ form.description.errors.0 }}</div>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+
+          <!-- Location Section -->
+          <div class="location-section mt-4">
+            <h5 class="mb-3">
+              <i class="fas fa-map-marker-alt me-2 text-warning"></i>GPS Location
+            </h5>
+
+            <div class="alert alert-info">
+              <i class="fas fa-info-circle me-2"></i>
+              <strong>GPS Location:</strong> Your device's GPS will be used to get your business location. This provides the most accurate location for customers.
+            </div>
+
+            <div class="row g-3">
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="{{ form.location.id_for_label }}" class="form-label">
+                    <i class="fas fa-map me-1"></i>Address (Auto-filled from GPS)
+                  </label>
+                  {{ form.location }}
+                  {% if form.location.errors %}
+                    <div class="text-danger small">{{ form.location.errors.0 }}</div>
+                  {% endif %}
+                  <small class="text-muted">Address will be automatically filled from your device's GPS coordinates</small>
+                </div>
+              </div>
+
+              <div class="col-md-3">
+                <div class="form-group">
+                  <label class="form-label">
+                    <i class="fas fa-coordinates me-1"></i>Latitude
+                  </label>
+                  <input type="number" class="form-control" id="latitude" name="latitude"
+                         step="any" placeholder="GPS coordinates" readonly
+                         value="{{ business.location.latitude|default:'' }}">
+                </div>
+              </div>
+
+              <div class="col-md-3">
+                <div class="form-group">
+                  <label class="form-label">
+                    <i class="fas fa-coordinates me-1"></i>Longitude
+                  </label>
+                  <input type="number" class="form-control" id="longitude" name="longitude"
+                         step="any" placeholder="GPS coordinates" readonly
+                         value="{{ business.location.longitude|default:'' }}">
+                </div>
+              </div>
+            </div>
+
+            <div class="location-status mt-3">
+              <div id="location-status" class="alert alert-info" style="display: none;">
+                <i class="fas fa-spinner fa-spin me-2"></i>
+                <span id="location-message">Getting your GPS location...</span>
+              </div>
+            </div>
+
+            <div class="text-center mt-3">
+              <button type="button" class="btn btn-primary-bento btn-bento" id="get-location-btn">
+                <i class="fas fa-crosshairs me-2"></i>Get GPS Location
+              </button>
+              <button type="button" class="btn btn-outline-info btn-bento ms-2" id="toggle-map-btn">
+                <i class="fas fa-map me-2"></i>Select on Map
+              </button>
+              <small class="d-block text-muted mt-2">Choose GPS detection or click on map to select location</small>
+            </div>
+
+            <!-- Interactive Map Section -->
+            <div class="map-section mt-4" id="map-section" style="display: none;">
+              <h6 class="mb-3">
+                <i class="fas fa-map-marked-alt me-2 text-info"></i>Click on Map to Select Location
+              </h6>
+              <div id="map" style="height: 400px; border-radius: 8px; overflow: hidden;"></div>
+              <div class="d-flex justify-content-between mt-2">
+                <small class="text-muted">Click on the map to set the location</small>
+                <button type="button" class="btn btn-sm btn-outline-secondary" id="clear-location">
+                  <i class="fas fa-times me-1"></i>Clear Location
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="d-flex justify-content-between mt-4">
+            <a href="{% url 'Business:detail' business.id %}" class="btn btn-outline-secondary">
+              <i class="fas fa-arrow-left me-1"></i>Cancel
+            </a>
+            <button type="submit" class="btn btn-primary">
+              <i class="fas fa-save me-1"></i>Save Changes
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Include Leaflet CSS and JS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+   integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/mZEZPo5RsVZpK1Z5w=="
+   crossorigin=""/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+   integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+   crossorigin=""></script>
+
+<style>
+  .location-section {
+    background: var(--gray-50);
+    padding: 1.5rem;
+    border-radius: 12px;
+    border: 1px solid var(--gray-200);
+  }
+
+  .form-group {
+    margin-bottom: 1rem;
+  }
+
+  .form-label {
+    font-weight: 600;
+    color: var(--gray-700);
+    margin-bottom: 0.5rem;
+  }
+
+  .form-control {
+    border: 2px solid var(--gray-200);
+    border-radius: 8px;
+    padding: 0.75rem;
+    transition: border-color 0.2s ease;
+  }
+
+  .form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.25rem rgba(99, 102, 241, 0.1);
+  }
+
+  #map {
+    border-radius: 8px;
+    border: 2px solid var(--gray-200);
+    z-index: 1;
+    width: 100%;
+  }
+  
+  .location-marker {
+    background: var(--primary-color);
+    border: 2px solid white;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  }
+  
+  .location-marker::after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 0;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-top: 10px solid var(--primary-color);
+    bottom: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+  
+  .btn-bento {
+    border-radius: 8px;
+    padding: 0.5rem 1.25rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+  }
+  
+  .btn-primary-bento {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    color: white;
+  }
+  
+  .btn-primary-bento:hover {
+    background-color: var(--primary-dark);
+    border-color: var(--primary-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  }
+  
+  .btn-outline-info {
+    color: var(--info-color);
+    border-color: var(--info-color);
+  }
+  
+  .btn-outline-info:hover {
+    background-color: var(--info-color);
+    color: white;
+  }
+</style>
+
+<script>
+  // Global variables
+  let map;
+  let marker;
+  let currentLocation = null;
+  let userLocationObtained = false;
+  let mapLocationSelected = false;
+  let locationPermissionGranted = false;
+
+  // Show location status message
+  function showLocationStatus(message, type = 'info') {
+    const statusDiv = document.getElementById('location-status');
+    const messageSpan = document.getElementById('location-message');
+    
+    if (statusDiv && messageSpan) {
+      statusDiv.className = `alert alert-${type} p-2 mb-0`;
+      messageSpan.textContent = message;
+      statusDiv.style.display = 'block';
+    }
+  }
+
+  // Hide location status message
+  function hideLocationStatus() {
+    const statusDiv = document.getElementById('location-status');
+    if (statusDiv) {
+      statusDiv.style.display = 'none';
+    }
+  }
+
+  // Update coordinates and address
+  function updateCoordinates(lat, lng, source = 'gps') {
+    document.getElementById('latitude').value = lat;
+    document.getElementById('longitude').value = lng;
+    currentLocation = { lat, lng };
+
+    // Update map if available
+    if (map) {
+      updateMapLocation(lat, lng);
+    }
+
+    // Try to get address from coordinates
+    getAddressFromCoordinates(lat, lng);
+
+    // Track which method was used
+    if (source === 'gps') {
+      userLocationObtained = true;
+      showLocationStatus(`Location set: ${lat.toFixed(6)}, ${lng.toFixed(6)}`, 'success');
+    } else if (source === 'map') {
+      mapLocationSelected = true;
+      showLocationStatus(`Location updated: ${lat.toFixed(6)}, ${lng.toFixed(6)}`, 'success');
+    }
+  }
+
+  // Get address from coordinates using Nominatim
+  function getAddressFromCoordinates(lat, lng) {
+    showLocationStatus('Getting address from coordinates...', 'info');
+
+    fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`, {
+      headers: {
+        'User-Agent': 'Wikonomi/1.0 (business-location)'
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.display_name) {
+        document.getElementById('id_location').value = data.display_name;
+        showLocationStatus('Address updated from coordinates', 'success');
+      } else {
+        showLocationStatus('Could not determine address from coordinates', 'warning');
+      }
+    })
+    .catch(error => {
+      console.error('Error getting address from coordinates:', error);
+      showLocationStatus('Error getting address', 'danger');
+    });
+  }
+
+  // Request location permission
+  function requestLocationPermission() {
+    showLocationStatus('Requesting location permission...', 'info');
+    
+    return new Promise((resolve) => {
+      if (!navigator.geolocation) {
+        showLocationStatus('Geolocation is not supported by your browser', 'warning');
+        resolve(false);
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          updateCoordinates(latitude, longitude, 'gps');
+          resolve(true);
+        },
+        (error) => {
+          let errorMessage = 'Unable to retrieve your location';
+          switch(error.code) {
+            case error.PERMISSION_DENIED:
+              errorMessage = 'Location permission denied. Please enable location services in your browser settings.';
+              break;
+            case error.POSITION_UNAVAILABLE:
+              errorMessage = 'Location information is unavailable.';
+              break;
+            case error.TIMEOUT:
+              errorMessage = 'The request to get your location timed out.';
+              break;
+          }
+          showLocationStatus(errorMessage, 'warning');
+          resolve(false);
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0
+        }
+      );
+    });
+  }
+
+  // Clear location data
+  function clearLocationData() {
+    document.getElementById('id_location').value = '';
+    document.getElementById('latitude').value = '';
+    document.getElementById('longitude').value = '';
+    currentLocation = null;
+    userLocationObtained = false;
+    mapLocationSelected = false;
+    
+    if (map && marker) {
+      map.removeLayer(marker);
+    }
+    
+    showLocationStatus('Location data cleared', 'info');
+  }
+
+  // Update map location
+  function updateMapLocation(lat, lng) {
+    if (!map) return;
+    
+    const newLatLng = L.latLng(lat, lng);
+    
+    if (marker) {
+      marker.setLatLng(newLatLng);
+    } else {
+      marker = L.marker(newLatLng, {
+        draggable: true,
+        icon: L.divIcon({
+          className: 'location-marker',
+          iconSize: [20, 20],
+          iconAnchor: [10, 20],
+          popupAnchor: [0, -20]
+        })
+      }).addTo(map);
+      
+      marker.on('dragend', function(event) {
+        const position = marker.getLatLng();
+        updateCoordinates(position.lat, position.lng, 'map');
+      });
+    }
+    
+    map.setView(newLatLng, 15);
+  }
+
+  // Initialize the map
+  function initMap() {
+    const mapElement = document.getElementById('map');
+    if (!mapElement) return;
+    
+    // Use existing coordinates if available, otherwise default to a world view
+    const initialLat = parseFloat('{{ business.location.latitude|default:0 }}') || 0;
+    const initialLng = parseFloat('{{ business.location.longitude|default:0 }}') || 0;
+    const initialZoom = (initialLat && initialLng) ? 15 : 2;
+    
+    map = L.map('map').setView([initialLat || 0, initialLng || 0], initialZoom);
+    
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '© OpenStreetMap contributors',
+      detectRetina: true
+    }).addTo(map);
+    
+    // Add marker if we have coordinates
+    if (initialLat && initialLng) {
+      updateMapLocation(initialLat, initialLng);
+      updateCoordinates(initialLat, initialLng, 'map');
+    }
+    
+    // Add click handler to set location
+    map.on('click', function(e) {
+      updateCoordinates(e.latlng.lat, e.latlng.lng, 'map');
+    });
+    
+    // Handle map resize
+    setTimeout(() => map.invalidateSize(), 100);
+  }
+
+  // Toggle map visibility
+  function toggleMap() {
+    const mapSection = document.getElementById('map-section');
+    if (mapSection) {
+      const isVisible = mapSection.style.display !== 'none';
+      mapSection.style.display = isVisible ? 'none' : 'block';
+      
+      // Only initialize map when it becomes visible
+      if (!isVisible) {
+        setTimeout(() => {
+          initMap();
+        }, 100);
+      }
+    }
+  }
+
+  // Initialize when DOM is loaded
+  document.addEventListener('DOMContentLoaded', function() {
+    // Get location button
+    const getLocationBtn = document.getElementById('get-location-btn');
+    if (getLocationBtn) {
+      getLocationBtn.addEventListener('click', requestLocationPermission);
+    }
+    
+    // Toggle map button
+    const toggleMapBtn = document.getElementById('toggle-map-btn');
+    if (toggleMapBtn) {
+      toggleMapBtn.addEventListener('click', toggleMap);
+    }
+    
+    // Clear location button
+    const clearLocationBtn = document.getElementById('clear-location');
+    if (clearLocationBtn) {
+      clearLocationBtn.addEventListener('click', clearLocationData);
+    }
+    
+    // If we have existing coordinates, show the map by default
+    const latInput = document.getElementById('latitude');
+    const lngInput = document.getElementById('longitude');
+    if (latInput && lngInput && latInput.value && lngInput.value) {
+      toggleMap();
+    }
+    
+    // Form submission
+    const form = document.getElementById('business-form');
+    if (form) {
+      form.addEventListener('submit', function(e) {
+        // Add any form validation here if needed
+      });
+    }
+  });
+</script>
 {% endblock %}

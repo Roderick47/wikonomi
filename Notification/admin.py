@@ -4,7 +4,7 @@ from .models import Notification
 
 
 class NotificationAdmin(admin.ModelAdmin):
-    list_display = ('__str__','date','user','is_viewed')
+    list_display = ('__str__','created_at','user','is_read','product','comment','data')
     search_fields = ['user']
     # actions = []
     # def action(self,request,queryset)

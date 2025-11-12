@@ -1,5 +1,523 @@
-{% extends 'Home/form_template.html' %}
+{% extends 'Home/base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
 
-{% block title %}
-  Add A New Product to {{business.name}}
+{% block title %}Add New Product - {{ business.name }} - WIKONOMI{% endblock %}
+
+{% block content %}
+<div class="bento-container">
+  <!-- Hero Section -->
+  <div class="bento-grid">
+    <div class="bento-card" style="grid-column: span 12; background: linear-gradient(135deg, var(--primary-color) 0%, var(--accent-color) 100%); color: white; border: none;">
+      <div class="bento-card-body text-center">
+        <h1 class="display-4 fw-bold mb-3">
+          <i class="fas fa-plus-circle me-3"></i>Add New Product
+        </h1>
+        <p class="lead mb-4">Add a product to <strong>{{ business.name }}</strong></p>
+        <div class="business-info">
+          <i class="fas fa-store me-2"></i>
+          <span>{{ business.name }}</span>
+          {% if business.location %}
+            <span class="ms-3">
+              <i class="fas fa-map-marker-alt me-1"></i>
+              {{ business.location }}
+            </span>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Form Section -->
+  <div class="bento-grid">
+    <div class="bento-card" style="grid-column: span 12;">
+      <div class="bento-card-header">
+        <h3 class="mb-0">
+          <i class="fas fa-edit me-2 text-primary"></i>Product Information
+        </h3>
+        <p class="text-muted mb-0">Fill in the product details below</p>
+      </div>
+      <div class="bento-card-body">
+        {% if messages %}
+          {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+              {{ message }}
+              <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+          {% endfor %}
+        {% endif %}
+
+        <form method="post" enctype="multipart/form-data" id="product-form">
+          {% csrf_token %}
+          
+          <!-- Product Details -->
+          <div class="row g-4">
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="{{ form.name.id_for_label }}" class="form-label">
+                  <i class="fas fa-tag me-1"></i>Product Name *
+                </label>
+                {{ form.name }}
+                {% if form.name.errors %}
+                  <div class="text-danger small">{{ form.name.errors.0 }}</div>
+                {% endif %}
+              </div>
+            </div>
+            
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="{{ form.price.id_for_label }}" class="form-label">
+                  <i class="fas fa-dollar-sign me-1"></i>Price *
+                </label>
+                {{ form.price }}
+                {% if form.price.errors %}
+                  <div class="text-danger small">{{ form.price.errors.0 }}</div>
+                {% endif %}
+              </div>
+            </div>
+            
+            <div class="col-12">
+              <div class="form-group">
+                <label for="{{ form.description.id_for_label }}" class="form-label">
+                  <i class="fas fa-align-left me-1"></i>Description
+                </label>
+                {{ form.description }}
+                {% if form.description.errors %}
+                  <div class="text-danger small">{{ form.description.errors.0 }}</div>
+                {% endif %}
+              </div>
+            </div>
+            
+            <div class="col-12">
+              <div class="form-group">
+                <label for="{{ imageForm.photo.id_for_label }}" class="form-label">
+                  <i class="fas fa-image me-1"></i>Product Image
+                </label>
+                {{ imageForm.photo }}
+                {% if imageForm.photo.errors %}
+                  <div class="text-danger small">{{ imageForm.photo.errors.0 }}</div>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+
+          <!-- Location Section -->
+          <div class="location-section mt-4">
+            <h5 class="mb-3">
+              <i class="fas fa-map-marker-alt me-2 text-warning"></i>GPS Location
+            </h5>
+
+            <div class="alert alert-info">
+              <i class="fas fa-info-circle me-2"></i>
+              <strong>GPS Location:</strong> Your device's GPS will be used to get the product's location. This provides the most accurate location for customers.
+            </div>
+
+            <div class="row g-3">
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="{{ locationForm.address.id_for_label }}" class="form-label">
+                    <i class="fas fa-map me-1"></i>Address (Auto-filled from GPS)
+                  </label>
+                  {{ locationForm.address }}
+                  {% if locationForm.address.errors %}
+                    <div class="text-danger small">{{ locationForm.address.errors.0 }}</div>
+                  {% endif %}
+                  <small class="text-muted">Address will be automatically filled from your device's GPS coordinates</small>
+                </div>
+              </div>
+
+              <div class="col-md-3">
+                <div class="form-group">
+                  <label class="form-label">
+                    <i class="fas fa-coordinates me-1"></i>Latitude
+                  </label>
+                  <input type="number" class="form-control" id="{{ locationForm.latitude.id_for_label }}" name="{{ locationForm.latitude.name }}"
+                         step="any" placeholder="GPS coordinates" readonly>
+                </div>
+              </div>
+
+              <div class="col-md-3">
+                <div class="form-group">
+                  <label class="form-label">
+                    <i class="fas fa-coordinates me-1"></i>Longitude
+                  </label>
+                  <input type="number" class="form-control" id="{{ locationForm.longitude.id_for_label }}" name="{{ locationForm.longitude.name }}"
+                         step="any" placeholder="GPS coordinates" readonly>
+                </div>
+              </div>
+            </div>
+
+            <div class="location-status mt-3">
+              <div id="location-status" class="alert alert-info" style="display: none;">
+                <i class="fas fa-spinner fa-spin me-2"></i>
+                <span id="location-message">Getting your GPS location...</span>
+              </div>
+            </div>
+
+            <div class="text-center mt-3">
+              <button type="button" class="btn btn-secondary-bento btn-bento" id="get-location-btn">
+                <i class="fas fa-crosshairs me-2"></i>Get GPS Location
+              </button>
+              <button type="button" class="btn btn-outline-info btn-bento ms-2" id="toggle-map-btn">
+                <i class="fas fa-map me-2"></i>Select on Map
+              </button>
+              <small class="d-block text-muted mt-2">Choose GPS detection or click on map to select location</small>
+            </div>
+
+            <!-- Interactive Map Section -->
+            <div class="map-section mt-4" id="map-section" style="display: none;">
+              <h6 class="mb-3">
+                <i class="fas fa-map-marked-alt me-2 text-info"></i>Click on Map to Select Location
+              </h6>
+              {% include 'Location/location_selector.html' with map_id='product-location' height='400px' latitude_field_id=locationForm.latitude.id_for_label longitude_field_id=locationForm.longitude.id_for_label address_field_id=locationForm.address.id_for_label %}
+            </div>
+          </div>
+
+          <!-- Submit Button -->
+          <div class="text-center mt-4">
+            <button type="submit" class="btn btn-success-bento btn-bento btn-lg">
+              <i class="fas fa-save me-2"></i>Add Product
+            </button>
+            <a href="{% url 'Business:detail' business.id %}" class="btn btn-outline-secondary btn-bento btn-lg ms-2">
+              <i class="fas fa-arrow-left me-2"></i>Back to Business
+            </a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .business-info {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 1rem;
+    border-radius: 8px;
+    backdrop-filter: blur(10px);
+  }
+
+  .location-section {
+    background: var(--gray-50);
+    padding: 1.5rem;
+    border-radius: 12px;
+    border: 1px solid var(--gray-200);
+  }
+
+  .form-group {
+    margin-bottom: 1rem;
+  }
+
+  .form-label {
+    font-weight: 600;
+    color: var(--gray-700);
+    margin-bottom: 0.5rem;
+  }
+
+  .form-control {
+    border: 2px solid var(--gray-200);
+    border-radius: 8px;
+    padding: 0.75rem;
+    transition: border-color 0.2s ease;
+  }
+
+  .form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgb(99 102 241 / 0.1);
+    outline: none;
+  }
+
+  .form-control[readonly] {
+    background-color: var(--gray-100);
+    color: var(--gray-600);
+  }
+
+  .map-section {
+    background: var(--gray-50);
+    padding: 1.5rem;
+    border-radius: 12px;
+    border: 1px solid var(--gray-200);
+  }
+</style>
+
+<script>
+  // Location detection functionality
+  let currentLocation = null;
+  let locationPermissionGranted = false;
+  let userLocationObtained = false;
+  let mapLocationSelected = false;
+
+  function showLocationStatus(message, type = 'info') {
+    const statusDiv = document.getElementById('location-status');
+    const messageSpan = document.getElementById('location-message');
+    
+    statusDiv.className = `alert alert-${type}`;
+    
+    // Create a container for the message and any additional actions
+    messageSpan.innerHTML = '';
+    
+    // Add the message
+    const messageText = document.createElement('span');
+    messageText.textContent = message;
+    messageSpan.appendChild(messageText);
+    
+    // Show the status
+    statusDiv.style.display = 'block';
+    
+    // Scroll to the status if it's an error
+    if (type === 'danger' || type === 'warning') {
+      statusDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }
+
+  function hideLocationStatus() {
+    const statusDiv = document.getElementById('location-status');
+    if (statusDiv) {
+      statusDiv.style.display = 'none';
+    }
+  }
+
+  function updateCoordinates(lat, lng, source = 'gps') {
+    if (source === 'gps') {
+      userLocationObtained = true;
+    } else if (source === 'map') {
+      mapLocationSelected = true;
+    }
+
+    document.getElementById("{{ locationForm.latitude.id_for_label }}").value = lat;
+    document.getElementById("{{ locationForm.longitude.id_for_label }}").value = lng;
+    currentLocation = { lat, lng };
+
+    // Update map if available
+    if (typeof window.updateMapLocation === 'function') {
+      window.updateMapLocation(lat, lng);
+    }
+
+    // Update address field
+    getAddressFromCoordinates(lat, lng);
+  }
+
+  function getAddressFromCoordinates(lat, lng) {
+    const addressField = document.getElementById('{{ locationForm.address.id_for_label }}');
+    if (!addressField) return;
+
+    // Show loading state
+    addressField.placeholder = 'Getting address...';
+    addressField.value = '';
+
+    fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`, {
+      headers: {
+        'User-Agent': 'Wikonomi/1.0 (product-location)'
+      }
+    })
+      .then(response => response.json())
+      .then(data => {
+        if (data.display_name) {
+          addressField.value = data.display_name;
+          addressField.placeholder = 'Address auto-filled from location';
+          showLocationStatus(`Address found: ${data.display_name}`, 'success');
+        } else {
+          addressField.placeholder = 'Address not found';
+        }
+      })
+      .catch(error => {
+        console.error('Reverse geocoding failed:', error);
+        addressField.placeholder = 'Could not get address. Please enter manually.';
+      });
+  }
+
+  function requestLocationPermission() {
+    if (!navigator.geolocation) {
+      showLocationStatus('Geolocation is not supported by your browser. Please use the map to select a location.', 'warning');
+      return Promise.resolve(false);
+    }
+
+    showLocationStatus('Requesting location permission...', 'info');
+
+    return new Promise((resolve) => {
+      navigator.geolocation.getCurrentPosition(
+        function(position) {
+          locationPermissionGranted = true;
+          const lat = position.coords.latitude;
+          const lng = position.coords.longitude;
+          
+          updateCoordinates(lat, lng, 'gps');
+          resolve(true);
+        },
+        function(error) {
+          locationPermissionGranted = false;
+
+          if (error.code === error.PERMISSION_DENIED) {
+            showLocationStatus('❌ GPS access denied - location data will NOT be saved with this product. You can still select a location on the map, or create the product without location data.', 'warning');
+          } else if (error.code === error.POSITION_UNAVAILABLE) {
+            showLocationStatus('❌ GPS information unavailable - location data will NOT be saved. Please check your GPS settings and try again, or use the map to select a location.', 'warning');
+          } else if (error.code === error.TIMEOUT) {
+            showLocationStatus('❌ GPS request timed out - location data will NOT be saved. Please try again or use the map to select a location.', 'warning');
+          }
+
+          resolve(false);
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 15000,
+          maximumAge: 300000 // 5 minutes
+        }
+      );
+    });
+  }
+
+  function clearLocationData() {
+    document.getElementById("{{ locationForm.latitude.id_for_label }}").value = '';
+    document.getElementById("{{ locationForm.longitude.id_for_label }}").value = '';
+    
+    const addressField = document.getElementById('{{ locationForm.address.id_for_label }}');
+    if (addressField) {
+      addressField.value = '';
+      addressField.placeholder = 'No location selected';
+    }
+    
+    currentLocation = null;
+    userLocationObtained = false;
+    mapLocationSelected = false;
+    hideLocationStatus();
+  }
+
+  // Event listeners
+  document.addEventListener('DOMContentLoaded', function() {
+    // Get location button
+    const getLocationBtn = document.getElementById('get-location-btn');
+    if (getLocationBtn) {
+      getLocationBtn.addEventListener('click', function() {
+        requestLocationPermission().then(success => {
+          if (!success) {
+            // If location permission was denied, show the map as a fallback
+            const mapSection = document.getElementById('map-section');
+            const toggleBtn = document.getElementById('toggle-map-btn');
+            if (mapSection && toggleBtn) {
+              mapSection.style.display = 'block';
+              toggleBtn.innerHTML = '<i class="fas fa-times me-2"></i>Hide Map';
+              
+              // Initialize map if we have coordinates
+              const currentLat = document.getElementById("{{ locationForm.latitude.id_for_label }}").value;
+              const currentLng = document.getElementById("{{ locationForm.longitude.id_for_label }}").value;
+              if (currentLat && currentLng && currentLat !== '' && currentLng !== '') {
+                if (typeof window.updateMapLocation === 'function') {
+                  window.updateMapLocation(parseFloat(currentLat), parseFloat(currentLng));
+                }
+              }
+            }
+          }
+        });
+      });
+    }
+
+    // Map toggle button
+    const toggleMapBtn = document.getElementById('toggle-map-btn');
+    if (toggleMapBtn) {
+      toggleMapBtn.addEventListener('click', function() {
+        const mapSection = document.getElementById('map-section');
+        const isVisible = mapSection.style.display !== 'none';
+
+        if (isVisible) {
+          mapSection.style.display = 'none';
+          this.innerHTML = '<i class="fas fa-map me-2"></i>Select on Map';
+        } else {
+          mapSection.style.display = 'block';
+          this.innerHTML = '<i class="fas fa-times me-2"></i>Hide Map';
+
+          // Initialize map if not already done
+          if (typeof window.updateMapLocation === 'function') {
+            const currentLat = document.getElementById("{{ locationForm.latitude.id_for_label }}").value;
+            const currentLng = document.getElementById("{{ locationForm.longitude.id_for_label }}").value;
+            
+            if (currentLat && currentLng && currentLat !== '' && currentLng !== '') {
+              window.updateMapLocation(parseFloat(currentLat), parseFloat(currentLng));
+            } else if (navigator.geolocation && !locationPermissionGranted) {
+              // If we don't have coordinates but have geolocation, try to get them
+              navigator.geolocation.getCurrentPosition(
+                function(position) {
+                  window.updateMapLocation(position.coords.latitude, position.coords.longitude);
+                },
+                function() {
+                  // Default to Nairobi if we can't get the location
+                  window.updateMapLocation(-1.2921, 36.8219);
+                }
+              );
+            } else {
+              // Default to Nairobi if we can't get the location
+              window.updateMapLocation(-1.2921, 36.8219);
+            }
+          }
+        }
+      });
+    }
+
+    // Initialize the map with current location if available
+    if (navigator.geolocation) {
+      requestLocationPermission().then(success => {
+        if (!success) {
+          showLocationStatus('Please select a location on the map or allow location access.', 'info');
+        }
+      });
+    } else {
+      showLocationStatus('Geolocation is not supported by your browser. Please use the map to select a location.', 'warning');
+    }
+  });
+
+  // Enhanced form validation
+  document.getElementById('product-form').addEventListener('submit', function(e) {
+    const useBrowserLocation = document.getElementById('use-browser-location').checked;
+    const latitude = document.getElementById("{{ locationForm.latitude.id_for_label }}").value;
+    const longitude = document.getElementById("{{ locationForm.longitude.id_for_label }}").value;
+
+    if (useBrowserLocation && (!latitude || !longitude)) {
+      e.preventDefault();
+      showLocationStatus('Requesting location permission...', 'info');
+
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          function(position) {
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+            updateCoordinates(lat, lng);
+            showLocationStatus(`Location obtained. Submitting form...`, 'success');
+            setTimeout(() => document.getElementById('product-form').submit(), 1000);  // Delay to show message
+          },
+          function(error) {
+            showLocationStatus('Location access denied. Please use the map to select location or uncheck "Use my current location".', 'warning');
+            setTimeout(() => document.getElementById('product-form').submit(), 2000);  // Delay to show message
+          },
+          {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 300000
+          }
+        );
+      } else {
+        showLocationStatus('Geolocation not supported. Please use the map to select location.', 'warning');
+        setTimeout(() => document.getElementById('product-form').submit(), 2000);
+      }
+      return false;
+    }
+  });
+
+  document.getElementById('use-browser-location').addEventListener('change', function() {
+    const locationInputs = document.querySelectorAll('#{{ locationForm.latitude.id_for_label }}, #{{ locationForm.longitude.id_for_label }}');
+
+    if (this.checked) {
+      locationInputs.forEach(input => input.readOnly = true);
+      getCurrentLocation();
+    } else {
+      locationInputs.forEach(input => input.readOnly = false);
+      hideLocationStatus();
+      updateCoordinates('', '');  // Clear coordinates when unchecked
+    }
+  });
+
+  // Initialize location on page load
+  document.addEventListener('DOMContentLoaded', function() {
+    if (document.getElementById('use-browser-location').checked) {
+      getCurrentLocation();
+    }
+  });
+</script>
 {% endblock %}

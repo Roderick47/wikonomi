@@ -1,0 +1,76 @@
+{% load thumbnail %}
+{% load humanize %}
+
+{% if products %}
+  <div class="list-group list-group-flush">
+    {% for product in products %}
+      <a href="{% url 'Product:detail' product.id %}" class="list-group-item list-group-item-action d-flex align-items-center py-2 px-3">
+        {% if product.FirstPhoto.photo %}
+          <div class="me-3">
+            {% thumbnail product.FirstPhoto.photo "40x40" crop="center" as thumb %}
+              <img src="{{ thumb.url }}" alt="{{ product.name }}" class="rounded" style="width: 40px; height: 40px; object-fit: cover;">
+            {% endthumbnail %}
+          </div>
+        {% else %}
+          <div class="me-3">
+            <div class="bg-light rounded d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+              <i class="fas fa-image text-muted"></i>
+            </div>
+          </div>
+        {% endif %}
+        
+        <div class="flex-grow-1">
+          <div class="fw-semibold text-truncate">{{ product.name }}</div>
+          {% if product.price %}
+            <small class="text-muted">K{{ product.price|floatformat:2|intcomma }}</small>
+          {% endif %}
+        </div>
+        
+        {% if product.business %}
+          <small class="text-muted ms-2">
+            <i class="fas fa-store me-1"></i>{{ product.business.name }}
+          </small>
+        {% endif %}
+      </a>
+    {% endfor %}
+  </div>
+{% else %}
+  {% if query and query|length >= 2 %}
+    <div class="p-3 text-center text-muted">
+      <i class="fas fa-search me-2"></i>No products found for "{{ query }}"
+    </div>
+  {% endif %}
+{% endif %}
+
+<script>
+  // Show suggestions when content is loaded
+  document.addEventListener('htmx:afterRequest', function(event) {
+    const suggestions = document.getElementById('search-suggestions');
+    
+    if (event.target.id === 'search-suggestions') {
+      if (suggestions.innerHTML.trim()) {
+        suggestions.style.display = 'block';
+      } else {
+        suggestions.style.display = 'none';
+      }
+    }
+  });
+  
+  // Hide suggestions when clicking outside
+  document.addEventListener('click', function(event) {
+    const suggestions = document.getElementById('search-suggestions');
+    const searchInput = document.getElementById('search');
+    
+    if (!searchInput.contains(event.target) && !suggestions.contains(event.target)) {
+      suggestions.style.display = 'none';
+    }
+  });
+  
+  // Hide suggestions when search input loses focus
+  document.getElementById('search').addEventListener('blur', function() {
+    setTimeout(function() {
+      const suggestions = document.getElementById('search-suggestions');
+      suggestions.style.display = 'none';
+    }, 200);
+  });
+</script> 

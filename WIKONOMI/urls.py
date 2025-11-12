@@ -14,27 +14,27 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path,include
+from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
-
+from Follow.views import api_toggle_watchlist
 
 urlpatterns = [
-    path('',include('Home.urls')),
+    path('', include('Home.urls')),
     path('admin/', admin.site.urls),
-    path('',include('Profile.urls')),
-    path('',include('Business.urls')),
-    path('',include('Product.urls')),
-    path('',include('Comment.urls')),
-    path('',include('Tag.urls')),
-    path('',include('Follow.urls')),
-    path('',include('Comment.urls')),
-    path('',include('Search.urls')),
-    path('',include('Notification.urls')),
-    path('',include('History.urls')),
-    path('',include('Location.urls')),
-    path('budget/',include('Budget.urls')),
-
+    path('accounts/', include('allauth.urls')),
+    path('', include('Profile.urls')),
+    path('', include('Business.urls')),
+    path('', include('Product.urls')),
+    path('', include('Comment.urls')),
+    path('', include('Tag.urls')),
+    path('', include('Follow.urls')),  # Keep existing URLs for backward compatibility
+    path('api/toggle-watchlist/<int:product_id>/', api_toggle_watchlist, name='api_toggle_watchlist'),
+    path('', include('Search.urls')),
+    path('', include('Notification.urls')),
+    path('', include('History.urls')),
+    path('', include('Location.urls')),
+    path('budget/', include('Budget.urls')),
 ]
 
 if settings.DEBUG:

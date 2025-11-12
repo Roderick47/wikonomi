@@ -26,12 +26,22 @@ SECRET_KEY = 'django-insecure-io2q&qeldj%)slhvwm0*m-(uhhi6xb)k!+@+wit9@gcixf@kgk
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
+
 
 
 # Application definition
 
+
+
 INSTALLED_APPS = [
+    'django.contrib.sites',
+    # django-allauth
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    # Temporarily disabled Google OAuth until verification is complete
+    # 'allauth.socialaccount.providers.google',
     'django_htmx',
     'crispy_forms',
     'import_export',
@@ -57,10 +67,27 @@ INSTALLED_APPS = [
     'Search.apps.SearchConfig',
     'Tag.apps.TagConfig',
     'Budget.apps.BudgetConfig',
+    'mathfilters',
     'Information',
     'Location',
-    
 ]
+
+# Temporarily disabled Google OAuth configuration
+# SOCIALACCOUNT_PROVIDERS = {
+#     "google":{
+#         "SCOPE":[
+#             "profile",
+#             "email"
+#         ],
+#         "APP":{
+#             'client_id':os.environ['CLIENT_ID'],
+#             'secret':os.environ['CLIENT_SECRET'],
+#         },
+#         "AUTH_PARAMS":{
+#             "access_type":"online",
+#         }
+#     }
+# }
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -71,6 +98,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     "django_htmx.middleware.HtmxMiddleware",
+    'allauth.account.middleware.AccountMiddleware',
 ]
 
 ROOT_URLCONF = 'WIKONOMI.urls'
@@ -78,7 +106,10 @@ ROOT_URLCONF = 'WIKONOMI.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [
+            os.path.join(BASE_DIR, 'Home', 'templates'),  # Look in Home/templates first
+            BASE_DIR/'templates',  # Then in the project's templates directory
+        ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -114,13 +145,12 @@ AUTH_PASSWORD_VALIDATORS = [
     },
     {
         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        'OPTIONS': {
+            'min_length': 6,
+        }
     },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
+    # Removed CommonPasswordValidator for development
+    # Removed NumericPasswordValidator for development
 ]
 
 
@@ -142,6 +172,7 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR,'staticfiles')
 MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
@@ -152,3 +183,32 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 
 CRISPY_TEMPLATE_PACK = "bootstrap5"
+
+AUTHENTICATION_BACKENDS = (
+    "django.contrib.auth.backends.ModelBackend",
+    "allauth.account.auth_backends.AuthenticationBackend"
+)
+
+SITE_ID=1
+LOGIN_REDIRECT_URL = "/"
+LOGOUT_REDIRECT_URL = "/"
+
+# Email Configuration for Development
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+EMAIL_HOST = 'localhost'
+EMAIL_PORT = 1025
+EMAIL_USE_TLS = False
+EMAIL_USE_SSL = False
+EMAIL_HOST_USER = ''
+EMAIL_HOST_PASSWORD = ''
+
+# Django Allauth Settings
+ACCOUNT_EMAIL_VERIFICATION = 'none'
+ACCOUNT_EMAIL_SUBJECT_PREFIX = '[WIKONOMI] '
+
+# New allauth settings (replaces deprecated settings)
+ACCOUNT_LOGIN_METHODS = {'email'}
+ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*', 'password2*']
+
+# For development, you can also disable email verification temporarily
+# ACCOUNT_EMAIL_VERIFICATION = 'none'

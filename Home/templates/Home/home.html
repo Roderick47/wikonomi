@@ -1,94 +1,657 @@
 {% extends 'Home/base.html' %}
 {% load static %}
-
-{% block script %}<link rel="stylesheet" href="{% static "Home/css/HomeStyle.css" %}">{% endblock script %}
-
-{% block content %}
 {% load thumbnail %}
 {% load humanize %}
 {% load extra_date_filters %}
 
-<div class="container-fluid ">
+{% block title %}WIKONOMI - Your Local Price Index{% endblock %}
 
-{% if products %}
-  <h4 class="text-center">Your local price index</h4>
-  <h6 class="text-center">Check out what others have posted recently:</h6>
+{% block content %}
+<div class="bento-container">
+  <!-- Hero Section -->
+  <div class="bento-grid">
+    <div class="bento-card" style="grid-column: span 12; background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%); color: white; border: none;">
+      <div class="bento-card-body text-center">
+        <h1 class="display-4 fw-bold mb-3">
+          <i class="fas fa-chart-line me-3"></i>WIKONOMI
+        </h1>
+        <p class="lead mb-4">Monitor prices of goods and services in your community</p>
+        <div class="d-flex justify-content-center gap-3 flex-wrap">
+          <a href="{% url 'Product:add-general' %}" class="btn btn-light btn-bento">
+            <i class="fas fa-plus me-2"></i>Post a Product
+          </a>
+          <a href="{% url 'Business:add' %}" class="btn btn-outline-light btn-bento">
+            <i class="fas fa-store me-2"></i>Add Business
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
 
-  {% for product in products %}
-    {% if forloop.first %}
-    <div class="row">
-    {% endif %}
-        <div class="col-lg-4">
-          <div class="card my-1 shadow-sm ">
-            <div class="card-header col m-0 p-0">
-                <div class="row ">
-                  <div class="col-7">
-                    <p class="font-weight-bold m-0 p-0 ml-1" >{{product.name}}
-                      {% if product.date_created.date|isNew %}
-                      <small class="badge bg-success text-wrap ml-1">New</small></p>
-                      {% endif %}
-                      {% comment %} {% if product.is_recent_update %} {% endcomment %}
-                  </div>
-                  <div class="col-5">
-                    <small class="float-right mr-0 p-0 mb-0  text-muted">{{product.date_updated|olderDate|naturalday }}</small>
-                    {% comment %} {% else %} {% endcomment %}
-                    {% comment %} <small class="text-right ml-3 p-0 mb-0">[{{product.date_updated.date|naturaltime}}]</small> {% endcomment %}
-                    {% comment %} {% endif %} {% endcomment %}
-                  </div>
-                </div>
-            </div>      
-            <div class="card-body pb-1 mb-0 p-1">
-                  <a href="{% url 'Product:detail' product.id %}"class="stretched-link" ></a>
-                  <div class="row">
-                    <!-- business title -->
-                    <div class="col-9">  
-                      {% comment %} <h6 class="text-responsive"style="" >{{business.name}}</h6>
-                      <p>{{business.location}}</p> {% endcomment %}
-                        {% if product.price %}
-                          <small class="text-responsive m-0 pb-0"><b>Price:</b> K {{product.price|floatformat:2|intcomma}}</small><br>
+  {% if products %}
+    <!-- Products Section -->
+    <div class="bento-grid">
+      <div class="bento-card" style="grid-column: span 12;">
+        <div class="bento-card-header">
+          <h3 class="mb-0">
+            <i class="fas fa-fire me-2 text-warning"></i>Recent Products
+          </h3>
+          <p class="text-muted mb-0">Check out what others have posted recently</p>
+        </div>
+        <div class="bento-card-body">
+          <div class="row g-4">
+            {% for product in products %}
+              <div class="col-lg-3 col-md-6 position-relative">
+                <div class="bento-card h-100 product-card">
+                  <a href="{% url 'Product:detail' product.id %}" class="stretched-link"></a>
+                  <div class="bento-card-body">
+                    <!-- Product Header -->
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                      <h6 class="fw-bold mb-1 text-truncate">{{product.name}}</h6>
+                      <div class="d-flex gap-1">
+                        {% if product.date_created.date|isNew %}
+                          <span class="badge bg-success">New</span>
                         {% endif %}
-                        {% if product.business %}
-                          <small class="text repsonsive m-0 p-0"  ><b>Vendor:</b> {{product.business.name}}</small><br>
-                        {% endif  %}
-                        {% if product.business.location %} 
-                          <small class="text repsonsive m-0 p-0"  ><b>Location:</b> {{product.business.location}}</small><br>
-                        {% endif %}
+  
+                        <small class="text-muted">{{product.date_updated|olderDate|naturalday }}</small>
+                      </div>
                     </div>
 
-                    <!-- Product image -->
-                    {% if product.FirstPhoto.photo  %}
-                      
-                      <div class="col-3 ">
-                        {% thumbnail product.FirstPhoto.photo "50x50" as prodImg %}
-                          <img class=" img img-fluid rounded float-right" src={{prodImg.url}} alt={{product.name}} style="max-width:85px; margin-left:10px;">
+                    <!-- Product Image -->
+                    {% if product.FirstPhoto.photo %}
+                      <div class="product-image-container mb-3">
+                        {% thumbnail product.FirstPhoto.photo "200x150" crop="center" as prodImg %}
+                          <img class="img-fluid rounded" src="{{prodImg.url}}" alt="{{product.name}}" style="width: 100%; height: 150px; object-fit: cover;">
                         {% endthumbnail %}
                       </div>
+                    {% else %}
+                      <div class="product-image-placeholder mb-3">
+                        <div class="d-flex align-items-center justify-content-center bg-light rounded" style="height: 150px;">
+                          <i class="fas fa-box fa-2x text-muted"></i>
+                        </div>
+                      </div>
                     {% endif %}
-                    
-                  </div>
-                  <div class="text-wrap ml-1 py-0 my-0">
-                  {% if product|isCheapest == 'most-expensive' %}
-                  <small class="badge bg-dark rounded-pill">{{product|isCheapest}}</small>
-                  {% elif product|isCheapest == 'expensive' %}
-                  <small class="badge bg-danger rounded-pill">{{product|isCheapest}}</small>
-                  {% elif product|isCheapest == "cheapest-price" %}
-                  <small class="badge bg-success rounded-pill">{{product|isCheapest}}</small>
-                  {% elif product|isCheapest == "cheap" %}
-                  <small class="badge bg-info rounded-pill">{{product|isCheapest}}</small>
-                  {% endif %}
-                  </div>
 
-                
-              </div>    
+                    <!-- Product Details -->
+                    <div class="product-details">
+                      {% if product.price %}
+                        <div class="price-info mb-2">
+                          <div class="current-price-with-change">
+                            <span class="fw-bold text-primary">
+                              <a href="{% url 'History:edit-list' product.id %}" class="text-decoration-none text-primary" title="View price history">
+                                K{{product.price|floatformat:2|intcomma}}
+                              </a>
+                            </span>
+                            
+                            <!-- Price change indicator next to current price -->
+                            {% if product.get_price_change is not None %}
+                              <span class="price-change-badge ms-2">
+                                {% if product.get_price_change > 0 %}
+                                  <i class="fas fa-arrow-up text-danger"></i>
+                                  <span class="text-danger">+K{{product.get_price_change|floatformat:2|intcomma}}</span>
+                                {% elif product.get_price_change < 0 %}
+                                  <i class="fas fa-arrow-down text-success"></i>
+                                  <span class="text-success">K{{product.get_price_change|floatformat:2|intcomma}}</span>
+                                {% else %}
+                                  <i class="fas fa-minus text-secondary"></i>
+                                  <span class="text-secondary">No Change</span>
+                                {% endif %}
+                              </span>
+                            {% endif %}
+                          </div>
+                          
+                          <!-- Last price below current price -->
+                          {% if product.get_last_price %}
+                            <div class="last-price-info">
+                              <small class="text-muted">
+                                <i class="fas fa-history me-1"></i>
+                                <a href="{% url 'History:edit-list' product.id %}" class="text-decoration-none text-muted" title="View price history">
+                                  Last: K{{product.get_last_price|floatformat:2|intcomma}}
+                                </a>
+                                {% if product.get_last_price_date %}
+                                  <span class="ms-1">• {{product.get_last_price_date|timesince}} ago</span>
+                                {% endif %}
+                              </small>
+                            </div>
+                          {% endif %}
+                        </div>
+                      {% endif %}
+
+                      {% if product.business %}
+                        <div class="vendor-info mb-2">
+                          <small class="text-muted">
+                            <i class="fas fa-store me-1"></i>{{product.business.name}}
+                          </small>
+                        </div>
+                      {% endif %}
+
+                      {% if product.business.location %}
+                        <div class="location-info mb-3">
+                          <small class="text-muted">
+                            <i class="fas fa-map-marker-alt me-1"></i>{{product.business.location}}
+                          </small>
+                        </div>
+                      {% endif %}
+
+                      <!-- Price Badge -->
+                      <div class="price-badge-container">
+                        {% if product|isCheapest == 'most-expensive' %}
+                          <span class="badge bg-dark">{{product|isCheapest}}</span>
+                        {% elif product|isCheapest == 'expensive' %}
+                          <span class="badge bg-danger">{{product|isCheapest}}</span>
+                        {% elif product|isCheapest == "cheapest-price" %}
+                          <span class="badge bg-success">{{product|isCheapest}}</span>
+                        {% elif product|isCheapest == "cheap" %}
+                          <span class="badge bg-info">{{product|isCheapest}}</span>
+                        {% endif %}
+                      </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="mt-3 d-flex justify-content-end">
+                      <div class="dropdown" style="position: relative; z-index: 10;">
+                        <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="productActions-{{ product.id }}" data-bs-toggle="dropdown" aria-expanded="false">
+                          <i class="fas fa-ellipsis-v"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="productActions-{{ product.id }}">
+                          <li>
+                            <a class="dropdown-item watchlist-toggle" href="#" data-product-id="{{ product.id }}" onclick="toggleWatchlist(event, {{ product.id }}); return false;">
+                              <i class="fas fa-bookmark me-2 text-warning"></i>
+                              <span class="watchlist-text">Add to Watchlist</span>
+                            </a>
+                          </li>
+                          <li>
+                            <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#addToBudgetModal" data-product-id="{{ product.id }}">
+                              <i class="fas fa-wallet me-2 text-primary"></i>Add to Budget
+                            </a>
+                          </li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            {% endfor %}
           </div>
+        </div>
       </div>
-    {% if forloop.counter|divisibleby:3 %} </div><div class="row">{% endif %}
-    {% if forloop.last %}</div>{% endif %}    
-  {% endfor %}
+    </div>
 
-{% else %}
-<h1>Wikonomi Home Page</h1>
-{% endif %}
+    <!-- Quick Actions Section -->
+    <div class="bento-grid">
+      <div class="bento-card" style="grid-column: span 12;">
+        <div class="bento-card-header">
+          <h4 class="mb-0">
+            <i class="fas fa-bolt me-2 text-warning"></i>Quick Actions
+          </h4>
+        </div>
+        <div class="bento-card-body">
+          <div class="row g-3">
+            <div class="col-md-3 col-sm-6">
+              <a href="{% url 'Product:add-general' %}" class="btn btn-primary-bento btn-bento w-100 h-100 d-flex flex-column align-items-center justify-content-center">
+                <i class="fas fa-box fa-2x mb-2"></i>
+                <span>Post Product</span>
+              </a>
+            </div>
+            <div class="col-md-3 col-sm-6">
+              <a href="{% url 'Business:add' %}" class="btn btn-success-bento btn-bento w-100 h-100 d-flex flex-column align-items-center justify-content-center">
+                <i class="fas fa-store fa-2x mb-2"></i>
+                <span>Add Business</span>
+              </a>
+            </div>
+            <div class="col-md-3 col-sm-6">
+              <a href="{% url 'Business:all' %}" class="btn btn-secondary-bento btn-bento w-100 h-100 d-flex flex-column align-items-center justify-content-center">
+                <i class="fas fa-building fa-2x mb-2"></i>
+                <span>Browse Businesses</span>
+              </a>
+            </div>
+            <div class="col-md-3 col-sm-6">
+              <a href="{% url 'Search:search' %}" class="btn btn-warning-bento btn-bento w-100 h-100 d-flex flex-column align-items-center justify-content-center">
+                <i class="fas fa-search fa-2x mb-2"></i>
+                <span>Search Products</span>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
 
+  {% else %}
+    <!-- Empty State -->
+    <div class="bento-grid">
+      <div class="bento-card" style="grid-column: span 12;">
+        <div class="empty-state">
+          <i class="fas fa-chart-line"></i>
+          <h2>Welcome to WIKONOMI</h2>
+          <p class="lead">Your local price index is empty. Be the first to add products and help build your community's price database!</p>
+          <div class="d-flex justify-content-center gap-3 flex-wrap">
+            <a href="{% url 'Product:add-general' %}" class="btn btn-primary-bento btn-bento">
+              <i class="fas fa-plus me-2"></i>Post Your First Product
+            </a>
+            <a href="{% url 'Business:add' %}" class="btn btn-success-bento btn-bento">
+              <i class="fas fa-store me-2"></i>Add a Business
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+</div>
 
+<!-- Add to Budget Modal -->
+<div class="modal fade" id="addToBudgetModal" tabindex="-1" aria-labelledby="addToBudgetModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="addToBudgetModalLabel">Add to Budget</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p>Select a budget to add this product to:</p>
+        <div id="budgetList">
+          <div class="text-center">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <a href="{% url 'Budget:create' %}" class="btn btn-primary">
+          <i class="fas fa-plus me-1"></i> Create New Budget
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast Container -->
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+  <div id="toastContainer"></div>
+</div>
+
+<script>
+  // CSRF Token for AJAX requests
+  function getCSRFToken() {
+    // First try to get CSRF token from the form
+    let csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+    
+    // If not found, try to get it from cookies
+    if (!csrfToken) {
+      const name = 'csrftoken';
+      if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === (name + '=')) {
+            csrfToken = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
+        }
+      }
+    }
+    
+    if (!csrfToken) {
+      console.error('CSRF token not found');
+      showToast('Security error: Please refresh the page and try again', 'error');
+      return null;
+    }
+    
+    return csrfToken;
+  }
+  
+  // Toggle watchlist status
+  async function toggleWatchlist(event, productId) {
+    event.preventDefault();
+    
+    // Check if user is authenticated
+    const isAuthenticated = {{ request.user.is_authenticated|yesno:'true,false' }};
+    if (!isAuthenticated) {
+      showToast('Please sign in to add items to your watchlist', 'warning');
+      return;
+    }
+    
+    const button = event.currentTarget;
+    const icon = button.querySelector('i');
+    const text = button.querySelector('.watchlist-text');
+    
+    // Disable button to prevent multiple clicks
+    const originalHTML = button.innerHTML;
+    button.disabled = true;
+    button.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>';
+    
+    try {
+      const csrfToken = getCSRFToken();
+      if (!csrfToken) return;
+      
+      // Log the request for debugging
+      console.log('Making request to toggle watchlist for product:', productId);
+      
+      // Use Django's URL template tag to generate the correct URL
+      const apiUrl = '{% url "api_toggle_watchlist" 0 %}'.replace('0', productId);
+      console.log('API URL:', apiUrl);
+      
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': csrfToken,
+          'Content-Type': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest'
+        },
+        credentials: 'same-origin'
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Error response:', errorText);
+        throw new Error(`HTTP error! status: ${response.status}, body: ${errorText}`);
+      }
+      
+      const data = await response.json();
+      
+      if (data.status === 'success') {
+        // Toggle button appearance
+        if (data.action === 'added') {
+          icon.className = 'fas fa-bookmark me-2 text-warning';
+          text.textContent = 'Remove from Watchlist';
+          showToast('Added to watchlist!', 'success');
+        } else {
+          icon.className = 'far fa-bookmark me-2';
+          text.textContent = 'Add to Watchlist';
+          showToast('Removed from watchlist', 'info');
+        }
+      } else {
+        showToast(data.message || 'An error occurred', 'error');
+      }
+    } catch (error) {
+      console.error('Error toggling watchlist:', error);
+      showToast('Failed to update watchlist. Please try again.', 'error');
+    } finally {
+      // Re-enable button
+      button.disabled = false;
+      button.innerHTML = originalHTML;
+    }
+  }
+  
+  // Initialize budget modal
+  const budgetModal = document.getElementById('addToBudgetModal');
+  if (budgetModal) {
+    budgetModal.addEventListener('show.bs.modal', function (event) {
+      const button = event.relatedTarget;
+      const productId = button.getAttribute('data-product-id');
+      const modal = this;
+      
+      // Load user's budgets
+      fetch('/budget/api/list/')
+        .then(response => response.json())
+        .then(data => {
+          const budgetList = document.getElementById('budgetList');
+          if (data.budgets && data.budgets.length > 0) {
+            budgetList.innerHTML = data.budgets.map(budget => `
+              <div class="budget-item d-flex justify-content-between align-items-center p-2 border-bottom">
+                <div>
+                  <h6 class="mb-0">${budget.title}</h6>
+                  <small class="text-muted">${budget.product_count} items</small>
+                </div>
+                <button class="btn btn-sm btn-outline-primary add-to-budget" 
+                        data-budget-id="${budget.id}" 
+                        data-product-id="${productId}">
+                  Add
+                </button>
+              </div>
+            `).join('');
+            
+            // Add event listeners to the Add buttons
+            document.querySelectorAll('.add-to-budget').forEach(button => {
+              button.addEventListener('click', addToBudget);
+            });
+          } else {
+            budgetList.innerHTML = `
+              <div class="text-center py-4">
+                <p>You don't have any budgets yet.</p>
+                <a href="/budget/create/" class="btn btn-primary">
+                  <i class="fas fa-plus me-1"></i> Create Your First Budget
+                </a>
+              </div>
+            `;
+          }
+        })
+        .catch(error => {
+          console.error('Error loading budgets:', error);
+          document.getElementById('budgetList').innerHTML = `
+            <div class="alert alert-danger">
+              Failed to load budgets. Please try again later.
+            </div>
+          `;
+        });
+    });
+  }
+  
+  // Add product to budget
+  async function addToBudget(event) {
+    const button = event.currentTarget;
+    const budgetId = button.getAttribute('data-budget-id');
+    const productId = button.getAttribute('data-product-id');
+    
+    button.disabled = true;
+    button.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>';
+    
+    try {
+      const response = await fetch(`/budget/api/add-product/${budgetId}/${productId}/`, {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': csrftoken,
+          'Content-Type': 'application/json',
+        },
+        credentials: 'same-origin'
+      });
+      
+      const data = await response.json();
+      
+      if (data.status === 'success') {
+        showToast(`Added to ${data.budget.title}`, 'success');
+        // Close the modal after a short delay
+        setTimeout(() => {
+          const modal = bootstrap.Modal.getInstance(document.getElementById('addToBudgetModal'));
+          if (modal) modal.hide();
+        }, 1000);
+      } else {
+        showToast(data.message || 'Failed to add to budget', 'error');
+        button.disabled = false;
+        button.textContent = 'Add';
+      }
+    } catch (error) {
+      console.error('Error adding to budget:', error);
+      showToast('An error occurred', 'error');
+      button.disabled = false;
+      button.textContent = 'Add';
+    }
+  }
+  
+  // Show toast notification
+  function showToast(message, type = 'info') {
+    const toastEl = document.createElement('div');
+    toastEl.className = `toast align-items-center text-white bg-${type} border-0`;
+    toastEl.setAttribute('role', 'alert');
+    toastEl.setAttribute('aria-live', 'assertive');
+    toastEl.setAttribute('aria-atomic', 'true');
+    
+    // Set different icons based on message type
+    let icon = 'info-circle';
+    if (type === 'success') icon = 'check-circle';
+    else if (type === 'error') icon = 'exclamation-circle';
+    else if (type === 'warning') icon = 'exclamation-triangle';
+    
+    toastEl.innerHTML = `
+      <div class="d-flex">
+        <div class="toast-body d-flex align-items-center">
+          <i class="fas fa-${icon} me-2"></i>
+          ${message}
+        </div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+      </div>
+    `;
+    
+    const container = document.getElementById('toastContainer');
+    container.appendChild(toastEl);
+    
+    const toast = new bootstrap.Toast(toastEl, {
+      autohide: true,
+      delay: 3000
+    });
+    
+    toast.show();
+    
+    // Remove the toast from DOM after it's hidden
+    toastEl.addEventListener('hidden.bs.toast', function () {
+      container.removeChild(toastEl);
+    });
+  }
+</script>
+
+<style>
+  .product-card {
+    transition: all 0.3s ease;
+    position: relative;
+  }
+  .product-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-xl);
+  }
+
+  .product-image-container {
+    position: relative;
+    overflow: hidden;
+    border-radius: 8px;
+  }
+
+  .price-section {
+    background: var(--gray-50);
+    padding: 1rem;
+    border-radius: 8px;
+    border: 1px solid var(--gray-200);
+  }
+
+  .current-price {
+    text-align: center;
+  }
+
+  .price-change {
+    text-align: center;
+  }
+
+  .price-info {
+    font-size: 1.1rem;
+  }
+
+  .current-price-with-change {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .vendor-info, .location-info {
+    font-size: 0.875rem;
+  }
+
+  .price-badge-container {
+    margin-top: 0.5rem;
+  }
+
+  .badge {
+    font-size: 0.7rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 12px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+  }
+
+  /* Status-specific badge styles */
+  .bg-success {
+    background-color: #10b981 !important;
+    border-color: #0d9f6e !important;
+  }
+  
+  .bg-info {
+    background-color: #3b82f6 !important;
+    border-color: #2563eb !important;
+    color: white !important;
+  }
+  
+  .bg-warning {
+    background-color: #f59e0b !important;
+    border-color: #d97706 !important;
+    color: white !important;
+  }
+  
+  .bg-danger {
+    background-color: #ef4444 !important;
+    border-color: #dc2626 !important;
+    color: white !important;
+  }
+  
+  /* Hover effects */
+  .badge:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+  
+  /* Status-specific hover effects */
+  .bg-success:hover {
+    background-color: #0d9f6e !important;
+  }
+  
+  .bg-info:hover {
+    background-color: #2563eb !important;
+  }
+  
+  .bg-warning:hover {
+    background-color: #d97706 !important;
+  }
+  
+  .bg-danger:hover {
+    background-color: #dc2626 !important;
+  }
+
+  .last-price-info {
+    margin-top: 0.25rem;
+    padding: 0.25rem 0;
+  }
+
+  .price-change-info {
+    margin-top: 0.25rem;
+    padding: 0.25rem 0;
+  }
+
+  .price-change-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+  }
+
+  .price-change-badge i {
+    font-size: 0.7rem;
+  }
+
+  @media (max-width: 767px) {
+    .bento-container {
+      padding: 0.5rem;
+    }
+    
+    .display-4 {
+      font-size: 2rem;
+    }
+    
+    .lead {
+      font-size: 1rem;
+    }
+  }
+</style>
 {% endblock %}

@@ -1,0 +1,40 @@
+{% load static %}
+{% load thumbnail %}
+
+<div class="comment-card">
+    <div class="comment-header">
+        <div class="row">
+            <div class="col-1">
+                {% if request.user.profile.image %}
+                    {% thumbnail request.user.profile.image '60x60' as img %}
+                    <img class="img-fluid rounded-circle align-self-start my-0" src="{{ img.url }}" alt="profilepic" id="profThumbImg">
+                    {% endthumbnail %}
+                {% else %}
+                    <img class="img-fluid rounded-circle align-self-start my-0" src="{% static 'Profile/images/profile.png' %}" alt="profilepic" id="profThumbImg">
+                {% endif %}
+            </div>
+            <p class="col-11 mb-0">{{ request.user.username }}</p>
+        </div>
+    </div>
+    <div class="comment-body">
+        <form method="post"
+              hx-post="{% url 'Comment:create' %}"
+              hx-target="{% if parent_id %}#comment-{{ parent_id }} .comment-actions{% else %}#comments-container{% endif %}"
+              hx-swap="{% if parent_id %}beforeend{% else %}afterbegin{% endif %}"
+              hx-on::after-request="this.reset(); {% if parent_id %}scrollToNewReply(this){% else %}scrollToNewComment(){% endif %};">
+            {% csrf_token %}
+            <input type="hidden" name="content_type" value="{% if product %}product{% elif business %}business{% elif info %}info{% endif %}">
+            <input type="hidden" name="object_id" value="{% if product %}{{ product.id }}{% elif business %}{{ business.id }}{% elif info %}{{ info.id }}{% endif %}">
+            <input type="hidden" name="parent_id" value="{{ parent_id|default:'' }}">
+            <div class="mb-2">
+                <textarea name="body" class="form-control" rows="{% if parent_id %}2{% else %}3{% endif %}" maxlength="500" placeholder="{% if parent_id %}Write a reply...{% else %}Write a comment...{% endif %}" required></textarea>
+            </div>
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary btn-sm">{% if parent_id %}Reply{% else %}Comment{% endif %}</button>
+                {% if parent_id %}
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="hideReplyForm({{ parent_id }})">Cancel</button>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+</div> 

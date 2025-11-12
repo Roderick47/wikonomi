@@ -1,46 +1,108 @@
-{% extends 'Home/home.html' %}
-{% load thumbnail %}
-{% load static %}
-{% load crispy_forms_tags %}
+﻿{% extends 'Home/base.html' %}
+
+{% block title %}Add New Product - WIKONOMI{% endblock %}
 
 {% block content %}
-<script src="{% static 'Home/js/jquery-3.5.1.js' %}"></script>
-<script src="{% static 'Home/jquery-ui-1.12.1.custom/jquery-ui.js' %}"></script>
-{% comment %} <script src="{% static 'Product/js/autocomplete.js' %}"></script> {% endcomment %}
-<script>
-/* Functions for autocomplete.*/
-$(function(){
-    $("#id_business").autocomplete({
-        source:"{% url 'Business:autocomplete' %}",
-        minLength: 2,
-    });
-});
-$(function(){
-    $("#id_name").autocomplete({
-        source:"{% url 'Product:autocomplete' %}",
-        minLength: 2,
-    });
-});
-</script>
-<div class="card">
-<div class="card-header">
-  <div class="card-body text-center">
-    <b>You are posting a product that is public. This means that anyone can find and edit the information that you are posting</b>
-    
-  </div>
-</div>
-
-
-  <div class="card-body">
-
-  <h2 class="text-center">Add a product </h2>
-  <form class="" action="" method="post" enctype="multipart/form-data">
+<div class="container">
+  <h1>Add New Product</h1>
+  <form method="post" enctype="multipart/form-data">
     {% csrf_token %}
-    {{imageForm|crispy}} {% comment %}  {% include "Product/image_upload.html" %}{% endcomment %}
-    {{form2|crispy}}
-    {{form|crispy}}
-    <button class="btn btn-info" type="submit" name="button"> Save Post</button>
+    <div class="mb-3">
+      <label for="{{ form.name.id_for_label }}">Product Name *</label>
+      {{ form.name }}
+    </div>
+    <div class="mb-3">
+      <label for="{{ form.price.id_for_label }}">Price *</label>
+      {{ form.price }}
+    </div>
+    <div class="mb-3">
+      <label for="{{ form.description.id_for_label }}">Description</label>
+      {{ form.description }}
+    </div>
+    <div class="mb-3">
+      <label for="{{ imageForm.photo.id_for_label }}">Product Image</label>
+      {{ imageForm.photo }}
+    </div>
+    <div class="mb-3">
+      <label for="{{ form2.business.id_for_label }}">Business Name *</label>
+      {{ form2.business }}
+    </div>
+    
+    <!-- Location Section -->
+    <div class="mb-3">
+      <h5>Product Location (Optional)</h5>
+      <div class="row">
+        <div class="col-md-6">
+          <label for="{{ locationForm.latitude.id_for_label }}">Latitude</label>
+          {{ locationForm.latitude }}
+        </div>
+        <div class="col-md-6">
+          <label for="{{ locationForm.longitude.id_for_label }}">Longitude</label>
+          {{ locationForm.longitude }}
+        </div>
+      </div>
+      <div class="mt-2">
+        <label>
+          <input type="checkbox" id="use-browser-location" checked> Use Browser Location
+        </label>
+      </div>
+    </div>
+    
+    <button type="submit" class="btn btn-primary">Add Product</button>
   </form>
 </div>
 
+<script>
+  // Function to get the browser location
+  function getLocation() {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(showPosition, showError);
+    } else {
+      alert("Geolocation is not supported by this browser.");
+    }
+  }
+
+  // Function to handle errors in getting the location
+  function showError(error) {
+    switch(error.code) {
+      case error.PERMISSION_DENIED:
+        alert("User denied the request for Geolocation.");
+        break;
+      case error.POSITION_UNAVAILABLE:
+        alert("Location information is unavailable.");
+        break;
+      case error.TIMEOUT:
+        alert("The request to get user location timed out.");
+        break;
+      case error.UNKNOWN_ERROR:
+        alert("An unknown error occurred.");
+        break;
+    }
+  }
+
+  // Function to update the form fields with the browser location
+  function showPosition(position) {
+    document.getElementById("{{ locationForm.latitude.id_for_label }}").value = position.coords.latitude;
+    document.getElementById("{{ locationForm.longitude.id_for_label }}").value = position.coords.longitude;
+  }
+
+  // Event listener for the checkbox
+  document.getElementById("use-browser-location").addEventListener("change", function() {
+    if (this.checked) {
+      // If checkbox is checked, get the browser location
+      getLocation();
+    } else {
+      // If checkbox is unchecked, clear the latitude and longitude fields
+      document.getElementById("{{ locationForm.latitude.id_for_label }}").value = "";
+      document.getElementById("{{ locationForm.longitude.id_for_label }}").value = "";
+    }
+  });
+
+  // Initialize location on page load
+  document.addEventListener('DOMContentLoaded', function() {
+    if (document.getElementById('use-browser-location').checked) {
+      getLocation();
+    }
+  });
+</script>
 {% endblock %}

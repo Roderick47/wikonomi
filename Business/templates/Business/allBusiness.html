@@ -1,75 +1,335 @@
 {% extends 'Home/base.html' %}
 {% load static %}
-
-{% block script %}<link rel="stylesheet" href="{% static "Home/css/HomeStyle.css" %}">{% endblock script %}
-
-{% block content %}
 {% load thumbnail %}
 {% load humanize %}
 {% load extra_date_filters %}
 
-<div class="container-fluid ">
+{% block title %}
+  {% if is_owner_view %}
+    My Businesses - WIKONOMI
+  {% else %}
+    Business Directory - WIKONOMI
+  {% endif %}
+{% endblock %}
 
-{% if all_business %}
-  <h4 class="text-center">Your local price index</h4>
-  <h6 class="text-center">Check out what others have posted recently:</h6>
+{% block content %}
+<div class="bento-container">
+  <!-- Hero Section -->
+  <div class="bento-grid">
+    <div class="bento-card" style="grid-column: span 12; background: linear-gradient(135deg, var(--success-color) 0%, var(--accent-color) 100%); color: white; border: none;">
+      <div class="bento-card-body text-center">
+        <h1 class="display-4 fw-bold mb-3">
+          <i class="fas fa-building me-3"></i>
+          {% if is_owner_view %}
+            My Businesses
+          {% else %}
+            Business Directory
+          {% endif %}
+        </h1>
+        <p class="lead mb-4">
+          {% if is_owner_view %}
+            Manage your business listings and products
+          {% else %}
+            Discover local businesses and vendors in your community
+          {% endif %}
+        </p>
+        <div class="d-flex justify-content-center gap-3 flex-wrap">
+          {% if is_owner_view %}
+            <a href="{% url 'Business:add' %}" class="btn btn-light btn-bento">
+              <i class="fas fa-plus me-2"></i>Add Business
+            </a>
+            <a href="{% url 'Business:all' %}" class="btn btn-outline-light btn-bento">
+              <i class="fas fa-globe me-2"></i>View Public Directory
+            </a>
+          {% else %}
+            <a href="{% url 'Business:add' %}" class="btn btn-light btn-bento">
+              <i class="fas fa-plus me-2"></i>Add Your Business
+            </a>
+            {% if user.is_authenticated %}
+              <a href="{% url 'Business:my-businesses' %}" class="btn btn-outline-light btn-bento">
+                <i class="fas fa-user me-2"></i>Manage My Businesses
+              </a>
+            {% endif %}
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
 
-  {% for business in all_business %}
-    {% if forloop.first %}
-    <div class="row">
-    {% endif %}
-        <div class="col-lg-4">
-          <div class="card my-1 shadow-sm ">
-            <div class="card-header col m-0 p-0">
-                <div class="row ">
-                  <div class="col-7">
-                    <p class="font-weight-bold m-0 p-0 ml-1" >{{business.name}}
-                      {% if business.date_created.date|isNew %}
-                      <small class="badge bg-success text-wrap ml-1">New</small></p>
-                      {% endif %}
-                  </div>
-                  <div class="col-5">
-                    <small class="float-right mr-0 p-0 mb-0  text-muted">{{business.date_updated|olderDate|naturalday }}</small>
-                    {% comment %} {% else %} {% endcomment %}
-                    {% comment %} <small class="text-right ml-3 p-0 mb-0">[{{business.date_updated.date|naturaltime}}]</small> {% endcomment %}
-                    {% comment %} {% endif %} {% endcomment %}
-                  </div>
-                </div>
-            </div>      
-            <div class="card-body pb-1 mb-0 p-1">
-                  <a href="{% url 'Business:detail' business.id %}"class="stretched-link" ></a>
-                  <div class="row">
-                    <!-- business title -->
-                    <div class="col-9">  
-                      {% comment %} <h6 class="text-responsive"style="" >{{business.name}}</h6>
-                      <p>{{business.location}}</p> {% endcomment %}
-                          <small class="text repsonsive m-0 p-0"  ><b>Vendor:</b> {% if business.name %}{{business.name}} {% else %} ...{% endif %}</small><br>
-                          <small class="text repsonsive m-0 p-0"  ><b>Location:</b>{% if business.location %} {{business.location}} {% else %} ...{% endif %}</small><br>
-                          <small class="text repsonsive m-0 p-0"  >{% if business.description %}  {{business.description|truncatewords:10}} {% else %} ...{% endif %}</small><br>
+  {% if all_business %}
+    <!-- Businesses Section -->
+    <div class="bento-grid">
+      <div class="bento-card" style="grid-column: span 12;">
+        <div class="bento-card-header">
+          <h3 class="mb-0">
+            <i class="fas fa-store me-2 text-success"></i>
+            {% if is_owner_view %}
+              Your Businesses
+            {% else %}
+              Local Businesses
+            {% endif %}
+          </h3>
+          <p class="text-muted mb-0">
+            {% if is_owner_view %}
+              Manage and monitor your business listings
+            {% else %}
+              Browse through our community's business directory
+            {% endif %}
+          </p>
+        </div>
+        <div class="bento-card-body">
+          <div class="row g-4">
+            {% for business in all_business %}
+              <div class="col-lg-4 col-md-6 position-relative">
+                <div class="bento-card h-100 business-card">
+                  <a href="{% url 'Business:detail' business.id %}" class="stretched-link"></a>
+                  <div class="bento-card-body">
+                    <!-- Business Header -->
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                      <h6 class="fw-bold mb-1 text-truncate">{{business.name}}</h6>
+                      <div class="d-flex gap-1 flex-column align-items-end">
+                        {% if business.date_created.date|isNew %}
+                          <span class="badge bg-success bg-new">New</span>
+                        {% endif %}
+                        <small class="text-muted">{{business.date_updated|olderDate|naturalday }}</small>
+                        <!-- Privacy Badge -->
+                        {% if business.is_public %}
+                          <span class="badge bg-success">
+                            <i class="fas fa-globe me-1"></i>Public
+                          </span>
+                        {% else %}
+                          <span class="badge bg-danger">
+                            <i class="fas fa-lock me-1"></i>Private
+                          </span>
+                        {% endif %}
+                      </div>
                     </div>
 
-                    <!-- Business image -->
-                    {% if business.image  %}
-                      
-                      <div class="col-3 ">
-                        {% thumbnail business.image "50x50" as busImg %}
-                          <img class=" img img-fluid rounded float-right" src={{busImg.url}} alt={{business.name}} style="max-width:85px; margin-left:10px;">
+                    <!-- Business Image -->
+                    {% if business.image %}
+                      <div class="business-image-container mb-1">
+                        {% thumbnail business.image "200x150" crop="center" as busImg %}
+                          <img class="img-fluid rounded" src="{{busImg.url}}" alt="{{business.name}}" style="width: 100%; height: 150px; object-fit: cover;">
                         {% endthumbnail %}
                       </div>
+                    {% else %}
+                      <div class="business-image-placeholder mb-1">
+                        <div class="d-flex align-items-center justify-content-center bg-light rounded" style="height: 150px;">
+                          <i class="fas fa-store fa-2x text-muted"></i>
+                        </div>
+                      </div>
                     {% endif %}
-                    
+
+                    <!-- Business Details -->
+                    <div class="business-details">
+                      {% if business.location %}
+                        <div class="location-info mb-1">
+                          <small class="text-muted">
+                            <i class="fas fa-map-marker-alt me-1"></i>{{business.location}}
+                          </small>
+                        </div>
+                      {% endif %}
+
+                      {% if business.description %}
+                        <div class="description-info mb-1">
+                          <small class="text-muted">
+                            {{business.description|truncatewords:15}}
+                          </small>
+                        </div>
+                      {% endif %}
+
+                      <!-- Business Stats -->
+                      <div class="business-stats">
+                        <div class="row text-center">
+                          <div class="col-6">
+                            <div class="stat-item">
+                              <small class="text-muted">Products</small>
+                              <div class="fw-bold text-primary">{{ business.product_set.count }}</div>
+                            </div>
+                          </div>
+                          <div class="col-6">
+                            <div class="stat-item">
+                              <small class="text-muted">Status</small>
+                              {% if business.is_public %}
+                              <div class="fw-bold text-warning">
+                                  <i class="fas fa-globe"></i> Public
+                                {% else %}
+                              <div class="fw-bold text-info">
+                              
+                                  <i class="fas fa-lock"></i> Private
+                                {% endif %}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="mt-3" style="position: relative; z-index: 10;">
+                      {% if is_owner_view %}
+                        <!-- Owner Actions -->
+                        <div class="d-flex gap-2">
+                          <a href="{% url 'Business:edit' business.id %}" class="btn btn-warning-bento btn-bento flex-fill">
+                            <i class="fas fa-edit me-1"></i>Edit
+                          </a>
+                        </div>
+                      {% endif %}
+                    </div>
                   </div>
-                
-              </div>    
+                </div>
+              </div>
+            {% endfor %}
           </div>
+        </div>
       </div>
-    {% if forloop.counter|divisibleby:3 %} </div><div class="row">{% endif %}
-    {% if forloop.last %}</div>{% endif %}    
-  {% endfor %}
+    </div>
 
-{% else %}
-<h1>Wikonomi Business List Page</h1>
-{% endif %}
+    <!-- Quick Actions Section (only for owners) -->
+    {% if is_owner_view %}
+      <div class="bento-grid">
+        <div class="bento-card" style="grid-column: span 12;">
+          <div class="bento-card-header">
+            <h4 class="mb-0">
+              <i class="fas fa-bolt me-2 text-warning"></i>Quick Actions
+            </h4>
+          </div>
+          <div class="bento-card-body">
+            <div class="row g-3">
+              <div class="col-md-4 col-sm-6">
+                <a href="{% url 'Business:add' %}" class="btn btn-success-bento btn-bento w-100 h-100 d-flex flex-column align-items-center justify-content-center">
+                  <i class="fas fa-store fa-2x mb-2"></i>
+                  <span>Add Business</span>
+                </a>
+              </div>
+              <div class="col-md-4 col-sm-6">
+                <a href="{% url 'Product:add-general' %}" class="btn btn-primary-bento btn-bento w-100 h-100 d-flex flex-column align-items-center justify-content-center">
+                  <i class="fas fa-box fa-2x mb-2"></i>
+                  <span>Post Product</span>
+                </a>
+              </div>
+              <div class="col-md-4 col-sm-6">
+                <a href="{% url 'Search:search' %}" class="btn btn-warning-bento btn-bento w-100 h-100 d-flex flex-column align-items-center justify-content-center">
+                  <i class="fas fa-search fa-2x mb-2"></i>
+                  <span>Search</span>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    {% endif %}
 
+  {% else %}
+    <!-- Empty State -->
+    <div class="bento-grid">
+      <div class="bento-card" style="grid-column: span 12;">
+        <div class="empty-state">
+          {% if is_owner_view %}
+            <i class="fas fa-store"></i>
+            <h2>You haven't created any businesses yet</h2>
+            <p class="lead">Start building your business presence by adding your first business!</p>
+          {% else %}
+            <i class="fas fa-building"></i>
+            <h2>No Businesses Yet</h2>
+            <p class="lead">Be the first to add a business to our directory and help build your community's business network!</p>
+          {% endif %}
+          <div class="d-flex justify-content-center gap-3 flex-wrap">
+            <a href="{% url 'Business:add' %}" class="btn btn-success-bento btn-bento">
+              <i class="fas fa-plus me-2"></i>Add Your Business
+            </a>
+            <a href="{% url 'Product:add-general' %}" class="btn btn-primary-bento btn-bento">
+              <i class="fas fa-box me-2"></i>Post a Product
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+</div>
 
+<style>
+  .business-card {
+    transition: all 0.3s ease;
+    position: relative;
+  }
+  .business-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-xl);
+  }
+    cursor: pointer;
+  }
+
+  .business-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-xl);
+  }
+
+  .business-image-container {
+    position: relative;
+    overflow: hidden;
+    border-radius: 8px;
+  }
+
+  .business-image-placeholder {
+    border-radius: 8px;
+  }
+
+  .location-info, .description-info {
+    font-size: 0.875rem;
+  }
+
+  .business-stats {
+    border-top: 1px solid var(--gray-200);
+    padding-top: 1rem;
+  }
+
+  .stat-item {
+    padding: 0.5rem;
+  }
+
+  .stat-item small {
+    font-size: 0.75rem;
+  }
+
+  /* Badge styling with important to override any conflicting styles */
+  /* Public business badge */
+  .badge.bg-success:not(.bg-new) {
+    background-color: #6f42c1 !important; /* Purple color for public */
+    color: white !important;
+  }
+  
+  /* Private business badge */
+  .badge.bg-danger {
+    background-color: #0d6efd !important; /* Blue color for private */
+    color: white !important;
+  }
+  
+  /* Keep 'New' badge green */
+  .badge.bg-success.bg-new {
+    background-color: var(--success-color) !important;
+    color: white !important;
+  }
+  
+  .badge {
+    font-size: 0.75rem !important;
+    padding: 0.25rem 0.5rem !important;
+    border-radius: 6px !important;
+    font-weight: 500 !important;
+  }
+
+  @media (max-width: 767px) {
+    .bento-container {
+      padding: 0.5rem;
+    }
+    
+    .display-4 {
+      font-size: 2rem;
+    }
+    
+    .lead {
+      font-size: 1rem;
+    }
+  }
+</style>
 {% endblock %}

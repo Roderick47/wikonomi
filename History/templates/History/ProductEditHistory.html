@@ -1,27 +1,231 @@
 {% extends 'home/base.html' %}
+{% load humanize %}
 
 {% block content %}
-    <h1>'{{product.name}}' Edit History</h1>
-    <table class="table table-condensed">
-        <theader>
-            <tr>
-                <th>Title</th>
-                <th>Price</th>
-                <th>Author</th>
-                <th>Date Updated</th>
-            </tr>
-        </theader>
-        <tbody>
-            {% for product1 in history %}
-            <tr>
-                <td><a href="{% url 'History:edit-detail' product1.id %}">{{product1.name}}</a></td>
-                <td>{{product1.price}}</td>
-                <td>{{product1.current_author}}</td>
-                <td>{{product1.date_updated}}</td>
-            </tr>
-            {% endfor %}
-        </tbody> 
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <h1 class="mb-4">'{{product.name}}' Price History</h1>
 
-    </table>
+                <!-- Price Chart Section -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-chart-line me-2"></i>Price Trend
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="priceChart" width="400" height="200"></canvas>
+                    </div>
+                </div>
 
+                <!-- History Table Section -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-history me-2"></i>Edit History
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover table-striped">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th scope="col">Title</th>
+                                        <th scope="col">Price</th>
+                                        <th scope="col">Author</th>
+                                        <th scope="col">Date Updated</th>
+                                        <th scope="col">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for product1 in history %}
+                                    <tr>
+                                        <td>
+                                            <a href="{% url 'History:edit-detail' product1.id %}" class="text-decoration-none">
+                                                {{product1.name}}
+                                            </a>
+                                        </td>
+                                        <td>
+                                            <span class="fw-bold text-primary">K{{product1.price|floatformat:2|intcomma}}</span>
+                                        </td>
+                                        <td>{{product1.current_author}}</td>
+                                        <td>
+                                            <small class="text-muted">
+                                                {{product1.date_updated|date:"M d, Y"}}<br>
+                                                <span class="badge bg-secondary">{{product1.date_updated|timesince}} ago</span>
+                                            </small>
+                                        </td>
+                                        <td>
+                                            <a href="{% url 'History:edit-detail' product1.id %}" class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-eye me-1"></i>View
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="5" class="text-center py-4">
+                                            <i class="fas fa-info-circle fa-2x text-muted mb-2"></i>
+                                            <p class="text-muted">No history records found for this product.</p>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Back Button -->
+                <div class="mt-3">
+                    <a href="{% url 'Product:detail' product.id %}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Back to Product
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
 {% endblock content %}
+
+{% block script %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Extract price and date data from the table
+    const historyData = [
+        {% for product1 in history %}
+        {
+            id: {{ product1.id }},
+            date: '{{ product1.date_updated|date:"Y-m-d" }}',
+            price: {{ product1.price|floatformat:2 }},
+            author: '{{ product1.current_author }}',
+            name: '{{ product1.name }}'
+        },
+        {% endfor %}
+    ];
+
+    // Sort data by date (oldest first)
+    historyData.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+    // Prepare data for Chart.js
+    const labels = historyData.map(item => {
+        const date = new Date(item.date);
+        return date.toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric'
+        });
+    });
+
+    const prices = historyData.map(item => item.price);
+
+    // Create the chart
+    const ctx = document.getElementById('priceChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Price (K)',
+                data: prices,
+                borderColor: 'rgb(75, 192, 192)',
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4,
+                pointBackgroundColor: 'rgb(75, 192, 192)',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2,
+                pointRadius: 6,
+                pointHoverRadius: 8
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Price Changes Over Time',
+                    font: {
+                        size: 16,
+                        weight: 'bold'
+                    },
+                    padding: 20
+                },
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false,
+                    callbacks: {
+                        label: function(context) {
+                            const dataIndex = context.dataIndex;
+                            const item = historyData[dataIndex];
+                            return [
+                                `Price: K${context.parsed.y.toLocaleString()}`,
+                                `Date: ${context.label}`,
+                                `Author: ${item.author}`,
+                                `Product: ${item.name}`
+                            ];
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    display: true,
+                    title: {
+                        display: true,
+                        text: 'Date',
+                        font: {
+                            size: 12,
+                            weight: 'bold'
+                        }
+                    },
+                    grid: {
+                        display: false
+                    }
+                },
+                y: {
+                    display: true,
+                    title: {
+                        display: true,
+                        text: 'Price (K)',
+                        font: {
+                            size: 12,
+                            weight: 'bold'
+                        }
+                    },
+                    beginAtZero: false,
+                    grid: {
+                        color: 'rgba(200, 200, 200, 0.2)'
+                    }
+                }
+            },
+            interaction: {
+                mode: 'nearest',
+                axis: 'x',
+                intersect: false
+            },
+            elements: {
+                point: {
+                    hoverRadius: 12
+                }
+            },
+            onClick: function(event, elements) {
+                if (elements.length > 0) {
+                    const dataIndex = elements[0].index;
+                    const item = historyData[dataIndex];
+                    if (item && item.id) {
+                        const detailUrl = `{% url 'History:edit-detail' 0 %}`.replace('0', item.id);
+                        window.location.href = detailUrl;
+                    }
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

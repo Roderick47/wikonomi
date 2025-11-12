@@ -1,0 +1,209 @@
+{% load static %}
+
+<!-- Interactive Location Selection Map Component -->
+<div class="map-container">
+  <div id="map-{{ map_id|default:'location-selector' }}" style="height: {{ height|default:'400px' }}; width: 100%; border-radius: 12px;"></div>
+</div>
+
+<!-- Leaflet CSS and JS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+     crossorigin=""/>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+     crossorigin=""></script>
+
+<style>
+  .map-container {
+    position: relative;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+
+  .location-marker {
+    background: var(--primary-color);
+    border: 3px solid white;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    cursor: move;
+  }
+
+  .location-marker::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 8px;
+    height: 8px;
+    background: white;
+    border-radius: 50%;
+  }
+
+  .map-instructions {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    color: var(--gray-700);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    z-index: 1000;
+    backdrop-filter: blur(5px);
+  }
+
+  .map-loading {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(255, 255, 255, 0.9);
+    padding: 16px 24px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 1000;
+  }
+</style>
+
+<script>
+  // Initialize location selection map
+  const mapContainer = document.getElementById('map-{{ map_id|default:'location-selector' }}');
+  if (mapContainer && typeof L !== 'undefined') {
+    // Get initial coordinates from form fields
+    const initialLat = {{ initial_latitude|default:'-1.2921' }};
+    const initialLng = {{ initial_longitude|default:'36.8219' }};
+    const formLatField = document.getElementById('{{ latitude_field_id|default:'latitude' }}');
+    const formLngField = document.getElementById('{{ longitude_field_id|default:'longitude' }}');
+    const formAddressField = document.getElementById('{{ address_field_id|default:'id_location' }}');
+
+    // Initialize map
+    const locationMap = L.map('map-{{ map_id|default:'location-selector' }}').setView([initialLat, initialLng], {{ zoom|default:'13' }});
+
+    // Add tile layer (OpenStreetMap)
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: ' OpenStreetMap contributors'
+    }).addTo(locationMap);
+
+    // Add location marker
+    let locationMarker = null;
+    let currentLocation = { lat: initialLat, lng: initialLng };
+
+    function updateLocation(lat, lng) {
+      currentLocation = { lat, lng };
+
+      // Update form fields
+      if (formLatField) formLatField.value = lat;
+      if (formLngField) formLngField.value = lng;
+
+      // Update marker position
+      if (locationMarker) {
+        locationMarker.setLatLng([lat, lng]);
+      } else {
+        locationMarker = L.marker([lat, lng], {
+          draggable: true,
+          icon: L.divIcon({
+            className: 'location-marker',
+            iconSize: [24, 24],
+            iconAnchor: [12, 24]
+          })
+        }).addTo(locationMap);
+
+        // Add popup to marker
+        locationMarker.bindPopup(`
+          <div style="text-align: center;">
+            <strong>Selected Location</strong><br>
+            <small>Lat: ${lat.toFixed(6)}<br>Lng: ${lng.toFixed(6)}</small>
+            <br><button onclick="locationMap.closePopup(); updateLocationFromMarker();" class="btn btn-sm btn-primary mt-1">
+              <i class="fas fa-save"></i> Confirm Location
+            </button>
+          </div>
+        `).openPopup();
+
+        // Make marker draggable
+        locationMarker.on('dragend', function(e) {
+          const newPos = e.target.getLatLng();
+          updateLocation(newPos.lat, newPos.lng);
+          updateAddressFromCoordinates(newPos.lat, newPos.lng);
+        });
+      }
+
+      // Update address if field exists
+      if (formAddressField) {
+        updateAddressFromCoordinates(lat, lng);
+      }
+    }
+
+    function updateLocationFromMarker() {
+      if (locationMarker) {
+        const pos = locationMarker.getLatLng();
+        updateLocation(pos.lat, pos.lng);
+        locationMap.closePopup();
+      }
+    }
+
+    // Add click handler to map
+    locationMap.on('click', function(e) {
+      updateLocation(e.latlng.lat, e.latlng.lng);
+    });
+
+    // Reverse geocoding function
+    function updateAddressFromCoordinates(lat, lng) {
+      if (!formAddressField) return;
+
+      // Show loading state
+      formAddressField.placeholder = 'Getting address...';
+
+      fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`)
+        .then(response => response.json())
+        .then(data => {
+          if (data.display_name) {
+            formAddressField.value = data.display_name;
+            formAddressField.placeholder = 'Address auto-filled from map';
+          } else {
+            formAddressField.placeholder = 'Click on map to set location';
+          }
+        })
+        .catch(error => {
+          console.log('Reverse geocoding failed:', error);
+          formAddressField.placeholder = 'Click on map to set location';
+        });
+    }
+
+    // Add instructions overlay
+    const instructions = document.createElement('div');
+    instructions.className = 'map-instructions';
+    instructions.innerHTML = '<i class="fas fa-mouse-pointer me-1"></i>Click on the map to select your location';
+    mapContainer.appendChild(instructions);
+
+    // Remove instructions after 5 seconds or on first click
+    let instructionsRemoved = false;
+    locationMap.on('click', function() {
+      if (!instructionsRemoved) {
+        instructions.remove();
+        instructionsRemoved = true;
+      }
+    });
+
+    setTimeout(() => {
+      if (!instructionsRemoved) {
+        instructions.remove();
+        instructionsRemoved = true;
+      }
+    }, 5000);
+
+    // If initial coordinates are provided, set the marker
+    if (initialLat !== '-1.2921' && initialLng !== '36.8219') {
+      updateLocation(initialLat, initialLng);
+    }
+
+    // Expose update function globally for use by other scripts
+    window.updateMapLocation = updateLocation;
+  }
+</script>

@@ -1,38 +1,176 @@
 {% extends 'Home/base.html' %}{% load humanize %}
 
-
-
 {% block content %}
-    <table class="table table-condensed">
-        <tr>
-            <th>Average Price:</th> 
-            <td>K{{summary.price__avg|floatformat:2|intcomma}}</td>
-        </tr>
-        <tr>
-            <th>Lowest Price:</th> 
-            <td> K{{summary.price__min|floatformat:2|intcomma}}</td>
-        </tr>
-        <tr>
-            <th>Highest Price: </th>
-            <td>K{{summary.price__max|floatformat:2|intcomma}}</td>
-        </tr> 
-    </table>
+<div class="bento-container">
+  <!-- Price Comparison Graph -->
+  <div class="bento-grid">
+    <div class="bento-card" style="grid-column: span 12;">
+      <div class="bento-card-header">
+        <h3 class="mb-0">
+          <i class="fas fa-chart-bar me-2 text-primary"></i>Price Comparison for "{{ tag.name }}"
+        </h3>
+        <p class="text-muted mb-0">Visualize how product prices compare within this tag</p>
+      </div>
+      <div class="bento-card-body">
+        <canvas id="priceChart" width="400" height="200"></canvas>
+      </div>
+    </div>
+  </div>
 
-    <table class="table table-condensed">
-        <tr>
-            <th scope="row">Product</th>
-            <th scope="row">Price</th>
-            <th scope="row">Business</th>
-            <th scope="row">Location</th>
-        </tr>
-        {% for product in products %}
-        <tr>
-            <td>{{product.name}}</td>
-            <td>K {{product.price|floatformat:2|intcomma}}</td>
-            <td>{{product.business.name}}</td>
-            <td></td>
-            <td><a class="btn btn-warning btn-sm" href="{% url 'Product:edit' product.id %}">Edit</a></td>
-        </tr>
-        {% endfor %}
-    </table>
-{% endblock content %}
+  <!-- Product List Table -->
+  <div class="bento-grid">
+    <div class="bento-card" style="grid-column: span 12;">
+      <div class="bento-card-header">
+        <h4 class="mb-0">
+          <i class="fas fa-list me-2 text-secondary"></i>Products in "{{ tag.name }}"
+        </h4>
+      </div>
+      <div class="bento-card-body">
+        <div class="table-responsive">
+          <table class="table table-hover">
+            <thead class="table-light">
+              <tr>
+                <th>Product</th>
+                <th>Price</th>
+                <th>Business</th>
+                <th>Location</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for product in products %}
+              <tr>
+                <td>{{ product.name }}</td>
+                <td><strong>K{{ product.price|floatformat:2|intcomma }}</strong></td>
+                <td>{{ product.business.name }}</td>
+                <td>{% if product.location %}{{ product.location }}{% else %}-{% endif %}</td>
+                <td><a class="btn btn-warning btn-sm" href="{% url 'Product:edit' product.id %}">Edit</a></td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Chart.js Script -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const ctx = document.getElementById('priceChart').getContext('2d');
+  
+  // Prepare data for the scatter chart
+  const productData = {{ product_data|safe }};
+  const normalPoints = [];
+  const currentPoints = [];
+  
+  productData.forEach(item => {
+    const point = {
+      x: item.index,
+      y: item.price
+    };
+    if (item.is_current === 'true') {
+      currentPoints.push(point);
+    } else {
+      normalPoints.push(point);
+    }
+  });
+  
+  const avgPrice = {{ summary.price__avg|default:0 }};
+  const maxIndex = productData.length;
+  
+  const data = {
+    datasets: [
+      {
+        label: 'Other Products',
+        data: normalPoints,
+        backgroundColor: 'rgba(99, 102, 241, 0.8)',
+        borderColor: 'rgba(99, 102, 241, 1)',
+        pointRadius: 6,
+        pointHoverRadius: 8
+      },
+      {
+        label: 'Current Product',
+        data: currentPoints,
+        backgroundColor: 'rgba(239, 68, 68, 0.8)',
+        borderColor: 'rgba(239, 68, 68, 1)',
+        pointRadius: 10,
+        pointHoverRadius: 12
+      },
+      {
+        label: 'Average Price',
+        data: [
+          { x: 0, y: avgPrice },
+          { x: maxIndex, y: avgPrice }
+        ],
+        type: 'line',
+        borderColor: 'rgba(34, 197, 94, 1)',
+        backgroundColor: 'rgba(34, 197, 94, 0.2)',
+        borderWidth: 3,
+        pointRadius: 0,
+        fill: false
+      }
+    ]
+  };
+  
+  const config = {
+    type: 'scatter',
+    data: data,
+    options: {
+      responsive: true,
+      plugins: {
+        legend: {
+          position: 'top',
+        },
+        title: {
+          display: true,
+          text: 'Price Scatter Plot and Average for "{{ tag.name }}"'
+        },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              const index = context.dataIndex;
+              if (productData[index]) {
+                return `${productData[index].name}: K${productData[index].price}`;
+              }
+              return context.label;
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          type: 'linear',
+          position: 'bottom',
+          title: {
+            display: true,
+            text: 'Product Index'
+          },
+          ticks: {
+            stepSize: 1
+          }
+        },
+        y: {
+          beginAtZero: true,
+          title: {
+            display: true,
+            text: 'Price (K)'
+          }
+        }
+      }
+    }
+  };
+  
+  // Only create chart if there is data
+  if (normalPoints.length > 0 || currentPoints.length > 0) {
+    new Chart(ctx, config);
+  } else {
+    // Show a message if no data
+    ctx.font = '20px Arial';
+    ctx.fillText('No products available for this tag.', 50, 100);
+  }
+});
+</script>
+{% endblock %}

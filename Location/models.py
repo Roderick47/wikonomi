@@ -4,8 +4,8 @@ from django.urls import reverse
 
 # Create your models here.
 class Location(models.Model):
-    latitude = models.FloatField()
-    longitude = models.FloatField()
+    latitude = models.FloatField(null=True, blank=True)
+    longitude = models.FloatField(null=True, blank=True)
     
     def __str__(self):
         return "location: {}, {}".format(self.latitude, self.longitude)

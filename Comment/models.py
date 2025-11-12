@@ -1,88 +1,65 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.utils import timezone
 from Product.models import Product
 from Business.models import Business
 from Information.models import Info
 
 # Create your models here.
 
+class Comment(models.Model):
+    """Base comment model that can be used for products, businesses, or info"""
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='%(class)s_comments')
+    body = models.TextField(max_length=500)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='replies')
+    is_active = models.BooleanField(default=True)
 
-class ProductComment(models.Model):
-    # sno = models.AutoField(primary_key=True)
-    product = models.ForeignKey(Product,on_delete=models.CASCADE, related_name="comments")
-    user = models.ForeignKey(User,on_delete=models.CASCADE)
-    body = models.TextField(max_length=250)
-    slug= models.CharField(max_length=150)
-    date = models.DateTimeField(auto_now_add=True)
-    parent = models.ForeignKey('self',on_delete=models.SET_NULL,null=True,related_name="replies")
+    class Meta:
+        abstract = True
+        ordering = ['-created_at']
 
     def __str__(self):
-        return self.user.username +": "+ self.body[:15]+"..."
+        return f"{self.user.username}: {self.body[:50]}..."
 
-    def has_reply(comment):
-        if comment.parent:
-            return True
-        return False
+    @property
+    def is_reply(self):
+        return self.parent is not None
 
-    # def count_reply(comment):
-    #     if 
-    #     comment.parent
-    def check_replies(self):
-        if self.replies.exists():
-            count=0
-            for reply in self.replies.all():
-                if reply.replies.exists():
-                    count += reply.replies.count()
-                else:
-                    pass
-                count += 1
-            
-            count += self.replies.count()
-             
-            if count:
-                if count>1:
-                    string = "[ {number} replies ]".format(number=count-1)
-                if count == 1:
-                    string = "[ {number} reply ]".format(number=count)
-                return string
-        else: 
+    @property
+    def reply_count(self):
+        return self.replies.filter(is_active=True).count()
+
+    @property
+    def all_replies(self):
+        return self.replies.filter(is_active=True).order_by('created_at')
+
+    def get_reply_text(self):
+        if self.reply_count == 0:
             return ""
+        elif self.reply_count == 1:
+            return "1 reply"
+        else:
+            return f"{self.reply_count} replies"
 
-    def replies_count(self):
-        if self.replies.count:
-
-            return self.replies.count()
-
-
-class BusinessComment(models.Model):
-    business = models.ForeignKey(Business,on_delete=models.CASCADE, related_name="comments")
-    user = models.ForeignKey(User,on_delete=models.CASCADE)
-    body = models.TextField(max_length=250)
-    slug= models.CharField(max_length=150)
-    date = models.DateTimeField(auto_now_add=True)
-    parent = models.ForeignKey('self',on_delete=models.CASCADE,null=True,related_name="replies")
-
-    def __str__(self):
-        return self.user.username +": "+ self.body[:15]+"..."
-
-    def has_reply(comment):
-        if comment.parent:
-            return True
-        return False
+class ProductComment(Comment):
+    """Comments for products"""
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='comments')
     
+    class Meta:
+        ordering = ['-created_at']
+
+class BusinessComment(Comment):
+    """Comments for businesses"""
+    business = models.ForeignKey(Business, on_delete=models.CASCADE, related_name='comments')
     
-class InfoComment(models.Model):
-    info = models.ForeignKey(Info,on_delete=models.CASCADE,related_name="comments")
-    user = models.ForeignKey(User,on_delete=models.CASCADE)
-    body = models.TextField(max_length=250)
-    slug= models.CharField(max_length=150)
-    date = models.DateTimeField(auto_now_add=True)
-    parent = models.ForeignKey('self',on_delete=models.CASCADE,null=True,related_name="replies")
+    class Meta:
+        ordering = ['-created_at']
 
-    def __str__(self):
-        return self.user.username +": "+ self.body[:15]+"..."
-
-    def has_reply(comment):
-        if comment.parent:
-            return True
-        return False
+class InfoComment(Comment):
+    """Comments for information posts"""
+    info = models.ForeignKey(Info, on_delete=models.CASCADE, related_name='comments')
+    
+    class Meta:
+        ordering = ['-created_at']

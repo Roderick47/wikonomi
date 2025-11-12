@@ -44,6 +44,15 @@
                       <p>{{business.location}}</p> {% endcomment %}
                         {% if product.price %}
                           <small class="text-responsive m-0 pb-0"><b>Price:</b> K {{product.price|floatformat:2|intcomma}}</small><br>
+                          {% if product.get_last_price and product.get_last_price != product.price %}
+                            <small class="text-muted"><b>Last:</b> K {{product.get_last_price|floatformat:2|intcomma}}</small><br>
+                            {% if product.get_price_change %}
+                              <small class="{% if product.get_price_change > 0 %}text-danger{% elif product.get_price_change < 0 %}text-success{% endif %}">
+                                <b>Change:</b> 
+                                {% if product.get_price_change > 0 %}+{% endif %}K {{product.get_price_change|floatformat:2|intcomma}}
+                              </small><br>
+                            {% endif %}
+                          {% endif %}
                         {% endif %}
                         {% if product.business %}
                           <small class="text repsonsive m-0 p-0"  ><b>Vendor:</b> {{product.business.name}}</small><br>

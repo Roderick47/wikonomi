@@ -1,29 +1,480 @@
-{% extends 'Home/form_template.html' %}
+{% extends 'Home/base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
 
-{% block content_before_form %}
-<div class="card col-8 mx-auto">
-  <div class="card-header text-center">
-    <b>You are creating a public business page.<br> This means that anyone can find, edit or delete this information that you are posting.</b>
-    <p>If you would like to post your own business page that can't be edited by others, follow this <a href="{% url 'Business:add-private' %}">link.</a><p>
+{% block title %}Add New Business - WIKONOMI{% endblock %}
+
+{% block content %}
+<div class="bento-container">
+  <!-- Hero Section -->
+  <div class="bento-grid">
+    <div class="bento-card" style="grid-column: span 12; background: linear-gradient(135deg, var(--success-color) 0%, var(--accent-color) 100%); color: white; border: none;">
+      <div class="bento-card-body text-center">
+        <h1 class="display-4 fw-bold mb-3">
+          <i class="fas fa-store me-3"></i>Add New Business
+        </h1>
+        <p class="lead mb-4">Create a public business page for the community</p>
+        <div class="d-flex justify-content-center align-items-center gap-3 mb-4">
+          <div class="alert alert-info d-inline-block" style="background: rgba(255,255,255,0.2); border: none; color: white;">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <strong>Public Business:</strong> Anyone can find, edit, or delete this information.
+            <a href="{% url 'Business:add-private' %}" class="alert-link ms-2">Create Private Business Instead</a>
+          </div>
+          <button type="button" class="btn btn-outline-light btn-sm" data-bs-toggle="modal" data-bs-target="#businessTypeModal">
+            <i class="fas fa-info-circle me-1"></i>What's the Difference?
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Form Section -->
+  <div class="bento-grid">
+    <div class="bento-card" style="grid-column: span 12;">
+      <div class="bento-card-header">
+        <h3 class="mb-0">
+          <i class="fas fa-edit me-2 text-primary"></i>Business Information
+        </h3>
+        <p class="text-muted mb-0">Fill in the details below to create your business page</p>
+      </div>
+      <div class="bento-card-body">
+        {% if messages %}
+          {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+              {{ message }}
+              <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+          {% endfor %}
+        {% endif %}
+
+        <form method="post" enctype="multipart/form-data" id="business-form">
+          {% csrf_token %}
+          
+          <!-- Business Details -->
+          <div class="row g-4">
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="{{ form.name.id_for_label }}" class="form-label">
+                  <i class="fas fa-store me-1"></i>Business Name *
+                </label>
+                {{ form.name }}
+                {% if form.name.errors %}
+                  <div class="text-danger small">{{ form.name.errors.0 }}</div>
+                {% endif %}
+              </div>
+            </div>
+            
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="{{ form.image.id_for_label }}" class="form-label">
+                  <i class="fas fa-image me-1"></i>Business Image
+                </label>
+                {{ form.image }}
+                {% if form.image.errors %}
+                  <div class="text-danger small">{{ form.image.errors.0 }}</div>
+                {% endif %}
+              </div>
+            </div>
+            
+            <div class="col-12">
+              <div class="form-group">
+                <label for="{{ form.description.id_for_label }}" class="form-label">
+                  <i class="fas fa-align-left me-1"></i>Description
+                </label>
+                {{ form.description }}
+                {% if form.description.errors %}
+                  <div class="text-danger small">{{ form.description.errors.0 }}</div>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+
+          <!-- Location Section -->
+          <div class="location-section mt-4">
+            <h5 class="mb-3">
+              <i class="fas fa-map-marker-alt me-2 text-warning"></i>GPS Location
+            </h5>
+            
+            <div class="alert alert-info">
+              <i class="fas fa-info-circle me-2"></i>
+              <strong>GPS Location Required:</strong> Your device's GPS will be used to automatically get your business location. This provides the most accurate location for customers.
+            </div>
+            
+            <div class="row g-3">
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="{{ form.location.id_for_label }}" class="form-label">
+                    <i class="fas fa-map me-1"></i>Address (Auto-filled from GPS)
+                  </label>
+                  {{ form.location }}
+                  {% if form.location.errors %}
+                    <div class="text-danger small">{{ form.location.errors.0 }}</div>
+                  {% endif %}
+                  <small class="text-muted">Address will be automatically filled from your device's GPS coordinates</small>
+                </div>
+              </div>
+              
+              <div class="col-md-3">
+                <div class="form-group">
+                  <label class="form-label">
+                    <i class="fas fa-coordinates me-1"></i>Latitude
+                  </label>
+                  <input type="number" class="form-control" id="latitude" name="latitude"
+                         step="any" placeholder="GPS coordinates" readonly>
+                </div>
+              </div>
+              
+              <div class="col-md-3">
+                <div class="form-group">
+                  <label class="form-label">
+                    <i class="fas fa-coordinates me-1"></i>Longitude
+                  </label>
+                  <input type="number" class="form-control" id="longitude" name="longitude"
+                         step="any" placeholder="GPS coordinates" readonly>
+                </div>
+              </div>
+            </div>
+            
+            <div class="location-status mt-3">
+              <div id="location-status" class="alert alert-info" style="display: none;">
+                <i class="fas fa-spinner fa-spin me-2"></i>
+                <span id="location-message">Getting your GPS location...</span>
+              </div>
+            </div>
+            
+            <div class="text-center mt-3">
+              <button type="button" class="btn btn-outline-primary btn-bento" id="get-location-btn">
+                <i class="fas fa-crosshairs me-2"></i>Get GPS Location
+              </button>
+              <button type="button" class="btn btn-outline-info btn-bento ms-2" id="toggle-map-btn">
+                <i class="fas fa-map me-2"></i>Select on Map
+              </button>
+              <small class="d-block text-muted mt-2">Choose GPS detection or click on map to select location</small>
+            </div>
+
+            <!-- Interactive Map Section -->
+            <div class="map-section mt-4" id="map-section" style="display: none;">
+              <h6 class="mb-3">
+                <i class="fas fa-map-marked-alt me-2 text-info"></i>Click on Map to Select Location
+              </h6>
+              {% include 'Location/location_selector.html' with map_id='business-location' height='400px' latitude_field_id='latitude' longitude_field_id='longitude' address_field_id='id_location' %}
+            </div>
+          </div>
+
+          <!-- Submit Button -->
+          <div class="text-center mt-4">
+            <button type="submit" class="btn btn-success-bento btn-bento btn-lg">
+              <i class="fas fa-save me-2"></i>Create Business
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .location-section {
+    background: var(--gray-50);
+    padding: 1.5rem;
+    border-radius: 12px;
+    border: 1px solid var(--gray-200);
+  }
+
+  .form-group {
+    margin-bottom: 1rem;
+  }
+
+  .form-label {
+    font-weight: 600;
+    color: var(--gray-700);
+    margin-bottom: 0.5rem;
+  }
+
+  .form-control {
+    border: 2px solid var(--gray-200);
+    border-radius: 8px;
+    padding: 0.75rem;
+    transition: border-color 0.2s ease;
+  }
+
+  .form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgb(99 102 241 / 0.1);
+    outline: none;
+  }
+
+  .form-control[readonly] {
+    background-color: var(--gray-100);
+    color: var(--gray-600);
+  }
+</style>
+
+<script>
+  // Enhanced location detection with 3-level hierarchy
+  let currentLocation = null;
+  let userLocationObtained = false;
+  let mapLocationSelected = false;
+  let locationPermissionGranted = false;
+
+  function showLocationStatus(message, type = 'info') {
+    const statusDiv = document.getElementById('location-status');
+    const messageSpan = document.getElementById('location-message');
+
+    if (statusDiv && messageSpan) {
+      statusDiv.className = `alert alert-${type}`;
+      messageSpan.textContent = message;
+      statusDiv.style.display = 'block';
+    }
+  }
+
+  function hideLocationStatus() {
+    const statusDiv = document.getElementById('location-status');
+    if (statusDiv) {
+      statusDiv.style.display = 'none';
+    }
+  }
+
+  function updateCoordinates(lat, lng, source = 'gps') {
+    document.getElementById('latitude').value = lat;
+    document.getElementById('longitude').value = lng;
+    currentLocation = { lat, lng };
+
+    // Update map if available
+    if (typeof window.updateMapLocation === 'function') {
+      window.updateMapLocation(lat, lng);
+    }
+
+    // Try to get address from coordinates
+    getAddressFromCoordinates(lat, lng);
+
+    // Track which method was used
+    if (source === 'gps') {
+      userLocationObtained = true;
+      showLocationStatus(`GPS location set as default: ${lat.toFixed(6)}, ${lng.toFixed(6)}`, 'success');
+    } else if (source === 'map') {
+      mapLocationSelected = true;
+      showLocationStatus(`Map location selected: ${lat.toFixed(6)}, ${lng.toFixed(6)}`, 'success');
+    }
+  }
+
+  function getAddressFromCoordinates(lat, lng) {
+    showLocationStatus('Getting address from coordinates...', 'info');
+
+    fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`, {
+      headers: {
+        'User-Agent': 'Wikonomi/1.0 (public-business-location)'
+      }
+    })
+      .then(response => response.json())
+      .then(data => {
+        if (data.display_name) {
+          document.getElementById('id_location').value = data.display_name;
+          showLocationStatus(`Address found: ${data.display_name}`, 'success');
+        } else {
+          showLocationStatus('Location set, but could not get address automatically.', 'warning');
+        }
+      })
+      .catch(error => {
+        console.log('Reverse geocoding failed:', error);
+        showLocationStatus('Location set, but could not get address automatically.', 'warning');
+      });
+  }
+
+  function requestLocationPermission() {
+    return new Promise((resolve, reject) => {
+      if (!navigator.geolocation) {
+        resolve(false); // GPS not supported, gracefully continue
+        return;
+      }
+
+      showLocationStatus('Requesting location permission... Please allow access to use your current location as the default business location.', 'info');
+
+      navigator.geolocation.getCurrentPosition(
+        function(position) {
+          locationPermissionGranted = true;
+          const lat = position.coords.latitude;
+          const lng = position.coords.longitude;
+
+          // Set as default location (Level 1)
+          updateCoordinates(lat, lng, 'gps');
+          resolve(true);
+        },
+        function(error) {
+          locationPermissionGranted = false;
+
+          if (error.code === error.PERMISSION_DENIED) {
+            showLocationStatus('❌ GPS access denied - location data will NOT be saved with this business. You can still select a location on the map, or create the business without location data.', 'warning');
+          } else if (error.code === error.POSITION_UNAVAILABLE) {
+            showLocationStatus('❌ GPS information unavailable - location data will NOT be saved. Please check your GPS settings and try again, or use the map to select a location.', 'warning');
+          } else if (error.code === error.TIMEOUT) {
+            showLocationStatus('❌ GPS request timed out - location data will NOT be saved. Please try again or use the map to select a location.', 'warning');
+          }
+
+          resolve(false); // Continue without location
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 15000,
+          maximumAge: 300000
+        }
+      );
+    });
+  }
+
+  function clearLocationData() {
+    document.getElementById('latitude').value = '';
+    document.getElementById('longitude').value = '';
+    document.getElementById('id_location').value = '';
+    currentLocation = null;
+    userLocationObtained = false;
+    mapLocationSelected = false;
+    hideLocationStatus();
+  }
+
+  // Event listeners
+  document.getElementById('get-location-btn').addEventListener('click', function() {
+    requestLocationPermission();
+  });
+
+  // Map toggle functionality
+  document.getElementById('toggle-map-btn').addEventListener('click', function() {
+    const mapSection = document.getElementById('map-section');
+    const isVisible = mapSection.style.display !== 'none';
+
+    if (isVisible) {
+      mapSection.style.display = 'none';
+      this.innerHTML = '<i class="fas fa-map me-2"></i>Select on Map';
+    } else {
+      mapSection.style.display = 'block';
+      this.innerHTML = '<i class="fas fa-times me-2"></i>Hide Map';
+
+      // Initialize map if not already done
+      if (typeof window.updateMapLocation === 'function') {
+        const currentLat = document.getElementById('latitude').value || '-1.2921';
+        const currentLng = document.getElementById('longitude').value || '36.8219';
+        if (currentLat && currentLng && currentLat !== '-1.2921' && currentLng !== '36.8219') {
+          window.updateMapLocation(parseFloat(currentLat), parseFloat(currentLng));
+        }
+      }
+    }
+  });
+
+  // Enhanced form validation with 3-level location hierarchy
+  document.getElementById('business-form').addEventListener('submit', function(e) {
+    const latitude = document.getElementById('latitude').value;
+    const longitude = document.getElementById('longitude').value;
+
+    // Level 3: If GPS was denied and no map selection was made, allow form submission without location
+    if (!locationPermissionGranted && !mapLocationSelected) {
+      showLocationStatus('⚠️ No location set - Business will be created WITHOUT location data. You can add location information later from your business settings.', 'warning');
+      // Don't prevent submission - allow form to submit without location
+      return true;
+    }
+
+    // Level 2: If map was used, ensure coordinates are set
+    if (mapLocationSelected && (!latitude || !longitude)) {
+      e.preventDefault();
+      showLocationStatus('Map location selected but coordinates missing. Please try selecting the location again.', 'danger');
+      return false;
+    }
+
+    // Level 1: If GPS was used, ensure coordinates are set
+    if (userLocationObtained && (!latitude || !longitude)) {
+      e.preventDefault();
+      showLocationStatus('GPS location obtained but coordinates missing. Please try getting your location again.', 'danger');
+      return false;
+    }
+
+    // If we have coordinates, show success
+    if (latitude && longitude) {
+      if (mapLocationSelected) {
+        showLocationStatus('✅ Map location will be saved with the business.', 'success');
+      } else if (userLocationObtained) {
+        showLocationStatus('✅ GPS location will be saved with the business.', 'success');
+      }
+    }
+  });
+
+  // Initialize location system on page load
+  document.addEventListener('DOMContentLoaded', function() {
+    // Show immediate feedback that we're requesting location
+    showLocationStatus('🔍 Detecting your location... Please allow access to use your current location as the default business location.', 'info');
+    
+    // Small delay to ensure the UI has updated with the loading message
+    setTimeout(() => {
+      // Level 1: Try to get user's location by default
+      requestLocationPermission().then(function(gotLocation) {
+        if (!gotLocation) {
+          // Level 3: GPS not available, show helpful message but don't block
+          showLocationStatus('ℹ️ GPS not available. You can use the map to select a location, or create the business without location data.', 'info');
+        }
+      });
+    }, 100);
+  });
+</script>
+
+<!-- Business Type Info Modal -->
+<div class="modal fade" id="businessTypeModal" tabindex="-1" aria-labelledby="businessTypeModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="businessTypeModalLabel">
+          <i class="fas fa-info-circle me-2"></i>Public vs Private Business
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row">
+          <div class="col-md-6">
+            <h6 class="text-primary">
+              <i class="fas fa-globe me-2"></i>Public Business
+            </h6>
+            <p class="text-muted small mb-3">Visible to everyone in the community and can be edited by anyone.</p>
+            <h6 class="text-success">Pros:</h6>
+            <ul class="small">
+              <li><i class="fas fa-check text-success me-1"></i>Easy to find and discover</li>
+              <li><i class="fas fa-check text-success me-1"></i>Community-driven updates for accuracy</li>
+              <li><i class="fas fa-check text-success me-1"></i>Promotes transparency and sharing</li>
+              <li><i class="fas fa-check text-success me-1"></i>Can be edited by customers for corrections</li>
+            </ul>
+            <h6 class="text-danger">Cons:</h6>
+            <ul class="small">
+              <li><i class="fas fa-times text-danger me-1"></i>Anyone can edit or delete information</li>
+              <li><i class="fas fa-times text-danger me-1"></i>Less control over content accuracy</li>
+              <li><i class="fas fa-times text-danger me-1"></i>Risk of vandalism or incorrect edits</li>
+            </ul>
+          </div>
+          <div class="col-md-6">
+            <h6 class="text-secondary">
+              <i class="fas fa-lock me-2"></i>Private Business
+            </h6>
+            <p class="text-muted small mb-3">Only editable by the owner, providing more control and privacy.</p>
+            <h6 class="text-success">Pros:</h6>
+            <ul class="small">
+              <li><i class="fas fa-check text-success me-1"></i>Full control over information</li>
+              <li><i class="fas fa-check text-success me-1"></i>Protected from unauthorized edits</li>
+              <li><i class="fas fa-check text-success me-1"></i>Maintains privacy and exclusivity</li>
+              <li><i class="fas fa-check text-success me-1"></i>Only you can update or delete</li>
+            </ul>
+            <h6 class="text-danger">Cons:</h6>
+            <ul class="small">
+              <li><i class="fas fa-times text-danger me-1"></i>Less discoverable by the public</li>
+              <li><i class="fas fa-times text-danger me-1"></i>Limited community contributions</li>
+              <li><i class="fas fa-times text-danger me-1"></i>May not appear in public searches</li>
+            </ul>
+          </div>
+        </div>
+        <div class="mt-3 p-3 bg-light rounded">
+          <p class="mb-0 small text-muted">
+            <strong>Recommendation:</strong> Choose Public if you want maximum visibility and community involvement. Choose Private if you need full control and privacy for your business information.
+          </p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Got it!</button>
+      </div>
+    </div>
   </div>
 </div>
 {% endblock %}
-
-
-{% block title %}
-  Add A New Business To The Public Directory
-{% endblock %}
-
-{% block script %}
-<script>
-$(function(){
-    $("#id_name").autocomplete({
-        source:"{% url 'Business:autocomplete' %}",
-        minLength: 2,
-    });
-});
-</script>
-{% endblock %}
-
-
-{% block bis_active %}active{% endblock %}

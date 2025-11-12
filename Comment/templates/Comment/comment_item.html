@@ -1,0 +1,304 @@
+{% load humanize %}
+{% load static %}
+{% load thumbnail %}
+
+<style>
+  .comment-action-link {
+    text-decoration: none !important;
+  }
+  .comment-action-link:hover {
+    text-decoration: none !important;
+  }
+  .mention-link {
+    color: #007bff;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .mention-link:hover {
+    text-decoration: underline;
+  }
+  .replies-container {
+    display: none;
+    position: relative;
+  }
+  .replies-container.expanded {
+    display: block;
+  }
+
+  /* Nested comment styling with connection lines */
+  .comment-thread {
+    position: relative;
+  }
+
+  .comment-thread::before {
+    content: '';
+    position: absolute;
+    left: -20px;
+    top: 60px;
+    bottom: 0;
+    width: 2px;
+    background: linear-gradient(to bottom, #e9ecef 0%, #e9ecef 20px, transparent 20px, transparent calc(100% - 20px), #e9ecef calc(100% - 20px), #e9ecef 100%);
+    background-repeat: repeat-y;
+    background-size: 100% 40px;
+  }
+
+  /* Connection line for replies */
+  .comment-thread.has-replies::after {
+    content: '';
+    position: absolute;
+    left: -20px;
+    top: 60px;
+    width: 20px;
+    height: 2px;
+    background: #e9ecef;
+  }
+
+  /* Improved indentation system */
+  .comment-nested {
+    margin-left: 40px;
+    position: relative;
+  }
+
+  .comment-nested::before {
+    content: '';
+    position: absolute;
+    left: -20px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: #e9ecef;
+  }
+
+  .comment-nested::after {
+    content: '';
+    position: absolute;
+    left: -20px;
+    top: 50px;
+    width: 20px;
+    height: 2px;
+    background: #e9ecef;
+  }
+
+  /* Deeper nesting levels */
+  .comment-nested .comment-nested {
+    margin-left: 30px;
+  }
+
+  .comment-nested .comment-nested::before {
+    left: -15px;
+    width: 1px;
+    background: #dee2e6;
+  }
+
+  .comment-nested .comment-nested::after {
+    left: -15px;
+    width: 15px;
+    height: 1px;
+    background: #dee2e6;
+  }
+
+  .toggle-replies-btn {
+    background: none;
+    border: none;
+    color: #6c757d;
+    cursor: pointer;
+    padding: 0.25rem;
+    font-size: 0.875rem;
+    border-radius: 0.25rem;
+    transition: all 0.2s ease;
+  }
+  .toggle-replies-btn:hover {
+    color: #007bff;
+    background-color: #f8f9fa;
+  }
+
+  /* Reply indicator styling */
+  .reply-indicator {
+    position: absolute;
+    top: -10px;
+    left: 50px;
+    background: #f8f9fa;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 0.75rem;
+    color: #6c757d;
+    border: 1px solid #dee2e6;
+    white-space: nowrap;
+    z-index: 10;
+  }
+
+  .reply-indicator::before {
+    content: '';
+    position: absolute;
+    bottom: -6px;
+    left: 15px;
+    width: 0;
+    height: 0;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-top: 6px solid #dee2e6;
+  }
+
+  .reply-indicator::after {
+    content: '';
+    position: absolute;
+    bottom: -5px;
+    left: 15px;
+    width: 0;
+    height: 0;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-top: 6px solid #f8f9fa;
+  }
+
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .comment-nested {
+      margin-left: 20px;
+    }
+    .comment-thread::before {
+      left: -10px;
+    }
+    .comment-thread.has-replies::after {
+      left: -10px;
+      width: 10px;
+    }
+    .reply-indicator {
+      left: 30px;
+      font-size: 0.7rem;
+      padding: 1px 6px;
+    }
+  }
+
+  /* Comment card styling for better visual hierarchy */
+  .comment-card {
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    position: relative;
+    transition: box-shadow 0.2s ease;
+  }
+
+  .comment-card:hover {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  }
+
+  .comment-card.reply-card {
+    background: #f8f9fa;
+    border-left: 3px solid #007bff;
+  }
+
+  .comment-header {
+    padding: 0.75rem 1rem;
+    background: #f8f9fa;
+    border-bottom: 1px solid #e9ecef;
+    display: flex;
+    align-items: center;
+  }
+
+  .comment-body {
+    padding: 1rem;
+  }
+
+  .comment-actions {
+    padding: 0.5rem 1rem;
+    border-top: 1px solid #e9ecef;
+    background: #fff;
+  }
+</style>
+
+<div class="comment-card {% if comment.is_reply %}reply-card{% endif %} {% if comment.parent %}comment-nested{% endif %} {% if comment.parent and comment.parent.parent %}comment-nested{% endif %}"
+     id="comment-{{ comment.id }}"
+     {% if comment.reply_count > 0 %}data-has-replies="true"{% endif %}>
+
+  <!-- Reply indicator for nested comments -->
+  {% if comment.is_reply and comment.parent %}
+    <div class="reply-indicator">
+      ↪ Replying to @{{ comment.parent.user.username }}
+    </div>
+  {% endif %}
+
+  <div class="comment-header">
+    <div class="me-3">
+      {% if comment.user.profile.image %}
+        <img class="rounded-circle" src="{{ comment.user.profile.image.url }}" alt="profilepic" width="40" height="40">
+      {% else %}
+        <img class="rounded-circle" src="{% static 'Profile/images/profile.png' %}" alt="profilepic" width="40" height="40">
+      {% endif %}
+    </div>
+    <div class="flex-grow-1">
+      <div class="d-flex align-items-center">
+        <strong>{{ comment.user.username }}</strong>
+        <small class="text-muted ms-2">{{ comment.created_at|naturaltime }}</small>
+      </div>
+    </div>
+    {% if request.user == comment.user or request.user.is_superuser %}
+      <button class="btn btn-link btn-sm text-danger ms-auto comment-action-link"
+              hx-post="{% url 'Comment:delete' comment.id %}"
+              hx-target="#comment-{{ comment.id }}"
+              hx-swap="outerHTML">
+        <i class="fas fa-trash"></i> Delete
+      </button>
+    {% endif %}
+  </div>
+
+  <div class="comment-body">
+    <p class="mb-2">{{ comment.body }}</p>
+    <div class="comment-actions">
+      <div class="d-flex align-items-center gap-2">
+        {% if request.user.is_authenticated %}
+          <button class="btn btn-link btn-sm text-primary p-0 comment-action-link"
+                  onclick="showReplyForm({{ comment.id }})">
+            <i class="fas fa-reply"></i> Reply
+          </button>
+        {% else %}
+          <a href="{% url 'account_login' %}?next={{ request.path }}" class="btn btn-link btn-sm text-primary p-0 comment-action-link">
+            <i class="fas fa-reply"></i> Reply (Login Required)
+          </a>
+        {% endif %}
+        {% if comment.reply_count > 0 %}
+          <span class="text-muted small">{{ comment.get_reply_text }}</span>
+          <button class="toggle-replies-btn" onclick="toggleReplies({{ comment.id }})" title="Toggle replies">
+            <i class="fas fa-chevron-down" id="toggle-icon-{{ comment.id }}"></i>
+          </button>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Reply form -->
+  {% if request.user.is_authenticated %}
+    <div class="comment-actions" id="reply-form-{{ comment.id }}" style="display: none;">
+      <form hx-post="{% url 'Comment:create' %}"
+            hx-target="#replies-{{ comment.id }}"
+            hx-swap="beforeend"
+            hx-on::after-request="hideReplyForm({{ comment.id }}); showRepliesContainer({{ comment.id }}); scrollToNewReply(this);"
+            class="form">
+        {% csrf_token %}
+        <input type="hidden" name="content_type" value="{% if comment.product %}product{% elif comment.business %}business{% elif comment.info %}info{% endif %}">
+        <input type="hidden" name="object_id" value="{% if comment.product %}{{ comment.product.id }}{% elif comment.business %}{{ comment.business.id }}{% elif comment.info %}{{ comment.info.id }}{% endif %}">
+        <input type="hidden" name="parent_id" value="{{ comment.id }}">
+        <div class="input-group">
+          <textarea class="form-control"
+                    required="required"
+                    name="body"
+                    rows="2"
+                    placeholder="Write your reply..."
+                    maxlength="500"></textarea>
+          <button type="submit" class="btn btn-primary">
+            <i class="fas fa-paper-plane"></i>
+          </button>
+        </div>
+      </form>
+    </div>
+  {% endif %}
+
+  <!-- Replies container -->
+  <div class="replies-container {% if comment.reply_count > 0 %}expanded{% endif %}" id="replies-{{ comment.id }}">
+    {% if comment.reply_count > 0 %}
+      {% for reply in comment.all_replies %}
+        {% include 'Comment/comment_item.html' with comment=reply %}
+      {% endfor %}
+    {% endif %}
+  </div>
+</div>
