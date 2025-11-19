@@ -15,6 +15,7 @@ MarkupPy==1.14
 odfpy==1.4.1
 openpyxl==3.1.2
 pillow
+mathfilters==0.4.0
 PyYAML==6.0.1
 requests==2.31.0
 sorl-thumbnail==12.10.0
