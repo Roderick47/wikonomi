@@ -69,14 +69,14 @@ INSTALLED_APPS = [
     'Search.apps.SearchConfig',
     'Tag.apps.TagConfig',
     'Budget.apps.BudgetConfig',
-    'mathfilters',
     'Information',
     'Location',
 ]
 
 # Temporarily disabled Google OAuth configuration
 # SOCIALACCOUNT_PROVIDERS = {
-#     "google":{
+#     "google"){
+#         "SCOPE"){
 #         "SCOPE":[
 #             "profile",
 #             "email"
