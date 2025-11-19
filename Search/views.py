@@ -60,11 +60,30 @@ def AdvancedSearchResultsView(request):
 def SearchAutocomplete(request):
     if 'q' in request.GET:
         query = request.GET.get('q')
+        budget_id = request.GET.get('budget_id')
+        
         if len(query) >= 2:  # Only search if query is 2+ characters
-            qs = Product.objects.filter(name__icontains=query)[:10]  # Limit to 10 results
+            qs = Product.objects.filter(
+                Q(name__icontains=query) | 
+                Q(description__icontains=query) |
+                Q(business__name__icontains=query)
+            )
+            
+            # Exclude products already in the budget if budget_id is provided
+            if budget_id:
+                from Budget.models import Budget
+                try:
+                    budget = Budget.objects.get(id=budget_id)
+                    qs = qs.exclude(id__in=budget.products.values_list('id', flat=True))
+                except (Budget.DoesNotExist, ValueError):
+                    pass
+            
+            qs = qs.select_related('business')[:10]  # Limit to 10 results
+            
             return render(request, 'Search/autocomplete_suggestions.html', {
                 'products': qs,
-                'query': query
+                'query': query,
+                'budget_id': budget_id
             })
     return render(request, 'Search/autocomplete_suggestions.html', {'products': [], 'query': ''})
 

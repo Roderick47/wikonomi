@@ -19,6 +19,8 @@ pillow==10.2.0
 PyYAML==6.0.1
 requests==2.31.0
 sorl-thumbnail==12.10.0
+gunicorn==21.2.0
+psycopg2-binary==2.9.9
 sqlparse==0.4.3
 tablib==3.5.0
 tzdata==2022.7

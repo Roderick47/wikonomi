@@ -1,0 +1,45 @@
+services:
+  # Web Service
+  - type: web
+    name: wikonomi
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn WIKONOMI.wsgi:application --bind 0.0.0.0:$PORT
+    healthCheck:
+      path: /
+      initialDelaySeconds: 30
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11
+      - key: DJANGO_SETTINGS_MODULE
+        value: WIKONOMI.settings
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: false
+      - key: ALLOWED_HOSTS
+        value: .onrender.com
+    autoDeploy: true
+    plan: free
+
+  # PostgreSQL Database (optional - recommended for production)
+  - type: pserv
+    name: wikonomi-db
+    env: postgres
+    plan: free
+    envVars:
+      - key: POSTGRES_DB
+        value: wikonomi
+      - key: POSTGRES_USER
+        value: wikonomi_user
+      - key: POSTGRES_PASSWORD
+        generateValue: true
+
+# Static file serving configuration
+staticPublish:
+  - type: static
+    name: wikonomi-static
+    plan: free
+    buildCommand: python manage.py collectstatic --noinput
+    sourceDir: staticfiles
+    # This will serve static files from a CDN

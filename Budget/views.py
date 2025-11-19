@@ -1,11 +1,13 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.core import serializers
+from django.db.models import Q
 from Product.models import Product
+from Photo.models import ProductPhoto
 from .models import Budget
 from .forms import BudgetAddForm
 
@@ -19,6 +21,75 @@ def BudgetListView(request):
 def BudgetDetailView(request,budg_id):
     budget = Budget.objects.get(id=budg_id)
     return render(request,"Budget/budget_detail.html",{"budget":budget})
+
+
+def product_search(request):
+    """View for product search autocomplete"""
+    query = request.GET.get('q', '').strip()
+    budget_id = request.GET.get('budget_id')
+    
+    if not query or len(query) < 2:
+        return HttpResponse('')
+    
+    try:
+        # Get the budget to exclude products already in it
+        budget = None
+        if budget_id:
+            budget = get_object_or_404(Budget, id=budget_id, user=request.user)
+        
+        # Get products that match the search query
+        products = Product.objects.filter(
+            Q(name__icontains=query) | 
+            Q(description__icontains=query) |
+            Q(business__name__icontains=query)
+        )
+        
+        # Exclude products already in the budget
+        if budget:
+            products = products.exclude(id__in=budget.products.values_list('id', flat=True))
+        
+        # Limit to 10 results
+        products = products.select_related('business')[:10]
+        
+        if not products.exists():
+            return HttpResponse('')
+        
+        # Get first photo for each product
+        product_photos = {}
+        for product in products:
+            try:
+                photo = ProductPhoto.objects.filter(product=product).first()
+                if photo and photo.photo:
+                    product_photos[product.id] = photo.photo.url
+            except Exception:
+                pass
+        
+        # Render the suggestions
+        html = ''
+        for product in products:
+            photo_url = product_photos.get(product.id, '')
+            
+            html += f'''
+            <div class="list-group list-group-flush">
+                <a href="#" class="list-group-item list-group-item-action d-flex align-items-center py-2 px-3 add-product" data-product-id="{product.id}">
+                    <div class="me-3">
+                        {'<img src="' + photo_url + '" class="rounded" style="width: 40px; height: 40px; object-fit: cover;">' if photo_url else 
+                         '<div class="bg-light rounded d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">' +
+                         '<i class="fas fa-image text-muted"></i></div>'}
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="fw-semibold text-truncate">{product.name}</div>
+                        {'<small class="text-muted">K' + f"{product.price:,.2f}" + '</small>' if product.price else ''}
+                    </div>
+                    {f'<small class="text-muted ms-2"><i class="fas fa-store me-1"></i>{product.business.name}</small>' if product.business else ''}
+                </a>
+            </div>
+            '''
+        
+        return HttpResponse(html)
+        
+    except Exception as e:
+        return HttpResponse('')
 
 def CreateBudgetView(request):
     if not request.user.is_authenticated:
@@ -64,6 +135,46 @@ def api_add_to_budget(request, budget_id, product_id):
         return JsonResponse({
             'status': 'success',
             'message': 'Product added to budget successfully',
+            'budget': {
+                'id': budget.id,
+                'title': budget.title,
+                'product_count': budget.products.count()
+            },
+            'product': {
+                'id': product.id,
+                'name': product.name
+            }
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e)
+        }, status=400)
+
+
+@csrf_exempt
+@require_http_methods(['POST'])
+@login_required(login_url='/accounts/login/')
+def api_remove_from_budget(request, budget_id, product_id):
+    """API endpoint to remove a product from a budget"""
+    try:
+        budget = get_object_or_404(Budget, id=budget_id, user=request.user)
+        product = get_object_or_404(Product, id=product_id)
+        
+        # Check if product is in the budget
+        if not budget.products.filter(id=product_id).exists():
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Product not found in this budget'
+            }, status=404)
+            
+        # Remove product from budget
+        budget.products.remove(product)
+        
+        return JsonResponse({
+            'status': 'success',
+            'message': 'Product removed from budget successfully',
             'budget': {
                 'id': budget.id,
                 'title': budget.title,
