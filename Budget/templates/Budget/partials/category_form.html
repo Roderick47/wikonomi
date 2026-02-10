@@ -1,0 +1,13 @@
+<div class="row g-3">
+    <div class="col-12">
+        <label class="form-label fw-semibold">Category Name</label>
+        {{ category_form.name }}
+        {% if category_form.name.errors %}<div class="text-danger small">{{ category_form.name.errors.0 }}</div>{% endif %}
+    </div>
+    <div class="col-12">
+        <label class="form-label fw-semibold">Allocated Amount (Kina)</label>
+        {{ category_form.allocated_amount }}
+        {% if category_form.allocated_amount.errors %}<div class="text-danger small">{{ category_form.allocated_amount.errors.0 }}</div>{% endif %}
+        <div class="form-text">How much do you plan to spend in this category?</div>
+    </div>
+</div>

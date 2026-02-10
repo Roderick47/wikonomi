@@ -1,0 +1,171 @@
+{% extends 'Home/base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}{% if is_edit %}Edit{% else %}Create{% endif %} Documentation - WIKONOMI{% endblock %}
+
+{% block content %}
+<div class="bento-container">
+    <div class="bento-grid">
+        <div class="bento-card" style="grid-column: span 12; background: linear-gradient(135deg, #06b6d4 0%, #6366f1 100%); color: white; border: none;">
+            <div class="bento-card-body text-center">
+                <h1 class="display-4 fw-bold mb-3">
+                    <i class="fas {% if is_edit %}fa-edit{% else %}fa-book-open{% endif %} me-3"></i>
+                    {% if is_edit %}Edit Guide v{{ howto.version }}{% else %}Create How-To Guide{% endif %}
+                </h1>
+                <p class="lead mb-0">Document a process for 
+                    <strong>
+                        {% if business %}{{ business.name }}{% elif product %}{{ product.name }}{% else %}the community{% endif %}
+                    </strong>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <form method="post" enctype="multipart/form-data" id="howto-form">
+        {% csrf_token %}
+        <div class="bento-grid">
+            <!-- Main Info -->
+            <div class="bento-card" style="grid-column: span 12;">
+                <div class="bento-card-header">
+                    <h4 class="mb-0"><i class="fas fa-info-circle me-2 text-primary"></i>General Information</h4>
+                </div>
+                <div class="bento-card-body">
+                    {{ form.title|as_crispy_field }}
+                    {{ form.description|as_crispy_field }}
+                    {{ form.business }}
+                    {{ form.product }}
+                    
+                    {% if is_edit %}
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Change Summary</label>
+                            <input type="text" name="change_summary" class="form-control" placeholder="Briefly describe what you changed (e.g., 'Fixed typo in step 2')">
+                        </div>
+                    {% endif %}
+
+                    <div class="form-check form-switch mt-3">
+                        {{ form.is_public }}
+                        <label class="form-check-label fw-bold" for="{{ form.is_public.id_for_label }}">Publicly Visible</label>
+                        <div class="form-text">If disabled, only the author and business owner can view this.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Steps -->
+            <div class="bento-card" style="grid-column: span 12;">
+                <div class="bento-card-header d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0"><i class="fas fa-list-ol me-2 text-primary"></i>Process Steps</h4>
+                    <button type="button" class="btn btn-sm btn-outline-primary rounded-pill" onclick="addStep()">
+                        <i class="fas fa-plus me-1"></i>Add Step
+                    </button>
+                </div>
+                <div class="bento-card-body">
+                    <div id="steps-container">
+                        {% if is_edit %}
+                            {% for step in howto.steps.all %}
+                                <div class="step-row card mb-3 border-0 bg-light">
+                                    <div class="card-body text-end p-2 pb-0">
+                                        <button type="button" class="btn-close small" onclick="this.closest('.step-row').remove(); reorderSteps();"></button>
+                                    </div>
+                                    <div class="card-body pt-0">
+                                        <div class="d-flex justify-content-between mb-2">
+                                            <h6 class="fw-bold mb-0 step-number">Step {{ forloop.counter }}</h6>
+                                        </div>
+                                        <div class="mb-3">
+                                            <input type="text" name="step_title[]" class="form-control mb-2" placeholder="Step Title (Optional)" value="{{ step.title }}">
+                                            <textarea name="step_content[]" class="form-control" rows="3" placeholder="Explain what to do..." required>{{ step.content }}</textarea>
+                                        </div>
+                                        <div class="mb-0">
+                                            <label class="form-label small text-muted">Step Image (Optional)</label>
+                                            {% if step.image %}
+                                                <div class="mb-2">
+                                                    <img src="{{ step.image.url }}" class="img-thumbnail" style="max-height: 100px;">
+                                                    <small class="d-block text-muted">Keep current image or upload new one below</small>
+                                                </div>
+                                            {% endif %}
+                                            <input type="file" name="step_image[]" class="form-control image-preview-input" accept="image/*">
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <!-- Initial Step for New Entry -->
+                            <div class="step-row card mb-3 border-0 bg-light animate__animated animate__fadeIn">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <h6 class="fw-bold mb-0">Step 1</h6>
+                                    </div>
+                                    <div class="mb-3">
+                                        <input type="text" name="step_title[]" class="form-control mb-2" placeholder="Step Title (Optional)">
+                                        <textarea name="step_content[]" class="form-control" rows="3" placeholder="Explain what to do..." required></textarea>
+                                    </div>
+                                    <div class="mb-0">
+                                        <label class="form-label small text-muted">Step Image (Optional)</label>
+                                        <input type="file" name="step_image[]" class="form-control image-preview-input" accept="image/*">
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Submit -->
+            <div class="col-12 text-center mt-4 pb-5">
+                <button type="submit" class="btn btn-primary btn-lg rounded-pill px-5 shadow">
+                    <i class="fas fa-save me-2"></i>{% if is_edit %}Save Changes{% else %}Publish Guide{% endif %}
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<template id="step-template">
+    <div class="step-row card mb-3 border-0 bg-light animate__animated animate__fadeIn">
+        <div class="card-body text-end p-2 pb-0">
+            <button type="button" class="btn-close small" onclick="this.closest('.step-row').remove(); reorderSteps();"></button>
+        </div>
+        <div class="card-body pt-0">
+            <div class="d-flex justify-content-between mb-2">
+                <h6 class="fw-bold mb-0 step-number">Step X</h6>
+            </div>
+            <div class="mb-3">
+                <input type="text" name="step_title[]" class="form-control mb-2" placeholder="Step Title (Optional)">
+                <textarea name="step_content[]" class="form-control" rows="3" placeholder="Explain what to do..." required></textarea>
+            </div>
+            <div class="mb-0">
+                <label class="form-label small text-muted">Step Image (Optional)</label>
+                <input type="file" name="step_image[]" class="form-control image-preview-input" accept="image/*">
+            </div>
+        </div>
+    </div>
+</template>
+
+<script>
+    function addStep() {
+        const container = document.getElementById('steps-container');
+        const template = document.getElementById('step-template');
+        const clone = template.content.cloneNode(true);
+        container.appendChild(clone);
+        reorderSteps();
+        
+        // Initialize image preview for new input
+        if (typeof initAllImagePreviews === 'function') {
+            initAllImagePreviews();
+        }
+    }
+
+    function reorderSteps() {
+        const steps = document.querySelectorAll('.step-row');
+        steps.forEach((step, index) => {
+            const h6 = step.querySelector('.step-number');
+            if (h6) h6.textContent = 'Step ' + (index + 1);
+        });
+    }
+</script>
+
+<style>
+    .bento-card-header { padding: 1.5rem 1.5rem 0.5rem; }
+    .form-group { margin-bottom: 1rem; }
+</style>
+{% endblock %}

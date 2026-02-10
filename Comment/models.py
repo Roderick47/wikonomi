@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
-from django.utils import timezone
+from django.urls import reverse
 from Product.models import Product
 from Business.models import Business
 from Information.models import Info
@@ -29,6 +29,17 @@ class Comment(models.Model):
 
     @property
     def reply_count(self):
+        """Count all descendants recursively (children, grandchildren, etc.)"""
+        count = 0
+        direct_replies = self.replies.filter(is_active=True)
+        for reply in direct_replies:
+            count += 1  # Count the direct reply
+            count += reply.reply_count  # Recursively count its descendants
+        return count
+    
+    @property
+    def direct_reply_count(self):
+        """Count only direct children (for cases where you need just immediate replies)"""
         return self.replies.filter(is_active=True).count()
 
     @property
@@ -43,12 +54,24 @@ class Comment(models.Model):
         else:
             return f"{self.reply_count} replies"
 
+    @property
+    def user_avatar(self):
+        try:
+            if hasattr(self.user, 'profile') and self.user.profile.image:
+                return self.user.profile.image.url
+        except Exception:
+            pass
+        return None
+
 class ProductComment(Comment):
     """Comments for products"""
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='comments')
     
     class Meta:
         ordering = ['-created_at']
+
+    def get_absolute_url(self):
+        return reverse('Product:detail', kwargs={'prod_id': self.product.id}) + f'#comment-{self.id}'
 
 class BusinessComment(Comment):
     """Comments for businesses"""
@@ -57,9 +80,15 @@ class BusinessComment(Comment):
     class Meta:
         ordering = ['-created_at']
 
+    def get_absolute_url(self):
+        return reverse('Business:detail', kwargs={'bus_id': self.business.id}) + f'#comment-{self.id}'
+
 class InfoComment(Comment):
     """Comments for information posts"""
     info = models.ForeignKey(Info, on_delete=models.CASCADE, related_name='comments')
     
     class Meta:
         ordering = ['-created_at']
+
+    def get_absolute_url(self):
+        return '/#comment-{}'.format(self.id)

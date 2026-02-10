@@ -28,10 +28,18 @@
                             <i class="fas fa-tag me-2"></i>Price Update
                         {% elif notification.notification_type == 'price_drop' %}
                             <i class="fas fa-arrow-down me-2 text-danger"></i>Price Drop!
-                        {% elif notification.notification_type == 'comment_reply' %}
+                        {% elif notification.notification_type == 'comment_reply' or notification.notification_type == 'post_reply' or notification.notification_type == 'business_reply' %}
                             <i class="fas fa-reply me-2"></i>New Reply
-                        {% elif notification.notification_type == 'new_comment' %}
+                        {% elif notification.notification_type == 'new_comment' or notification.notification_type == 'post_comment' or notification.notification_type == 'answer_comment' or notification.notification_type == 'business_review' %}
                             <i class="fas fa-comment me-2"></i>New Comment
+                        {% elif notification.notification_type == 'new_answer' %}
+                            <i class="fas fa-question-circle me-2"></i>New Answer
+                        {% elif notification.notification_type == 'answer_accepted' %}
+                            <i class="fas fa-check-circle me-2 text-success"></i>Answer Accepted
+                        {% elif notification.notification_type == 'post_like' %}
+                            <i class="fas fa-heart me-2 text-danger"></i>New Like
+                        {% elif notification.notification_type == 'new_follower' %}
+                            <i class="fas fa-user-plus me-2 text-primary"></i>New Follower
                         {% endif %}
                     </h6>
                     <small class="text-muted">{{ notification.created_at|timesince }} ago</small>
@@ -46,18 +54,55 @@
                         {{ notification.data.replier_username }} replied to your comment on {{ notification.product.name }}
                     {% elif notification.notification_type == 'new_comment' %}
                         {{ notification.data.commenter_username }} commented on {{ notification.product.name }}
+                    
+                    {# New Types #}
+                    {% elif notification.notification_type == 'post_comment' %}
+                        {{ notification.data.commenter_username }} commented on your post
+                    {% elif notification.notification_type == 'post_reply' %}
+                        {{ notification.data.replier_username }} replied to your comment on a post
+                    {% elif notification.notification_type == 'post_like' %}
+                        {{ notification.data.liker_username }} liked your post
+                    {% elif notification.notification_type == 'new_follower' %}
+                        {{ notification.data.follower_username }} started following 
+                        {% if notification.data.product_name %}
+                            your product {{ notification.data.product_name }}
+                        {% elif notification.data.business_name %}
+                            your business {{ notification.data.business_name }}
+                        {% else %}
+                            you
+                        {% endif %}
+                    {% elif notification.notification_type == 'new_answer' %}
+                        {{ notification.data.answerer_username }} answered your question "{{ notification.data.question_title }}"
+                    {% elif notification.notification_type == 'answer_accepted' %}
+                        {{ notification.data.accepter_username }} accepted your answer to "
+                        {% if notification.question %}{{ notification.question.title }}{% else %}a question{% endif %}"
+                    {% elif notification.notification_type == 'answer_comment' %}
+                        {{ notification.data.commenter_username }} commented on your answer
+                    {% elif notification.notification_type == 'business_review' %}
+                        {{ notification.data.commenter_username }} reviewed your business {{ notification.business.name }}
+                    {% elif notification.notification_type == 'business_reply' %}
+                        {{ notification.data.replier_username }} replied to your review on {{ notification.business.name }}
                     {% endif %}
                 </p>
                 
-                {% if notification.comment and notification.comment.content %}
+                {% if notification.data.comment_preview %}
+                    <div class="mt-2 p-2 bg-light rounded text-muted small">
+                        "{{ notification.data.comment_preview }}"
+                    </div>
+                {% elif notification.data.answer_preview %}
+                     <div class="mt-2 p-2 bg-light rounded text-muted small">
+                        "{{ notification.data.answer_preview }}"
+                    </div>
+                {% elif notification.comment and notification.comment.content %}
                     <div class="mt-2 p-2 bg-light rounded">
                         <small class="text-muted">"{{ notification.comment.content|truncatechars:100 }}"</small>
                     </div>
                 {% endif %}
             </a>
         {% empty %}
-            <div class="alert alert-info">
-                <i class="fas fa-inbox me-2"></i>You don't have any notifications yet.
+            <div class="list-group-item text-center p-5 text-muted">
+                <i class="fas fa-bell-slash fa-3x mb-3"></i>
+                <p>You don't have any notifications yet.</p>
             </div>
         {% endfor %}
     </div>

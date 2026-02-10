@@ -1,0 +1,5 @@
+<span class="badge rounded-pill {% if exists %}bg-success{% else %}bg-primary{% endif %} me-2 mb-2 d-inline-flex align-items-center" 
+      id="chip-{{ tag_name|slugify }}">
+    {{ tag_name }}
+    <i class="fas fa-times ms-2 cursor-pointer" onclick="removeTag('{{ tag_name }}')"></i>
+</span>

@@ -12,6 +12,7 @@ class Tag(models.Model):
     name = models.CharField(max_length=100)
     products = models.ManyToManyField(Product,blank=True,related_name='tags')
     businesses = models.ManyToManyField(Business,blank=True)
+    questions = models.ManyToManyField('QA.Question', blank=True, related_name='tags')
 
     def __str__(self):
         return self.name

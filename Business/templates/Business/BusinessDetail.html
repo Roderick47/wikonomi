@@ -201,7 +201,101 @@
               <span>Edit Business</span>
             </a>
           </div>
+          <div class="col-md-4 col-sm-6">
+            <a href="{% url 'Post:create' %}?business={{ business.id }}" class="btn btn-info btn-bento w-100 h-100 d-flex flex-column align-items-center justify-content-center text-white">
+              <i class="fas fa-comment-dots fa-2x mb-2"></i>
+              <span>Discuss</span>
+            </a>
+          </div>
+          
+          <div class="col-md-4 col-sm-6">
+            <a href="{% url 'QA:ask' %}?business={{ business.id }}" class="btn btn-bento w-100 h-100 d-flex flex-column align-items-center justify-content-center text-white" style="background-color: #64748b;">
+              <i class="fas fa-question-circle fa-2x mb-2"></i>
+              <span>Ask</span>
+            </a>
+          </div>
         </div>
+      </div>
+    </div>
+
+    <!-- Q&A Section -->
+    <div class="bento-card" style="grid-column: span 12;">
+      <div class="bento-card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">
+          <i class="fas fa-question-circle me-2"></i>Questions & Answers
+        </h5>
+        <a href="{% url 'QA:ask' %}?business={{ business.id }}" class="btn btn-sm btn-primary rounded-pill">Ask Question</a>
+      </div>
+      <div class="bento-card-body">
+        {% if business.questions.exists %}
+          <div class="list-group list-group-flush">
+            {% for question in business.questions.all|slice:":3" %}
+              <div class="list-group-item px-0">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <a href="{% url 'QA:detail' question.id %}" class="fw-bold text-dark text-decoration-none">{{ question.title }}</a>
+                        <div class="text-muted small mt-1">
+                            {{ question.answer_count }} answer{{ question.answer_count|pluralize }} • {{ question.views_count }} view{{ question.views_count|pluralize }}
+                        </div>
+                    </div>
+                    <small class="text-muted">{{ question.created_at|naturaltime }}</small>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+          {% if business.questions.count > 3 %}
+             <div class="text-center mt-3">
+                 <a href="#" class="btn btn-outline-primary btn-sm rounded-pill">View all questions</a>
+             </div>
+          {% endif %}
+        {% else %}
+          <div class="text-center py-4 text-muted">
+             <i class="far fa-question-circle fa-2x mb-2 opacity-50"></i>
+             <p>No questions yet. Have something to ask?</p>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- How-To Guides Section -->
+    <div class="bento-card" style="grid-column: span 12;">
+      <div class="bento-card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">
+          <i class="fas fa-graduation-cap me-2 text-primary"></i>Documentation & Guides
+        </h5>
+        <a href="{% url 'HowTo:create' %}?business={{ business.id }}" class="btn btn-sm btn-outline-primary rounded-pill">Create Guide</a>
+      </div>
+      <div class="bento-card-body">
+        {% if business.how_tos.exists %}
+          <div class="row g-3">
+            {% for guide in business.how_tos.all|slice:":10" %}
+              <div class="col-md-4">
+                <div class="card h-100 border shadow-none hover-shadow transition-all rounded-3 guide-card">
+                  <a href="{% url 'HowTo:detail' guide.id %}" class="stretched-link"></a>
+                  <div class="card-body p-3">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        {% if guide.is_official %}
+                            <span class="badge bg-soft-primary text-primary border-primary border-opacity-10 py-1" style="font-size: 0.6rem;">OFFICIAL</span>
+                        {% endif %}
+                    </div>
+                    <h6 class="fw-bold mb-1">{{ guide.title }}</h6>
+                    <p class="text-muted extra-small mb-0">{{ guide.description|truncatechars:60 }}</p>
+                  </div>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+          {% if business.how_tos.count > 10 %}
+             <div class="text-center mt-3">
+                 <a href="{% url 'HowTo:business-guides' business.id %}" class="btn btn-outline-primary btn-sm rounded-pill">View all guides ({{ business.how_tos.count }})</a>
+             </div>
+          {% endif %}
+        {% else %}
+          <div class="text-center py-4 text-muted">
+             <i class="fas fa-book-open fa-2x mb-2 opacity-50"></i>
+             <p>No guides published yet for {{ business.name }}.</p>
+          </div>
+        {% endif %}
       </div>
     </div>
 
@@ -294,6 +388,16 @@
     font-size: 0.75rem;
     padding: 0.25rem 0.5rem;
     border-radius: 6px;
+  }
+
+  .guide-card {
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  
+  .guide-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-xl);
   }
 
   @media (max-width: 767px) {

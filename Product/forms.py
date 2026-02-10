@@ -23,6 +23,24 @@ class ProductAddForm(forms.ModelForm):
             })
         }
 
+    social_post = forms.CharField(
+        required=False,
+        widget=forms.Textarea(attrs={
+            'class': 'form-control',
+            'placeholder': 'Share a social post about this new product! (e.g., "Just launched our new summer collection!")',
+            'rows': 2,
+            'maxlength': 500
+        }),
+        help_text="Optional: Create a social post to announce this product immediately."
+    )
+
+    tags_input = forms.CharField(
+        required=False, 
+        widget=forms.HiddenInput() # Visual widget is mostly JS based, but form needs field.
+        # Actually in QA we used TextInput without hiding it because we rendered it manually in template 
+        # and hide it there. Here we can just define it.
+    )
+
 
 class GetOrCreateBusinessForm(forms.Form):
     business = forms.CharField(

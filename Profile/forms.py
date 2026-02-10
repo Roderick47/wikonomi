@@ -11,17 +11,25 @@ class SignUpForm(UserCreationForm):
 
     class Meta:
         model = User
-        fields = ('username', 'first_name', 'last_name', 'email', 'password1', 'password2', )
-
-#class LoginForm(UserLoginForm):
+        fields = ('username', 'first_name', 'last_name', 'email')
 
 
 class UserForm(forms.ModelForm):
     class Meta:
         model = User
-        fields = ['username','first_name','last_name','email']
+        fields = ['username', 'first_name', 'last_name', 'email']
+        widgets = {
+            'username': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Username'}),
+            'first_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'First Name'}),
+            'last_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Last Name'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'Email address'}),
+        }
+
 
 class ProfileForm(forms.ModelForm):
     class Meta:
         model = Profile
         fields = ['image']
+        widgets = {
+            'image': forms.FileInput(attrs={'class': 'form-control image-preview-input'}),
+        }

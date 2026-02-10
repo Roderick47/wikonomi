@@ -1,0 +1,15 @@
+{% load post_tags %}
+{% if request.user.is_authenticated %}
+<button class="btn btn-link text-decoration-none p-0 d-flex align-items-center {% if post|user_has_liked:request.user %}text-danger{% else %}text-muted{% endif %}"
+        hx-post="{% url 'Post:toggle_like' post.id %}"
+        hx-target="#like-btn-{{ post.id }}"
+        hx-swap="innerHTML">
+    <i class="{% if post|user_has_liked:request.user %}fas{% else %}far{% endif %} fa-heart me-1"></i>
+    <span class="small">{{ post.like_count }}</span>
+</button>
+{% else %}
+<a href="{% url 'account_login' %}?next={{ request.path }}" class="btn btn-link text-decoration-none text-muted p-0 d-flex align-items-center">
+    <i class="far fa-heart me-1"></i>
+    <span class="small">{{ post.like_count }}</span>
+</a>
+{% endif %}

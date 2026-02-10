@@ -35,8 +35,14 @@ urlpatterns = [
     path('', include('History.urls')),
     path('', include('Location.urls')),
     path('budget/', include('Budget.urls')),
+    path('post/', include('Post.urls')),
+    path('qa/', include('QA.urls')),
+    path('report/', include('Report.urls')),
+    path('howto/', include('HowTo.urls')),
 ]
 
 if settings.DEBUG:
     urlpatterns += static(settings.STATIC_URL,document_root = settings.STATIC_ROOT)
     urlpatterns += static(settings.MEDIA_URL,document_root = settings.MEDIA_ROOT)
+
+# Force server reload for new templates

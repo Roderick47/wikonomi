@@ -4,6 +4,8 @@ from django.contrib.auth.decorators import login_required
 from django.template.loader import render_to_string
 from django.views.decorators.http import require_POST
 from django.views import View
+from django.db.models import Count
+from .utils import render_rich_text
 from django.contrib.contenttypes.models import ContentType
 from django.core.paginator import Paginator
 from django.contrib import messages
@@ -306,22 +308,34 @@ class CommentCreateView(View):
                 return HttpResponse('Invalid object id', status=400)
 
             setattr(comment, fk_name, instance)
-            comment.save()
+            try:
+                comment.save()
+            except Exception as save_err:
+                raise save_err
 
-            html = render_to_string('Comment/comment_item.html', {'comment': comment, 'request': request}, request=request)
+            try:
+                html = render_to_string('Comment/comment_item.html', {'comment': comment, 'request': request, 'content_type': content_type}, request=request)
+            except Exception as render_err:
+                raise render_err
+
             response_html = f"""
             {html}
             <script>
-                // Expand the parent comment's replies container to show the new reply
-                const parentRepliesContainer = document.getElementById('replies-{parent_id}');
-                if (parentRepliesContainer && !parentRepliesContainer.classList.contains('expanded')) {{
-                    parentRepliesContainer.classList.add('expanded');
-                }}
+                (function() {{
+                    // Expand the parent comment's replies container to show the new reply
+                    var parentRepliesContainer = document.getElementById('replies-{parent_id}');
+                    if (parentRepliesContainer && !parentRepliesContainer.classList.contains('expanded')) {{
+                        parentRepliesContainer.classList.add('expanded');
+                    }}
+                }})();
             </script>
             """
             return HttpResponse(response_html)
 
         except Exception as e:
+            import traceback
+            print(f"Server error in CommentCreateView: {str(e)}")
+            print(traceback.format_exc())
             return HttpResponse(f'Server error: {str(e)}', status=500)
 
 class CommentDeleteView(View):
@@ -352,4 +366,120 @@ class CommentDeleteView(View):
             return HttpResponse('Not found or not allowed', status=404)
         except Exception as e:
             print(f"Error in CommentDeleteView: {str(e)}")
-            return HttpResponse('Error deleting comment', status=500) 
+            return HttpResponse('Error deleting comment', status=500)
+
+class CommentEditView(View):
+    def get(self, request, pk):
+        if not request.user.is_authenticated:
+            return HttpResponse('Login required', status=401)
+            
+        try:
+            from .models import ProductComment, BusinessComment, InfoComment
+            comment = None
+            for model in (ProductComment, BusinessComment, InfoComment):
+                try:
+                    comment = model.objects.get(pk=pk, is_active=True)
+                    break
+                except model.DoesNotExist:
+                    continue
+            
+            if not comment:
+                return HttpResponse('Comment not found', status=404)
+            
+            if request.user != comment.user:
+                return HttpResponse('Unauthorized', status=403)
+                
+            return render(request, 'Comment/comment_edit_form.html', {'comment': comment})
+        except Exception as e:
+            return HttpResponse(f'Error: {str(e)}', status=500)
+
+class CommentUpdateView(View):
+    def get(self, request, pk):
+        if not request.user.is_authenticated:
+            return HttpResponse('Login required', status=401)
+        try:
+            from .models import ProductComment, BusinessComment, InfoComment
+            comment = None
+            for model in (ProductComment, BusinessComment, InfoComment):
+                try:
+                    comment = model.objects.get(pk=pk, is_active=True)
+                    break
+                except model.DoesNotExist:
+                    continue
+            if not comment:
+                return HttpResponse('Comment not found', status=404)
+            return HttpResponse(f'<div class="mb-2">{render_rich_text(comment.body)}</div>')
+        except Exception as e:
+            return HttpResponse(f'Error: {str(e)}', status=500)
+
+    def post(self, request, pk):
+        if not request.user.is_authenticated:
+            return HttpResponse('Login required', status=401)
+            
+        try:
+            from .models import ProductComment, BusinessComment, InfoComment
+            comment = None
+            for name, model in [('product', ProductComment), ('business', BusinessComment), ('info', InfoComment)]:
+                try:
+                    comment = model.objects.get(pk=pk, is_active=True)
+                    break
+                except model.DoesNotExist:
+                    continue
+            
+            if not comment:
+                return HttpResponse('Comment not found', status=404)
+            
+            if request.user != comment.user:
+                return HttpResponse('Unauthorized', status=403)
+            
+            new_body = request.POST.get('body', '').strip()
+            if not new_body or len(new_body) > 500:
+                return HttpResponse('Invalid content', status=400)
+                
+            comment.body = new_body
+            comment.save()
+            
+            return HttpResponse(f'<div class="mb-2">{render_rich_text(comment.body)}</div>')
+        except Exception as e:
+            return HttpResponse(f'Error: {str(e)}', status=500)
+
+class CommentRepliesView(View):
+    def get(self, request, parent_id):
+        try:
+            from .models import ProductComment, BusinessComment, InfoComment
+            
+            parent_comment = None
+            # Find the parent comment across all models
+            for model in (ProductComment, BusinessComment, InfoComment):
+                try:
+                    parent_comment = model.objects.get(pk=parent_id, is_active=True)
+                    break
+                except model.DoesNotExist:
+                    continue
+            
+            if not parent_comment:
+                return HttpResponse('Comment not found', status=404)
+                
+            # Get replies using the correct related_name from the model
+            replies = parent_comment.replies.filter(is_active=True).order_by('created_at')
+            
+            # Debug: Print how many replies we found
+            replies_list = list(replies)
+            print(f"DEBUG: Found {len(replies_list)} replies for comment {parent_id}")
+            for i, r in enumerate(replies_list):
+                print(f"  Reply {i+1}: ID={r.id}, user={r.user.username}, is_active={r.is_active}, parent_id={r.parent_id}")
+            
+            # Render each reply
+            html_parts = []
+            for reply in replies_list:
+                html_parts.append(render_to_string('Comment/comment_item.html', {'comment': reply, 'request': request}, request=request))
+            
+            print(f"DEBUG: Rendered {len(html_parts)} HTML parts, total size: {sum(len(h) for h in html_parts)} bytes")
+                
+            return HttpResponse("".join(html_parts))
+            
+        except Exception as e:
+            import traceback
+            print(f"Error in CommentRepliesView: {str(e)}")
+            print(traceback.format_exc())
+            return HttpResponse(f"Error loading replies: {str(e)}", status=500)

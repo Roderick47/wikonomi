@@ -1,0 +1,262 @@
+{% extends 'Home/base.html' %}
+{% load static %}
+{% load thumbnail %}
+{% load humanize %}
+{% load extra_date_filters %}
+
+{% block title %}{{ title }} - WIKONOMI{% endblock %}
+
+{% block content %}
+<div class="bento-container">
+  {% if step %}
+  <!-- Breadcrumb for step-specific questions -->
+  <nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{% url 'HowTo:detail' step.how_to.id %}" class="text-decoration-none">{{ step.how_to.title }}</a></li>
+      <li class="breadcrumb-item active">{% if step.title %}{{ step.title }}{% else %}Step {{ step.order }}{% endif %} Questions</li>
+    </ol>
+  </nav>
+  {% endif %}
+  
+  <!-- Hero Section -->
+  <div class="bento-grid">
+    <div class="bento-card" style="grid-column: span 12; background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); color: white; border: none;">
+      <div class="bento-card-body text-center">
+        <h1 class="display-4 fw-bold mb-3">
+          <i class="fas fa-graduation-cap me-3"></i>{{ title }}
+        </h1>
+        <p class="lead mb-4">
+          {% if step %}
+            Questions and answers about {% if step.title %}{{ step.title }}{% else %}step {{ step.order }}{% endif %} of {{ step.how_to.title }}
+          {% else %}
+            Discover community-driven How-To guides and Q&A insights
+          {% endif %}
+        </p>
+
+        <!-- Knowledge Search Bar -->
+        <div class="row justify-content-center mb-4">
+          <div class="col-md-6">
+            <form action="{% url 'Search:search' %}" method="get" class="position-relative">
+              <input type="hidden" name="type" value="knowledge">
+              <div class="input-group input-group-lg">
+                <input type="text" 
+                       name="q" 
+                       class="form-control" 
+                       placeholder="Search guides and questions..." 
+                       style="border-radius: 12px 0 0 12px; border: 2px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.9);">
+                <button class="btn btn-light" type="submit" style="border-radius: 0 12px 12px 0; border: 2px solid rgba(255,255,255,0.3); border-left: none;">
+                  <i class="fas fa-search"></i>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <div class="d-flex justify-content-center gap-3 flex-wrap">
+          <a href="{% url 'QA:ask' %}" class="btn btn-light btn-bento">
+            <i class="fas fa-question-circle me-2"></i>Ask a Question
+          </a>
+          <a href="{% url 'HowTo:create' %}" class="btn btn-outline-light btn-bento">
+            <i class="fas fa-plus me-2"></i>Create a Guide
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats Grid -->
+  <div class="bento-grid mb-4">
+    <div class="bento-card" style="grid-column: span 6;">
+        <div class="bento-card-body d-flex align-items-center">
+            <div class="rounded-circle bg-soft-primary p-3 me-3">
+                <i class="fas fa-question-circle text-primary fa-2x"></i>
+            </div>
+            <div>
+                <h3 class="fw-bold mb-0">{{ questions_count }}</h3>
+                <small class="text-muted">Questions Asked</small>
+            </div>
+        </div>
+    </div>
+    <div class="bento-card" style="grid-column: span 6;">
+        <div class="bento-card-body d-flex align-items-center">
+            <div class="rounded-circle bg-soft-info p-3 me-3">
+                <i class="fas fa-book-open text-info fa-2x"></i>
+            </div>
+            <div>
+                <h3 class="fw-bold mb-0">{{ how_to_count }}</h3>
+                <small class="text-muted">Guides Published</small>
+            </div>
+        </div>
+    </div>
+  </div>
+
+  {% if knowledge_items %}
+    <!-- Knowledge Section -->
+    <div class="bento-grid">
+      <div class="bento-card" style="grid-column: span 12;">
+        <div class="bento-card-header d-flex justify-content-between align-items-center">
+          <h3 class="mb-0">
+            <i class="fas fa-atlas me-2 text-primary"></i>Knowledge Feed
+          </h3>
+          <div class="d-flex gap-2">
+            <span class="badge bg-light text-dark border">Recent First</span>
+          </div>
+        </div>
+        <div class="bento-card-body">
+          <div class="row g-4">
+            {% for item in knowledge_items %}
+              <div class="col-lg-4 col-md-6 position-relative">
+                {% if item.item_type == 'question' %}
+                    <!-- Question Card -->
+                    <div class="bento-card h-100 question-card">
+                      <a href="{% url 'QA:detail' item.id %}" class="stretched-link"></a>
+                      <div class="bento-card-body d-flex flex-column h-100">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                          <div class="d-flex align-items-center">
+                            <div class="rounded-circle bg-light d-flex align-items-center justify-content-center text-secondary fw-bold me-2" style="width: 32px; height: 32px; font-size: 0.8rem;">
+                              {{ item.author.username.0|upper }}
+                            </div>
+                            <div>
+                              <h6 class="fw-bold mb-0 text-truncate" style="max-width: 150px;">{{ item.author.username }}</h6>
+                              <small class="text-muted">{{ item.created_at|naturaltime }}</small>
+                            </div>
+                          </div>
+                          <span class="badge bg-soft-warning text-warning border-warning border-opacity-10">QUESTION</span>
+                        </div>
+
+                        <h5 class="fw-bold mb-2 line-clamp-2" style="height: 3rem; overflow: hidden;">{{ item.title }}</h5>
+                        <p class="text-muted small mb-3 flex-grow-1 line-clamp-3">{{ item.body|truncatewords:20 }}</p>
+
+                        <div class="mb-3">
+                          {% if item.product %}
+                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle me-1">
+                              <i class="fas fa-box me-1"></i>{{ item.product.name|truncatechars:15 }}
+                            </span>
+                          {% endif %}
+                          {% if item.business %}
+                            <span class="badge bg-success-subtle text-success border border-success-subtle me-1">
+                              <i class="fas fa-store me-1"></i>{{ item.business.name|truncatechars:15 }}
+                            </span>
+                          {% endif %}
+                          {% if item.howto_step %}
+                            <div class="d-flex flex-wrap gap-1 mt-1">
+                              <span class="badge bg-info-subtle text-info border border-info-subtle">
+                                <i class="fas fa-book-open me-1"></i>{{ item.howto_step.how_to.title|truncatechars:20 }}
+                              </span>
+                              <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">
+                                Step {{ item.howto_step.order }}
+                              </span>
+                            </div>
+                          {% endif %}
+                        </div>
+
+                        <div class="question-stats mt-auto pt-3 border-top d-flex justify-content-between">
+                          <small class="text-muted"><i class="far fa-comment me-1"></i>{{ item.answer_count }} answers</small>
+                          <small class="text-muted"><i class="far fa-eye me-1"></i>{{ item.views_count }}</small>
+                        </div>
+                      </div>
+                    </div>
+                {% else %}
+                    <!-- How-To Card -->
+                    <div class="bento-card h-100 guide-card" style="border-left: 4px solid #06b6d4;">
+                      <a href="{% url 'HowTo:detail' item.id %}" class="stretched-link"></a>
+                      <div class="bento-card-body d-flex flex-column h-100">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                          <div class="d-flex align-items-center">
+                            <div class="rounded-circle bg-info d-flex align-items-center justify-content-center text-white fw-bold me-2" style="width: 32px; height: 32px; font-size: 0.8rem;">
+                              <i class="fas fa-graduation-cap"></i>
+                            </div>
+                            <div>
+                              <h6 class="fw-bold mb-0 text-truncate" style="max-width: 150px;">{{ item.author.username }}</h6>
+                              <small class="text-muted">{{ item.created_at|naturaltime }}</small>
+                            </div>
+                          </div>
+                          <span class="badge bg-soft-info text-info border-info border-opacity-10">GUIDE</span>
+                          <span class="bg-light text-muted">v{{ item.version }}</span>
+                        </div>
+
+                        <h5 class="fw-bold mb-2 line-clamp-2" style="height: 3rem; overflow: hidden;">{{ item.title }}</h5>
+                        <p class="text-muted small mb-3 flex-grow-1 line-clamp-3">{{ item.description|truncatewords:20 }}</p>
+
+                        <div class="mb-3">
+                            {% if item.is_official %}
+                                <span class="badge bg-soft-primary text-primary border-primary border-opacity-10 me-1">
+                                    <i class="fas fa-check-circle me-1"></i>OFFICIAL
+                                </span>
+                            {% endif %}
+                            
+                            {% if item.product %}
+                              <span class="badge bg-primary text-primary border border-primary-subtle me-1">
+                                <i class="fas fa-box me-1"></i>{{ item.product.name|truncatechars:15 }}
+                              </span>
+                            {% endif %}
+                            {% if item.business %}
+                              <span class="badge bg-success text-success border border-success-subtle me-1">
+                                <i class="fas fa-store me-1"></i>{{ item.business.name|truncatechars:15 }}
+                              </span>
+                            {% endif %}
+                        </div>
+
+
+                        <div class="guide-stats mt-auto pt-3 border-top d-flex justify-content-between">
+                          <small class="text-muted"><i class="fas fa-list-ol me-1"></i>{{ item.steps.count }} steps</small>
+                          <small class="text-muted"><i class="far fa-eye me-1"></i>{{ item.views_count }}</small>
+                        </div>
+                      </div>
+                    </div>
+                {% endif %}
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+  {% else %}
+    <!-- Empty State -->
+    <div class="bento-grid">
+      <div class="bento-card" style="grid-column: span 12;">
+        <div class="empty-state text-center py-5">
+          <i class="fas fa-atlas fa-4x text-light mb-3"></i>
+          <h2>No Knowledge Items Yet</h2>
+          <p class="lead">Be the first to ask a question or share a guide!</p>
+          <div class="d-flex justify-content-center gap-3">
+            <a href="{% url 'QA:ask' %}" class="btn btn-primary">Ask Question</a>
+            <a href="{% url 'HowTo:create' %}" class="btn btn-info text-white">Share Guide</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+</div>
+
+<style>
+  .question-card, .guide-card {
+    transition: all 0.3s ease;
+    cursor: pointer;
+  }
+  
+  .question-card:hover, .guide-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-xl);
+  }
+
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .bg-primary-subtle { background-color: rgba(99, 102, 241, 0.1) !important; }
+  .bg-success-subtle { background-color: rgba(16, 185, 129, 0.1) !important; }
+  .bg-info-subtle { background-color: rgba(6, 182, 212, 0.1) !important; }
+  .bg-secondary-subtle { background-color: rgba(107, 114, 128, 0.1) !important; }
+</style>
+{% endblock %}

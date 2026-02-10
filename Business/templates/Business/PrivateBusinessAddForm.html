@@ -87,6 +87,29 @@
                 {% endif %}
               </div>
             </div>
+
+            <div class="col-12">
+               {% include "Tag/partials/tag_input_widget.html" with placeholder="e.g. restaurant, food, service" %}
+            </div>
+          </div>
+
+          <!-- Social Post Section -->
+          <div class="bento-card mt-4 border bg-light">
+            <div class="bento-card-body">
+              <h5 class="mb-3 text-primary">
+                <i class="fas fa-bullhorn me-2"></i>New Launch Announcement
+              </h5>
+              <div class="form-group">
+                <label for="{{ form.social_post.id_for_label }}" class="form-label">
+                  Social Post (Optional)
+                </label>
+                {{ form.social_post }}
+                <div class="form-text text-muted">
+                  <i class="fas fa-info-circle me-1"></i>
+                  Write something exciting! This will be posted to the social feed immediately.
+                </div>
+              </div>
+            </div>
           </div>
 
           <!-- Location Section -->

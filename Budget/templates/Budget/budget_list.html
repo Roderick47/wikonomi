@@ -1,73 +1,102 @@
 {% extends 'Home/base.html' %}
-{% load humanize %}
+{% load static %}
+
+{% block title %}My Budgets - WIKONOMI{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
+<div class="container py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2><i class="fas fa-wallet me-2"></i>My Budgets</h2>
-        <a class="btn btn-primary" href="{% url 'Budget:create' %}">
-            <i class="fas fa-plus me-1"></i> Create New Budget
-        </a>
+        <div>
+            <h1 class="h3 mb-0 text-gray-800">My Budgets</h1>
+            <p class="text-muted">Manage your spending and plan for the future.</p>
+        </div>
     </div>
 
-    {% if budgets %}
-        <div class="row g-4">
-            {% for budget in budgets %}
-            <div class="col-md-6 col-lg-4">
-                <div class="card h-100 shadow-sm">
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">{{ budget.title }}</h5>
-                        <div class="dropdown">
-                            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" 
-                                    id="budgetActions{{ budget.id }}" data-bs-toggle="dropdown" 
-                                    aria-expanded="false">
-                                <i class="fas fa-ellipsis-v"></i>
-                            </button>
-                            <ul class="dropdown-menu" aria-labelledby="budgetActions{{ budget.id }}">
-                                <li><a class="dropdown-item" href="{% url 'Budget:detail' budget.id %}">
-                                    <i class="fas fa-eye me-2"></i>View Details</a></li>
-                                <li><a class="dropdown-item" href="#">
-                                    <i class="fas fa-edit me-2"></i>Edit</a></li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item text-danger" href="#">
-                                    <i class="fas fa-trash-alt me-2"></i>Delete</a></li>
-                            </ul>
+    <div class="row g-4" id="budget-grid" hx-get="{% url 'Budget:list' %}" hx-trigger="budgetListChanged from:body" hx-select="#budget-grid" hx-swap="outerHTML">
+        {% for budget in budgets %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 border-0 shadow-sm bento-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h5 class="card-title fw-bold mb-0">{{ budget.title }}</h5>
+                        <span class="badge bg-light text-primary border">{{ budget.get_period_type_display }}</span>
+                    </div>
+                    <p class="card-text text-muted small mb-3 text-truncate-2">{{ budget.description|default:"No description" }}</p>
+                    
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-1 small">
+                            <span>Progress</span>
+                            <span class="fw-bold">K{{ budget.total_estimated_spend|floatformat:2 }} / K{{ budget.target_amount|floatformat:2 }}</span>
+                        </div>
+                        <div class="progress" style="height: 8px;">
+                            {% with percent=budget.progress_percentage %}
+                            <div class="progress-bar {% if percent > 90 %}bg-danger{% elif percent > 70 %}bg-warning{% else %}bg-success{% endif %}" 
+                                 role="progressbar" style="width: {{ percent }}%" 
+                                 aria-valuenow="{{ percent }}" aria-valuemin="0" aria-valuemax="100"></div>
+                            {% endwith %}
                         </div>
                     </div>
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between mb-3">
-                            <div class="text-muted">Products</div>
-                            <span class="badge bg-primary rounded-pill">{{ budget.products.count }}</span>
+
+                    <div class="d-flex justify-content-between align-items-center mt-3">
+                        <div class="small text-muted">
+                            <i class="fas fa-calendar-alt me-1"></i> {{ budget.start_date }}
                         </div>
-                        <div class="progress mb-3" style="height: 10px;">
-                            <div class="progress-bar bg-success" role="progressbar" style="width: 25%;" 
-                                 aria-valuenow="25" aria-valuemin="0" aria-valuemax="100"></div>
-                        </div>
-                        <div class="d-flex justify-content-between text-muted small">
-                            <div>Spent: $0.00</div>
-                            <div>Budget: $0.00</div>
-                        </div>
-                    </div>
-                    <div class="card-footer bg-transparent">
-                        <a href="{% url 'Budget:detail' budget.id %}" class="btn btn-outline-primary btn-sm w-100">
-                            View Details <i class="fas fa-arrow-right ms-1"></i>
-                        </a>
+                        <a href="{% url 'Budget:detail' budget.id %}" class="btn btn-sm btn-outline-primary rounded-pill px-3">View Details</a>
                     </div>
                 </div>
             </div>
-            {% endfor %}
         </div>
-    {% else %}
-        <div class="text-center py-5 my-5">
-            <div class="mb-4">
-                <i class="fas fa-wallet text-muted" style="font-size: 4rem;"></i>
+        {% empty %}
+        <div class="col-12 text-center py-5">
+            <div class="empty-state">
+                <i class="fas fa-wallet mb-3"></i>
+                <h5>No budgets yet</h5>
+                <p>Create your first budget to start tracking your expenses.</p>
+                <button class="btn btn-primary mt-3" hx-get="{% url 'Budget:hx_create_budget_modal' %}" hx-target="#modal-body" data-bs-toggle="modal" data-bs-target="#createBudgetModal">
+                    <i class="fas fa-plus me-2"></i>Create New Budget
+                </button>
             </div>
-            <h4 class="mb-3">No Budgets Yet</h4>
-            <p class="text-muted mb-4">Create your first budget to start tracking your product expenses.</p>
-            <a href="{% url 'Budget:create' %}" class="btn btn-primary">
-                <i class="fas fa-plus me-2"></i>Create Your First Budget
-            </a>
         </div>
-    {% endif %}
+        {% endfor %}
+    </div>
 </div>
+
+<!-- Floating Action Button -->
+<button class="btn btn-primary btn-lg rounded-circle shadow-lg position-fixed" 
+        style="bottom: 30px; right: 30px; width: 60px; height: 60px; z-index: 1050;"
+        hx-get="{% url 'Budget:hx_create_budget_modal' %}" 
+        hx-target="#modal-body" 
+        data-bs-toggle="modal" 
+        data-bs-target="#createBudgetModal">
+    <i class="fas fa-plus"></i>
+</button>
+
+<!-- Modal Container -->
+<div class="modal fade" id="createBudgetModal" tabindex="-1" aria-labelledby="createBudgetModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
+            <div id="modal-body">
+                <!-- HTMX will load content here -->
+                <div class="p-5 text-center">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block script %}
+<script>
+    // Close modal on escape or backdrop click is handled by Bootstrap
+    // We can add a listener to hide the modal after a successful HTMX save
+    document.body.addEventListener('budgetListChanged', function() {
+        var modal = bootstrap.Modal.getInstance(document.getElementById('createBudgetModal'));
+        if (modal) {
+            modal.hide();
+        }
+    });
+</script>
 {% endblock %}

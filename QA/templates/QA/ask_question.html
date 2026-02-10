@@ -1,0 +1,63 @@
+{% extends 'Home/base.html' %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-4">
+                    <h2 class="mb-4 fw-bold">Ask a Question</h2>
+                    
+                    {% if product %}
+                        <div class="alert alert-info mb-4">
+                            You are asking about product: <strong>{{ product.name }}</strong>
+                        </div>
+                    {% elif business %}
+                        <div class="alert alert-info mb-4">
+                            You are asking about business: <strong>{{ business.name }}</strong>
+                        </div>
+                    {% elif howto_step %}
+                        <div class="alert alert-primary mb-4">
+                            <div class="d-flex align-items-start">
+                                <div class="rounded-circle bg-white text-primary d-flex align-items-center justify-content-center me-3 fw-bold" style="width: 32px; height: 32px; min-width: 32px;">
+                                    {{ howto_step.order }}
+                                </div>
+                                <div>
+                                    <strong>Asking about Step {{ howto_step.order }}</strong>
+                                    {% if howto_step.title %}
+                                        <span class="text-muted">- {{ howto_step.title }}</span>
+                                    {% endif %}
+                                    <div class="small mt-1">
+                                        From guide: <a href="{% url 'HowTo:detail' howto_step.how_to.id %}" class="text-decoration-underline">{{ howto_step.how_to.title }}</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info mb-4">
+                            Questions are answered by the community. Be specific and clear to get the best answers. e.g looking for X product or how can i do Y at Z location.
+                        </div>
+                    {% endif %}
+                    
+                    <form method="post" class="position-relative">
+                        {% csrf_token %}
+                        {{ form.title|as_crispy_field }}
+                        {{ form.body|as_crispy_field }}
+                        
+                        <div class="position-relative">
+                            {% include "Tag/partials/tag_input_widget.html" %}
+                        </div>
+                        
+                        <div class="d-grid mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg rounded-pill fw-bold">
+                                <i class="fas fa-paper-plane me-2"></i>Submit Question
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -46,6 +46,49 @@ def isCheapest(product):
     return label
 
 
+@register.filter(name="get_price_tag_details")
+def get_price_tag_details(product):
+    """
+    Returns a list of dictionaries containing label and tag for price comparisons.
+    Example: [{'label': 'cheapest-price', 'tag': tag_obj}, ...]
+    """
+    results = []
+    
+    # Check if the product has any tags
+    if not hasattr(product, 'tags'):
+        return results
+        
+    for tag in product.tags.all():
+        label = ''
+        # Get price statistics for products with this tag
+        stats = tag.products.aggregate(
+            min_price=Min('price'),
+            avg_price=Avg('price'),
+            max_price=Max('price')
+        )
+        
+        # Skip if we don't have enough data
+        if not all(stats.values()):
+            continue
+            
+        # Check price conditions
+        avg_price = float(stats['avg_price'] or 0)
+        
+        if product.price == stats['min_price']:
+            label = "Cheapest"
+        elif product.price < 0.8 * avg_price:
+            label = "Cheap"
+        elif product.price == stats['max_price']:
+            label = "Most Expensive"
+        elif product.price >= 1.3 * avg_price:
+            label = "Expensive"
+            
+        if label:
+            results.append({'label': label, 'tag': tag})
+            
+    return results
+
+
 @register.filter
 def olderDate(date):
     prev24hours = timezone.now() - timedelta(hours=24)

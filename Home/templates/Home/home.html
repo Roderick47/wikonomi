@@ -3,6 +3,7 @@
 {% load thumbnail %}
 {% load humanize %}
 {% load extra_date_filters %}
+{% load post_tags %}
 
 {% block title %}WIKONOMI - Your Local Price Index{% endblock %}
 
@@ -15,7 +16,26 @@
         <h1 class="display-4 fw-bold mb-3">
           <i class="fas fa-chart-line me-3"></i>WIKONOMI
         </h1>
-        <p class="lead mb-4">Monitor prices of goods and services in your community</p>
+        <p class="lead mb-4">Explore and Share your local market goods</p>
+        
+        <!-- Search Field -->
+        <div class="row justify-content-center mb-4">
+          <div class="col-md-6">
+            <form action="{% url 'Search:search' %}" method="get" class="position-relative">
+              <div class="input-group input-group-lg">
+                <input type="text" 
+                       name="q" 
+                       class="form-control" 
+                       placeholder="Search products, businesses..." 
+                       style="border-radius: 12px 0 0 12px; border: 2px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.9);">
+                <button class="btn btn-light" type="submit" style="border-radius: 0 12px 12px 0; border: 2px solid rgba(255,255,255,0.3); border-left: none;">
+                  <i class="fas fa-search"></i>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+        
         <div class="d-flex justify-content-center gap-3 flex-wrap">
           <a href="{% url 'Product:add-general' %}" class="btn btn-light btn-bento">
             <i class="fas fa-plus me-2"></i>Post a Product
@@ -28,150 +48,33 @@
     </div>
   </div>
 
-  {% if products %}
-    <!-- Products Section -->
-    <div class="bento-grid">
-      <div class="bento-card" style="grid-column: span 12;">
-        <div class="bento-card-header">
-          <h3 class="mb-0">
-            <i class="fas fa-fire me-2 text-warning"></i>Recent Products
-          </h3>
-          <p class="text-muted mb-0">Check out what others have posted recently</p>
+  {% if feed_items %}
+    <!-- Unified Feed Section -->
+    <div class="row justify-content-center">
+      <div class="col-lg-7">
+        <div class="d-flex align-items-center mb-4">
+          <h4 class="mb-0 fw-bold">
+            <i class="fas fa-stream me-2 text-primary"></i>Community Feed
+          </h4>
         </div>
-        <div class="bento-card-body">
-          <div class="row g-4">
-            {% for product in products %}
-              <div class="col-lg-3 col-md-6 position-relative">
-                <div class="bento-card h-100 product-card">
-                  <a href="{% url 'Product:detail' product.id %}" class="stretched-link"></a>
-                  <div class="bento-card-body">
-                    <!-- Product Header -->
-                    <div class="d-flex justify-content-between align-items-start mb-3">
-                      <h6 class="fw-bold mb-1 text-truncate">{{product.name}}</h6>
-                      <div class="d-flex gap-1">
-                        {% if product.date_created.date|isNew %}
-                          <span class="badge bg-success">New</span>
-                        {% endif %}
-  
-                        <small class="text-muted">{{product.date_updated|olderDate|naturalday }}</small>
-                      </div>
-                    </div>
 
-                    <!-- Product Image -->
-                    {% if product.FirstPhoto.photo %}
-                      <div class="product-image-container mb-3">
-                        {% thumbnail product.FirstPhoto.photo "200x150" crop="center" as prodImg %}
-                          <img class="img-fluid rounded" src="{{prodImg.url}}" alt="{{product.name}}" style="width: 100%; height: 150px; object-fit: cover;">
-                        {% endthumbnail %}
-                      </div>
-                    {% else %}
-                      <div class="product-image-placeholder mb-3">
-                        <div class="d-flex align-items-center justify-content-center bg-light rounded" style="height: 150px;">
-                          <i class="fas fa-box fa-2x text-muted"></i>
-                        </div>
-                      </div>
-                    {% endif %}
-
-                    <!-- Product Details -->
-                    <div class="product-details">
-                      {% if product.price %}
-                        <div class="price-info mb-2">
-                          <div class="current-price-with-change">
-                            <span class="fw-bold text-primary">
-                              <a href="{% url 'History:edit-list' product.id %}" class="text-decoration-none text-primary" title="View price history">
-                                K{{product.price|floatformat:2|intcomma}}
-                              </a>
-                            </span>
-                            
-                            <!-- Price change indicator next to current price -->
-                            {% if product.get_price_change is not None %}
-                              <span class="price-change-badge ms-2">
-                                {% if product.get_price_change > 0 %}
-                                  <i class="fas fa-arrow-up text-danger"></i>
-                                  <span class="text-danger">+K{{product.get_price_change|floatformat:2|intcomma}}</span>
-                                {% elif product.get_price_change < 0 %}
-                                  <i class="fas fa-arrow-down text-success"></i>
-                                  <span class="text-success">K{{product.get_price_change|floatformat:2|intcomma}}</span>
-                                {% else %}
-                                  <i class="fas fa-minus text-secondary"></i>
-                                  <span class="text-secondary">No Change</span>
-                                {% endif %}
-                              </span>
-                            {% endif %}
-                          </div>
-                          
-                          <!-- Last price below current price -->
-                          {% if product.get_last_price %}
-                            <div class="last-price-info">
-                              <small class="text-muted">
-                                <i class="fas fa-history me-1"></i>
-                                <a href="{% url 'History:edit-list' product.id %}" class="text-decoration-none text-muted" title="View price history">
-                                  Last: K{{product.get_last_price|floatformat:2|intcomma}}
-                                </a>
-                                {% if product.get_last_price_date %}
-                                  <span class="ms-1">• {{product.get_last_price_date|timesince}} ago</span>
-                                {% endif %}
-                              </small>
-                            </div>
-                          {% endif %}
-                        </div>
-                      {% endif %}
-
-                      {% if product.business %}
-                        <div class="vendor-info mb-2">
-                          <small class="text-muted">
-                            <i class="fas fa-store me-1"></i>{{product.business.name}}
-                          </small>
-                        </div>
-                      {% endif %}
-
-                      {% if product.business.location %}
-                        <div class="location-info mb-3">
-                          <small class="text-muted">
-                            <i class="fas fa-map-marker-alt me-1"></i>{{product.business.location}}
-                          </small>
-                        </div>
-                      {% endif %}
-
-                      <!-- Price Badge -->
-                      <div class="price-badge-container">
-                        {% if product|isCheapest == 'most-expensive' %}
-                          <span class="badge bg-dark">{{product|isCheapest}}</span>
-                        {% elif product|isCheapest == 'expensive' %}
-                          <span class="badge bg-danger">{{product|isCheapest}}</span>
-                        {% elif product|isCheapest == "cheapest-price" %}
-                          <span class="badge bg-success">{{product|isCheapest}}</span>
-                        {% elif product|isCheapest == "cheap" %}
-                          <span class="badge bg-info">{{product|isCheapest}}</span>
-                        {% endif %}
-                      </div>
-                    </div>
-
-                    <!-- Action Buttons -->
-                    <div class="mt-3 d-flex justify-content-end">
-                      <div class="dropdown" style="position: relative; z-index: 10;">
-                        <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="productActions-{{ product.id }}" data-bs-toggle="dropdown" aria-expanded="false">
-                          <i class="fas fa-ellipsis-v"></i>
-                        </button>
-                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="productActions-{{ product.id }}">
-                          <li>
-                            <a class="dropdown-item watchlist-toggle" href="#" data-product-id="{{ product.id }}" onclick="toggleWatchlist(event, {{ product.id }}); return false;">
-                              <i class="fas fa-bookmark me-2 text-warning"></i>
-                              <span class="watchlist-text">Add to Watchlist</span>
-                            </a>
-                          </li>
-                          <li>
-                            <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#addToBudgetModal" data-product-id="{{ product.id }}">
-                              <i class="fas fa-wallet me-2 text-primary"></i>Add to Budget
-                            </a>
-                          </li>
-                        </ul>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            {% endfor %}
+        <div class="feed-container">
+          {% include 'Home/partials/feed_chunk.html' %}
+        </div>
+      </div>
+      
+      <!-- Right Sidebar (optional) -->
+      <div class="col-lg-3 d-none d-lg-block">
+        <div class="bento-card sticky-top" style="top: 20px;">
+          <div class="bento-card-body">
+            <h6 class="fw-bold mb-3">Trending</h6>
+            <p class="text-muted small">No trending topics yet.</p>
+            <hr>
+            <div class="small">
+              <a href="#" class="text-decoration-none text-muted me-2">Privacy</a>
+              <a href="#" class="text-decoration-none text-muted me-2">Terms</a>
+              <span class="text-muted">© 2026 WIKONOMI</span>
+            </div>
           </div>
         </div>
       </div>
@@ -258,7 +161,7 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-        <a href="{% url 'Budget:create' %}" class="btn btn-primary">
+        <a href="{% url 'Budget:list' %}" class="btn btn-primary">
           <i class="fas fa-plus me-1"></i> Create New Budget
         </a>
       </div>
@@ -410,7 +313,7 @@
             budgetList.innerHTML = `
               <div class="text-center py-4">
                 <p>You don't have any budgets yet.</p>
-                <a href="/budget/create/" class="btn btn-primary">
+                <a href="{% url 'Budget:list' %}" class="btn btn-primary">
                   <i class="fas fa-plus me-1"></i> Create Your First Budget
                 </a>
               </div>

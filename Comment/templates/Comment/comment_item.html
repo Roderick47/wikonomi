@@ -1,4 +1,5 @@
 {% load humanize %}
+{% load comment_tags %}
 {% load static %}
 {% load thumbnail %}
 
@@ -18,11 +19,11 @@
     text-decoration: underline;
   }
   .replies-container {
-    display: none;
+    display: none !important;
     position: relative;
   }
   .replies-container.expanded {
-    display: block;
+    display: block !important;
   }
 
   /* Nested comment styling with connection lines */
@@ -220,8 +221,8 @@
 
   <div class="comment-header">
     <div class="me-3">
-      {% if comment.user.profile.image %}
-        <img class="rounded-circle" src="{{ comment.user.profile.image.url }}" alt="profilepic" width="40" height="40">
+      {% if comment.user_avatar %}
+        <img class="rounded-circle" src="{{ comment.user_avatar }}" alt="profilepic" width="40" height="40">
       {% else %}
         <img class="rounded-circle" src="{% static 'Profile/images/profile.png' %}" alt="profilepic" width="40" height="40">
       {% endif %}
@@ -233,19 +234,38 @@
       </div>
     </div>
     {% if request.user == comment.user or request.user.is_superuser %}
-      <button class="btn btn-link btn-sm text-danger ms-auto comment-action-link"
-              hx-post="{% url 'Comment:delete' comment.id %}"
-              hx-target="#comment-{{ comment.id }}"
-              hx-swap="outerHTML">
-        <i class="fas fa-trash"></i> Delete
-      </button>
+      <div class="ms-auto d-flex gap-2">
+        {% if request.user == comment.user %}
+          <button class="btn btn-link btn-sm text-primary comment-action-link"
+                  hx-get="{% url 'Comment:edit' comment.id %}"
+                  hx-target="#comment-{{ comment.id }}-content"
+                  hx-swap="innerHTML">
+            <i class="fas fa-edit"></i> Edit
+          </button>
+          <button class="btn btn-link btn-sm text-danger comment-action-link"
+                  hx-post="{% url 'Comment:delete' comment.id %}"
+                  hx-target="#comment-{{ comment.id }}"
+                  hx-swap="outerHTML">
+            <i class="fas fa-trash"></i> Delete
+          </button>
+        {% elif request.user.is_superuser %}
+          <button class="btn btn-link btn-sm text-danger comment-action-link"
+                  hx-post="{% url 'Comment:delete' comment.id %}"
+                  hx-target="#comment-{{ comment.id }}"
+                  hx-swap="outerHTML">
+            <i class="fas fa-trash"></i> Delete (Admin)
+          </button>
+        {% endif %}
+      </div>
     {% endif %}
   </div>
 
-  <div class="comment-body">
-    <p class="mb-2">{{ comment.body }}</p>
-    <div class="comment-actions">
-      <div class="d-flex align-items-center gap-2">
+  <div class="comment-body" id="comment-{{ comment.id }}-content">
+    <div class="mb-2">{{ comment.body|rich_text }}</div>
+  </div>
+  
+  <div class="comment-body pt-0">
+      <div class="d-flex align-items-center gap-2" id="reply-actions-{{ comment.id }}">
         {% if request.user.is_authenticated %}
           <button class="btn btn-link btn-sm text-primary p-0 comment-action-link"
                   onclick="showReplyForm({{ comment.id }})">
@@ -257,14 +277,13 @@
           </a>
         {% endif %}
         {% if comment.reply_count > 0 %}
-          <span class="text-muted small">{{ comment.get_reply_text }}</span>
+          <span class="text-muted small" id="reply-count-text-{{ comment.id }}">{{ comment.get_reply_text }}</span>
           <button class="toggle-replies-btn" onclick="toggleReplies({{ comment.id }})" title="Toggle replies">
             <i class="fas fa-chevron-down" id="toggle-icon-{{ comment.id }}"></i>
           </button>
         {% endif %}
       </div>
     </div>
-  </div>
 
   <!-- Reply form -->
   {% if request.user.is_authenticated %}
@@ -272,11 +291,11 @@
       <form hx-post="{% url 'Comment:create' %}"
             hx-target="#replies-{{ comment.id }}"
             hx-swap="beforeend"
-            hx-on::after-request="hideReplyForm({{ comment.id }}); showRepliesContainer({{ comment.id }}); scrollToNewReply(this);"
+            hx-on::after-request="hideReplyForm({{ comment.id }}); showRepliesContainer({{ comment.id }}); updateReplyCount({{ comment.id }}); scrollToNewReply(this);"
             class="form">
         {% csrf_token %}
-        <input type="hidden" name="content_type" value="{% if comment.product %}product{% elif comment.business %}business{% elif comment.info %}info{% endif %}">
-        <input type="hidden" name="object_id" value="{% if comment.product %}{{ comment.product.id }}{% elif comment.business %}{{ comment.business.id }}{% elif comment.info %}{{ comment.info.id }}{% endif %}">
+        <input type="hidden" name="content_type" value="{% if content_type %}{{ content_type }}{% elif comment.product %}product{% elif comment.business %}business{% elif comment.info %}info{% endif %}">
+        <input type="hidden" name="object_id" value="{% if content_type == 'product' %}{{ comment.product.id }}{% elif content_type == 'business' %}{{ comment.business.id }}{% elif content_type == 'info' %}{{ comment.info.id }}{% elif comment.product %}{{ comment.product.id }}{% elif comment.business %}{{ comment.business.id }}{% elif comment.info %}{{ comment.info.id }}{% endif %}">
         <input type="hidden" name="parent_id" value="{{ comment.id }}">
         <div class="input-group">
           <textarea class="form-control"
@@ -294,11 +313,10 @@
   {% endif %}
 
   <!-- Replies container -->
-  <div class="replies-container {% if comment.reply_count > 0 %}expanded{% endif %}" id="replies-{{ comment.id }}">
-    {% if comment.reply_count > 0 %}
-      {% for reply in comment.all_replies %}
-        {% include 'Comment/comment_item.html' with comment=reply %}
-      {% endfor %}
-    {% endif %}
+  <!-- Replies container -->
+  <div class="replies-container" 
+       id="replies-{{ comment.id }}" 
+       data-replies-url="{% url 'Comment:replies' comment.id %}"
+       data-loaded="false">
   </div>
 </div>

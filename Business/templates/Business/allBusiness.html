@@ -33,6 +33,26 @@
             Discover local businesses and vendors in your community
           {% endif %}
         </p>
+        
+        <!-- Search Field -->
+        <div class="row justify-content-center mb-4">
+          <div class="col-md-6">
+            <form action="{% url 'Search:search' %}" method="get" class="position-relative">
+              <input type="hidden" name="type" value="business">
+              <div class="input-group input-group-lg">
+                <input type="text" 
+                       name="q" 
+                       class="form-control" 
+                       placeholder="Search businesses..." 
+                       style="border-radius: 12px 0 0 12px; border: 2px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.9);">
+                <button class="btn btn-light" type="submit" style="border-radius: 0 12px 12px 0; border: 2px solid rgba(255,255,255,0.3); border-left: none;">
+                  <i class="fas fa-search"></i>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+        
         <div class="d-flex justify-content-center gap-3 flex-wrap">
           {% if is_owner_view %}
             <a href="{% url 'Business:add' %}" class="btn btn-light btn-bento">

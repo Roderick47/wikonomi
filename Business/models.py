@@ -4,9 +4,10 @@ import datetime
 from django.utils.text import slugify
 from Location.models import Location
 
-def get_image_filename(instance,filename):
+def get_image_filename(instance, filename):
+    ext = filename.split('.')[-1]
     slug = slugify(instance.name)
-    return slug
+    return f"{slug}.{ext}"
 
 class Business(models.Model):
     name = models.CharField(max_length=100)

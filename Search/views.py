@@ -2,20 +2,78 @@ from django.shortcuts import render,redirect
 from django.db.models import Q
 from Product.models import Product
 from Business.models import Business
+from Post.models import Post
+from QA.models import Question
 # from .forms import ChooseSpecForm
 from .models import pager,combine_query_sets
+from HowTo.models import HowTo
 from django.http import JsonResponse
 
 
 
 def SearchView(request):
     query = request.GET.get('q','')
-    results_list = Product.objects.filter(
-        Q(name__icontains=query)|Q(description__icontains=query)|Q(tags__name__icontains=query)
-        )
-    results_list = results_list.order_by('price')
-    results = pager(request,results_list,3)
-    return render(request,'Search/results.html',{'results_list':results_list,'products':results,'query':query})
+    search_type = request.GET.get('type', '')  # Get optional type filter
+    
+    # Initialize all result lists
+    products_results_list = Product.objects.none()
+    business_results_list = Business.objects.none()
+    question_results_list = Question.objects.none()
+    howto_results_list = HowTo.objects.none()
+    post_results_list = Post.objects.none()
+    
+    # Search based on type filter or search all if no type specified
+    if not search_type or search_type == 'product':
+        products_results_list = Product.objects.filter(
+            Q(name__icontains=query)|Q(description__icontains=query)|Q(tags__name__icontains=query)
+            ).select_related('business').distinct()
+        products_results_list = products_results_list.order_by('price')
+    
+    if not search_type or search_type == 'business':
+        business_results_list = Business.objects.filter(
+            Q(name__icontains=query)|Q(description__icontains=query)
+            ).distinct()
+        business_results_list = business_results_list.order_by('name')
+    
+    if not search_type or search_type == 'question' or search_type == 'knowledge':
+        question_results_list = Question.objects.filter(
+            Q(title__icontains=query) | Q(body__icontains=query)
+        ).distinct()
+
+    if not search_type or search_type == 'knowledge':
+        howto_results_list = HowTo.objects.filter(
+            Q(title__icontains=query) | Q(description__icontains=query),
+            is_public=True
+        ).distinct()
+    
+    if not search_type or search_type == 'post':
+        post_results_list = Post.objects.filter(
+            Q(body__icontains=query),
+            is_active=True
+        ).select_related('author', 'product', 'business').distinct()
+        post_results_list = post_results_list.order_by('-created_at')
+    
+    # Paginate results
+    products_results = pager(request, products_results_list, 6)
+    business_results = pager(request, business_results_list, 6)
+    question_results = pager(request, question_results_list, 6)
+    howto_results = pager(request, howto_results_list, 6)
+    post_results = pager(request, post_results_list, 6)
+
+    return render(request,'Search/results.html',{
+        'products_results_list':products_results_list,
+        'products_results':products_results,
+        'query':query,
+        'business_results_list':business_results_list,
+        'business_results':business_results,
+        'question_results_list': question_results_list,
+        'question_results': question_results,
+        'howto_results_list': howto_results_list,
+        'howto_results': howto_results,
+        'post_results_list': post_results_list,
+        'post_results': post_results,
+        'search_type': search_type,
+    })
 
 
 def BusinessSearchView(request,query):

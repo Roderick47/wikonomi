@@ -2,16 +2,18 @@
 {% load thumbnail %}
 {% load humanize %}
 {% load static %}
+{% load extra_date_filters %}
 
-  <script src="{% static 'Product/js/product_detail.js' %}"></script>
-  <script src="{% static 'Home/jquery-ui-1.12.1.custom/jquery-ui.js' %}"></script>
-  <link rel="stylesheet" href="{% static 'Product/css/ProductDetail.css' %}">
-  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-  
+
 
 
 {% block content %}
+  <script src="{% static 'Product/js/product_detail.js' %}"></script>
+  <script src="{% static 'Home/jquery-ui-1.12.1.custom/jquery-ui.js' %}"></script>
+  <script src="{% static 'Comment/comment.js' %}"></script>
+  <link rel="stylesheet" href="{% static 'Product/css/ProductDetail.css' %}">
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <script>
     $(function(){
         $("#tag").autocomplete({
@@ -32,13 +34,27 @@
               <i class="fas fa-tag me-2"></i>K{{product.price|intcomma}}
               {% if product.has_price_history %}
                 <span class="price-comparison ms-2" style="font-size: 0.8em; opacity: 0.9;">
-                  {% if product.get_last_price > product.price %}
-                <span class="text-success">▼</span>
-                  {% else %}
-                <span class="text-warning">▲</span>
-                  {% endif %}
-                  Was K{{ product.get_last_price|intcomma }} 
-                  <span class="text-muted">({{ product.get_last_price_date|timesince }} ago)</span>
+                  {% with price_stats=product.get_price_history_stats %}
+                    {% if price_stats %}
+                      {% if price_stats.is_increase %}
+                        <span class="badge bg-danger text-white ms-2" title="Increased from K{{ price_stats.previous|intcomma }}">
+                          <i class="fas fa-arrow-trend-up me-1"></i>{{ price_stats.percentage|floatformat:1 }}%
+                        </span>
+                      {% elif price_stats.is_decrease %}
+                        <span class="badge bg-success text-white ms-2" title="Decreased from K{{ price_stats.previous|intcomma }}">
+                          <i class="fas fa-arrow-trend-down me-1"></i>{{ price_stats.percentage|floatformat:1 }}%
+                        </span>
+                      {% endif %}
+                    {% else %}
+                      {% if product.get_last_price > product.price %}
+                        <span class="text-success">▼</span>
+                      {% else %}
+                        <span class="text-warning">▲</span>
+                      {% endif %}
+                      Was K{{ product.get_last_price|intcomma }} 
+                      <span class="text-muted">({{ product.get_last_price_date|timesince }} ago)</span>
+                    {% endif %}
+                  {% endwith %}
                 </span>
               {% endif %}
             </a>
@@ -144,6 +160,8 @@
               </div>
             </div>
           </div>
+
+
         </div>
       </div>
 
@@ -168,6 +186,35 @@
             </div>
           {% endif %}
         </div>
+        <div class="bento-card-body border-top">
+          <h6 class="mb-3 text-muted text-uppercase small fw-bold">Price Insights</h6>
+          {% for item in product|get_price_tag_details %}
+          <div class="d-flex align-items-center mb-2">
+            <div class="text-success me-2">
+              <i class="fas fa-chart-line"></i>
+            </div>
+            <div>
+              {% if item.label == 'Most Expensive' %}
+                <span class="badge bg-dark">{{ item.label }}</span>
+              {% elif item.label == 'Expensive' %}
+                <span class="badge bg-danger">{{ item.label }}</span>
+              {% elif item.label == "Cheapest" %}
+                <span class="badge bg-success">{{ item.label }}</span>
+              {% elif item.label == "Cheap" %}
+                <span class="badge bg-info">{{ item.label }}</span>
+              {% else %}
+                <span class="badge bg-secondary">{{ item.label }}</span>
+              {% endif %}
+              in 
+              <a href="{% url 'Tag:products' item.tag.id product.id %}" class="text-decoration-none fw-medium">
+                {{ item.tag.name }}
+              </a>
+            </div>
+          </div>
+          {% empty %}
+          <p class="text-muted small fst-italic mb-0">No price insights available for this product's tags.</p>
+          {% endfor %}
+        </div>
         <div class="bento-card-footer">
           <button class="btn btn-secondary-bento btn-bento w-100" 
                   data-bs-toggle="modal" 
@@ -188,6 +235,14 @@
               <i class="fas fa-bell"></i>Track
             </a>
             
+            <a href="{% url 'Post:create' %}?product={{ product.id }}" class="btn btn-primary-bento btn-bento">
+              <i class="fas fa-comment-dots"></i>Discuss
+            </a>
+
+            <a href="{% url 'QA:ask' %}?product={{ product.id }}" class="btn btn-bento" style="background-color: #64748b; color: white;">
+              <i class="fas fa-question-circle"></i>Ask
+            </a>
+            
             <a href="{% url 'Product:edit' product.id %}" class="btn btn-warning-bento btn-bento">
               <i class="fas fa-edit"></i>Edit
             </a>
@@ -206,6 +261,85 @@
           </div>
         </div>
       </div>
+
+    <!-- How-To Guides Section -->
+    <div class="bento-card" style="grid-column: span 12;">
+      <div class="bento-card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">
+          <i class="fas fa-graduation-cap me-2 text-primary"></i>Guides & Documentation
+        </h5>
+        <a href="{% url 'HowTo:create' %}?product={{ product.id }}" class="btn btn-sm btn-outline-primary rounded-pill">Create Guide</a>
+      </div>
+      <div class="bento-card-body">
+        {% if product.how_tos.exists %}
+          <div class="row g-3">
+            {% for guide in product.how_tos.all|slice:":10" %}
+              <div class="col-md-4">
+                <div class="card h-100 border shadow-none hover-shadow transition-all rounded-3 guide-card">
+                  <a href="{% url 'HowTo:detail' guide.id %}" class="stretched-link"></a>
+                  <div class="card-body p-3">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        {% if guide.is_official %}
+                            <span class="badge bg-soft-primary text-primary border-primary border-opacity-10 py-1" style="font-size: 0.6rem;">OFFICIAL</span>
+                        {% endif %}
+                    </div>
+                    <h6 class="fw-bold mb-1">{{ guide.title }}</h6>
+                    <p class="text-muted extra-small mb-0">{{ guide.description|truncatechars:60 }}</p>
+                  </div>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+          {% if product.how_tos.count > 10 %}
+             <div class="text-center mt-3">
+                 <a href="{% url 'HowTo:product-guides' product.id %}" class="btn btn-outline-primary btn-sm rounded-pill">View all guides ({{ product.how_tos.count }})</a>
+             </div>
+          {% endif %}
+        {% else %}
+          <div class="text-center py-4 text-muted">
+             <i class="fas fa-book-open fa-2x mb-2 opacity-50"></i>
+             <p>No guides published for this product yet.</p>
+          </div>
+        {% endif %}
+      </div>
+    <!-- Q&A Section -->
+    <div class="bento-card" style="grid-column: span 12;">
+      <div class="bento-card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">
+          <i class="fas fa-question-circle me-2"></i>Questions & Answers
+        </h5>
+        <a href="{% url 'QA:ask' %}?product={{ product.id }}" class="btn btn-sm btn-primary rounded-pill">Ask Question</a>
+      </div>
+      <div class="bento-card-body">
+        {% if product.questions.exists %}
+          <div class="list-group list-group-flush">
+            {% for question in product.questions.all|slice:":3" %}
+              <div class="list-group-item px-0">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <a href="{% url 'QA:detail' question.id %}" class="fw-bold text-dark text-decoration-none">{{ question.title }}</a>
+                        <div class="text-muted small mt-1">
+                            {{ question.answer_count }} answer{{ question.answer_count|pluralize }} • {{ question.views_count }} view{{ question.views_count|pluralize }}
+                        </div>
+                    </div>
+                    <small class="text-muted">{{ question.created_at|naturaltime }}</small>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+          {% if product.questions.count > 3 %}
+             <div class="text-center mt-3">
+                 <a href="#" class="btn btn-outline-primary btn-sm rounded-pill">View all questions</a>
+             </div>
+          {% endif %}
+        {% else %}
+          <div class="text-center py-4 text-muted">
+             <i class="far fa-question-circle fa-2x mb-2 opacity-50"></i>
+             <p>No questions yet.</p>
+          </div>
+        {% endif %}
+      </div>
+    </div>
     </div>
 
     <!-- Comments Section -->
@@ -225,7 +359,7 @@
             <form hx-post="{% url 'Comment:create' %}"
                   hx-target="#comments-container"
                   hx-swap="afterbegin"
-                  hx-on::after-request="this.reset(); updateCommentCount(); scrollToNewComment();"
+                  hx-on::after-request="handleCommentSuccess(event)"
                   class="form">
               {% csrf_token %}
               <input type="hidden" name="content_type" value="product">
@@ -254,7 +388,7 @@
         </div>
         
         <!-- Comments Display -->
-        <div id="comments-container" hx-get="{% url 'Comment:list' %}?content_type=product&object_id={{product.id}}&page=1" hx-trigger="load">
+        <div id="comments-container" class="comment-thread" hx-get="{% url 'Comment:list' %}?content_type=product&object_id={{product.id}}&page=1" hx-trigger="load">
           <div class="text-center py-4">
             <div class="spinner-border text-primary" role="status">
               <span class="visually-hidden">Loading comments...</span>
@@ -760,6 +894,16 @@
       }
     }
 
+    .guide-card {
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .guide-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-xl);
+    }
+
     /* Empty state */
     .empty-state {
       text-align: center;
@@ -875,25 +1019,7 @@
         }, 3000);
       }
     }
-
-    function toggleReplies(commentId) {
-      const repliesContainer = document.getElementById(`replies-${commentId}`);
-      const toggleIcon = document.getElementById(`toggle-icon-${commentId}`);
-
-      if (repliesContainer && toggleIcon) {
-        const isExpanded = repliesContainer.classList.contains('expanded');
-
-        if (isExpanded) {
-          // Collapse replies
-          repliesContainer.classList.remove('expanded');
-          toggleIcon.className = 'fas fa-chevron-down';
-        } else {
-          // Expand replies
-          repliesContainer.classList.add('expanded');
-          toggleIcon.className = 'fas fa-chevron-up';
-        }
-      }
-    }
+    // toggleReplies is now defined in comment.js - do not duplicate here
   </script>
 
 {% endblock %}

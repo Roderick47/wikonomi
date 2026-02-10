@@ -1,0 +1,6 @@
+<button hx-post="{% url 'QA:toggle_like_answer' answer.id %}"
+        hx-target="#answer-like-{{ answer.id }}"
+        hx-swap="innerHTML"
+        class="btn btn-sm {% if request.user in answer.likes.all %}btn-primary{% else %}btn-outline-primary{% endif %} rounded-pill">
+    <i class="fas fa-thumbs-up me-1"></i> {{ answer.num_likes }}
+</button>

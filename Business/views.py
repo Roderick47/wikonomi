@@ -8,6 +8,9 @@ from django.urls import reverse
 import datetime
 from urllib.parse import urlencode
 from Location.models import Location
+from Location.models import Location
+from Post.models import Post
+from Tag.models import Tag
 import requests
 
 # Create your views here.
@@ -61,7 +64,28 @@ def BusinessAddView(request):
                 business.location = location_obj
 
             business.save()
-            messages.success(request, 'Business created successfully with GPS location!')
+            
+            # Handle tags
+            tags_input = form.cleaned_data.get('tags_input', '')
+            if tags_input:
+                for tag_name in tags_input.split(','):
+                    tag_name = tag_name.strip()
+                    if tag_name:
+                        tag, created = Tag.objects.get_or_create(name=tag_name)
+                        tag.businesses.add(business)
+            
+            # Handle social post creation
+            social_post_body = form.cleaned_data.get('social_post')
+            if social_post_body:
+                Post.objects.create(
+                    author=request.user,
+                    body=social_post_body,
+                    business=business
+                )
+                messages.success(request, 'Business and social post created successfully with GPS location!')
+            else:
+                messages.success(request, 'Business created successfully with GPS location!')
+
             return redirect('Business:detail',business.id)
     else:
         form = BusinessAddForm()
@@ -179,7 +203,28 @@ def PrivateBusinessAddView(request):
                 business.location = location_obj
 
             business.save()
-            messages.success(request, 'Private business created successfully!')
+            
+            # Handle tags
+            tags_input = form.cleaned_data.get('tags_input', '')
+            if tags_input:
+                for tag_name in tags_input.split(','):
+                    tag_name = tag_name.strip()
+                    if tag_name:
+                        tag, created = Tag.objects.get_or_create(name=tag_name)
+                        tag.businesses.add(business)
+            
+            # Handle social post creation
+            social_post_body = form.cleaned_data.get('social_post')
+            if social_post_body:
+                Post.objects.create(
+                    author=request.user,
+                    body=social_post_body,
+                    business=business
+                )
+                messages.success(request, 'Private business and social post created successfully!')
+            else:
+                messages.success(request, 'Private business created successfully!')
+
             return redirect('Home:home')
     form = BusinessAddForm()
     return render(request,'Business/PrivateBusinessAddForm.html',{'form':form})

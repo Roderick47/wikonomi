@@ -87,3 +87,35 @@ def calculate_distance(lat1, lon1, lat2, lon2):
     
     return R * c
 
+
+# Proxy view for reverse geocoding to avoid CORS issues
+import requests
+from django.views.decorators.http import require_GET
+
+@require_GET
+def reverse_geocode(request):
+    """Fetch address from Nominatim and return JSON.
+    Expects 'lat' and 'lon' query parameters.
+    """
+    lat = request.GET.get('lat')
+    lon = request.GET.get('lon')
+    if not lat or not lon:
+        return JsonResponse({'error': 'Missing lat or lon'}, status=400)
+    url = 'https://nominatim.openstreetmap.org/reverse'
+    params = {
+        'format': 'json',
+        'lat': lat,
+        'lon': lon,
+        'zoom': 18,
+        'addressdetails': 1,
+    }
+    headers = {
+        'User-Agent': 'Wikonomi/1.0 (location-selector)'
+    }
+    try:
+        resp = requests.get(url, params=params, headers=headers, timeout=10)
+        resp.raise_for_status()
+        data = resp.json()
+        return JsonResponse(data)
+    except requests.RequestException as e:
+        return JsonResponse({'error': str(e)}, status=500)

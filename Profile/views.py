@@ -7,6 +7,7 @@ from urllib.parse import urlencode
 from django.urls import reverse
 from Business.models import Business
 from Follow.models import ProductSubscription
+from History.models import ProductHistory
 
 
 from .forms import SignUpForm,UserForm,ProfileForm
@@ -63,15 +64,29 @@ def LogoutView(request):
         logout(request)
         return redirect('Home:home')
 
+from Post.models import Post
+from QA.models import Question
+
 #returns the profile page of a logged in user.
 def ProfileView(request):
     if request.user.is_authenticated:
         profile = Profile.objects.get(user=request.user)
-        prof_bus = Business.objects.filter(author=request.user)
+        user_business = Business.objects.filter(author=request.user)
         MySubscriptions = ProductSubscription.objects.filter(user=request.user)
+        edit_history = ProductHistory.objects.filter(current_author=request.user.username).order_by('-date_created')
+        user_posts = Post.objects.filter(author=request.user)
+        user_questions = Question.objects.filter(author=request.user)
 
-
-        return render(request,'Profile/profile.html',{'profile':profile,'all_business':prof_bus,'MySubscriptions':MySubscriptions})
+        context = {
+            'profile': profile,
+            'all_business': user_business,
+            'MySubscriptions': MySubscriptions,
+            'edit_history': edit_history,
+            'user_posts': user_posts,
+            'user_questions': user_questions,
+            'is_own_profile': True,
+        }
+        return render(request,'Profile/profile.html', context)
 
     return redirect('Profile:login')
 
@@ -93,6 +108,17 @@ def UpdateProfileView(request,prof_id):
     return render(request,'Profile/profile_update_form.html',{'user_form':user_form,'profile_form':profile_form})
 
 def PublicProfileView(request,user_id):
-    user1 = User.objects.get(id=user_id)
-    profile = Profile.objects.get(user= user1)
-    return render(request,'Profile/profile.html',{'profile':profile})
+    user_obj = User.objects.get(id=user_id)
+    profile = Profile.objects.get(user=user_obj)
+    user_business = Business.objects.filter(author=user_obj)
+    user_posts = Post.objects.filter(author=user_obj)
+    user_questions = Question.objects.filter(author=user_obj)
+
+    context = {
+        'profile': profile,
+        'all_business': user_business,
+        'user_posts': user_posts,
+        'user_questions': user_questions,
+        'is_own_profile': request.user == user_obj,
+    }
+    return render(request,'Profile/profile.html', context)

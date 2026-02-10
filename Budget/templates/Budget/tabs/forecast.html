@@ -1,0 +1,115 @@
+<div class="animate__animated animate__fadeIn">
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm bento-card">
+                <div class="card-header bg-white border-0 pt-4 px-4 pb-0">
+                    <h5 class="fw-bold mb-0">Spending Forecast</h5>
+                </div>
+                <div class="card-body p-4">
+                    <div style="height: 300px;">
+                        <canvas id="forecastChart"></canvas>
+                    </div>
+                    <div class="mt-4 small text-muted">
+                        <i class="fas fa-info-circle me-1"></i> This chart estimates your spending pace based on current items in your shopping list vs your target budget.
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm bento-card">
+                <div class="card-header bg-white border-0 pt-4 px-4 pb-0">
+                    <h5 class="fw-bold mb-0">What-If Scenarios</h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="mb-4">
+                        <label class="form-label d-flex justify-content-between">
+                            <span>Price Increase</span>
+                            <span class="fw-bold text-primary" id="price-inc-val">0%</span>
+                        </label>
+                        <input type="range" class="form-range" min="0" max="50" step="5" value="0" id="price-inc-slider">
+                        <div class="form-text">Simulate if market prices rise in Port Moresby.</div>
+                    </div>
+                    
+                    <div class="p-3 bg-light rounded-3">
+                        <div class="small text-muted mb-1">Projected Total</div>
+                        <div class="h4 fw-bold mb-0 text-primary" id="projected-total">K{{ budget.total_estimated_spend|floatformat:2 }}</div>
+                        <div class="mt-2 small" id="projection-status">
+                            <span class="text-success"><i class="fas fa-check-circle me-1"></i> Within budget</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function() {
+        const ctx = document.getElementById('forecastChart');
+        if (ctx) {
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+                    datasets: [
+                        {
+                            label: 'Budget Limit',
+                            data: [{{ budget.target_amount }}, {{ budget.target_amount }}, {{ budget.target_amount }}, {{ budget.target_amount }}],
+                            borderColor: '#ef4444',
+                            borderDash: [5, 5],
+                            pointRadius: 0,
+                            fill: false
+                        },
+                        {
+                            label: 'Estimated Path',
+                            data: [0, {{ budget.total_estimated_spend|floatformat:2 }} * 0.3, {{ budget.total_estimated_spend|floatformat:2 }} * 0.7, {{ budget.total_estimated_spend|floatformat:2 }}],
+                            borderColor: '#6366f1',
+                            backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                            fill: true,
+                            tension: 0.4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return 'K' + value;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        const slider = document.getElementById('price-inc-slider');
+        const valDisp = document.getElementById('price-inc-val');
+        const totalDisp = document.getElementById('projected-total');
+        const statusDisp = document.getElementById('projection-status');
+        const baseTotal = {{ budget.total_estimated_spend|floatformat:2 }};
+        const target = {{ budget.target_amount|floatformat:2 }};
+
+        slider.addEventListener('input', function() {
+            const inc = parseInt(this.value);
+            valDisp.textContent = inc + '%';
+            const projected = baseTotal * (1 + inc/100);
+            totalDisp.textContent = 'K' + projected.toFixed(2);
+            
+            if (projected > target) {
+                statusDisp.innerHTML = '<span class="text-danger"><i class="fas fa-exclamation-triangle me-1"></i> Over budget!</span>';
+            } else {
+                statusDisp.innerHTML = '<span class="text-success"><i class="fas fa-check-circle me-1"></i> Within budget</span>';
+            }
+        });
+    })();
+</script>

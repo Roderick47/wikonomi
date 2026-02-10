@@ -1,161 +1,351 @@
 {% extends 'Home/base.html' %}
 
-{% block title %}About WIKONOMI - Your Local Price Index{% endblock %}
+{% block title %}About WIKONOMI - Your Local Economy Hub{% endblock %}
 
 {% block content %}
 <div class="bento-container">
   <!-- Hero Section -->
   <div class="bento-grid">
-    <div class="bento-card" style="grid-column: span 12; background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%); color: white; border: none;">
-      <div class="bento-card-body text-center">
-        <h1 class="display-4 fw-bold mb-3">
-          <i class="fas fa-chart-line me-3"></i>What is WIKONOMI?
+    <div class="bento-card hero-card" style="grid-column: span 12; background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #06b6d4 100%); color: white; border: none; overflow: hidden; position: relative;">
+      <div class="hero-pattern"></div>
+      <div class="bento-card-body text-center position-relative" style="z-index: 2;">
+        <div class="hero-badge mb-4">
+          <span class="badge bg-white text-primary px-4 py-2 rounded-pill fw-bold">
+            <i class="fas fa-flag me-2"></i>Made for Papua New Guineans
+          </span>
+        </div>
+        <h1 class="display-3 fw-bold mb-4">
+          Welcome to<br><span class="text-gradient-light">WIKONOMI</span>
         </h1>
-        <p class="lead mb-4">Empowering Papua New Guineans with transparent pricing information</p>
+        <p class="lead mb-4 opacity-90" style="max-width: 700px; margin: 0 auto;">
+          Your all-in-one platform for discovering businesses, comparing prices, sharing knowledge.
+        </p>
+        <div class="hero-stats d-flex justify-content-center gap-4 flex-wrap mt-5">
+          <div class="stat-item">
+            <i class="fas fa-store fa-2x mb-2 opacity-75"></i>
+            <div class="h4 fw-bold mb-0">Businesses</div>
+            <small class="opacity-75">Discover local shops</small>
+          </div>
+          <div class="stat-item">
+            <i class="fas fa-box fa-2x mb-2 opacity-75"></i>
+            <div class="h4 fw-bold mb-0">Products</div>
+            <small class="opacity-75">Compare prices</small>
+          </div>
+          <div class="stat-item">
+            <i class="fas fa-graduation-cap fa-2x mb-2 opacity-75"></i>
+            <div class="h4 fw-bold mb-0">Guides</div>
+            <small class="opacity-75">Learn how-to's</small>
+          </div>
+          <div class="stat-item">
+            <i class="fas fa-users fa-2x mb-2 opacity-75"></i>
+            <div class="h4 fw-bold mb-0">Community</div>
+            <small class="opacity-75">Connect & share</small>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Core Features Section -->
+  <div class="bento-grid">
+    <div class="bento-card" style="grid-column: span 12;">
+      <div class="bento-card-header text-center">
+        <span class="badge bg-primary-subtle text-primary rounded-pill px-3 py-2 mb-3">CORE FEATURES</span>
+        <h2 class="fw-bold mb-2">Everything You Need, In One Place</h2>
+        <p class="text-muted mb-0">Discover what makes WIKONOMI the ultimate market guide for Papua New Guineans</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Feature Cards Grid -->
+  <div class="bento-grid">
+    <!-- Business Discovery -->
+    <div class="bento-card feature-highlight" style="grid-column: span 6;">
+      <div class="bento-card-body">
+        <div class="feature-icon-lg bg-gradient-primary mb-4">
+          <i class="fas fa-store"></i>
+        </div>
+        <h3 class="fw-bold mb-3">Business Directory</h3>
+        <p class="text-muted mb-4">Discover local businesses, from restaurants to retailers. Each business profile includes location, products, and community reviews.</p>
+        <ul class="feature-list">
+          <li><i class="fas fa-check text-success me-2"></i>Find businesses by location</li>
+          <li><i class="fas fa-check text-success me-2"></i>View products & services</li>
+          <li><i class="fas fa-check text-success me-2"></i>Interactive maps</li>
+          <li><i class="fas fa-check text-success me-2"></i>Business owner profiles</li>
+        </ul>
+        <a href="{% url 'Business:all' %}" class="btn btn-outline-primary rounded-pill mt-3">
+          <i class="fas fa-compass me-2"></i>Explore Businesses
+        </a>
+      </div>
+    </div>
+
+    <!-- Price Comparison -->
+    <div class="bento-card feature-highlight" style="grid-column: span 6;">
+      <div class="bento-card-body">
+        <div class="feature-icon-lg bg-gradient-success mb-4">
+          <i class="fas fa-tags"></i>
+        </div>
+        <h3 class="fw-bold mb-3">Price Comparison</h3>
+        <p class="text-muted mb-4">Compare prices across different vendors and track price changes over time. Never overpay for products again!</p>
+        <ul class="feature-list">
+          <li><i class="fas fa-check text-success me-2"></i>Compare product prices</li>
+          <li><i class="fas fa-check text-success me-2"></i>Price history tracking</li>
+          <li><i class="fas fa-check text-success me-2"></i>Find the cheapest option</li>
+          <li><i class="fas fa-check text-success me-2"></i>Community-verified prices</li>
+        </ul>
+        <a href="{% url 'Product:all' %}" class="btn btn-outline-success rounded-pill mt-3">
+          <i class="fas fa-search-dollar me-2"></i>Compare Prices
+        </a>
+      </div>
+    </div>
+
+    <!-- Knowledge Base -->
+    <div class="bento-card feature-highlight" style="grid-column: span 6;">
+      <div class="bento-card-body">
+        <div class="feature-icon-lg bg-gradient-info mb-4">
+          <i class="fas fa-book-open"></i>
+        </div>
+        <h3 class="fw-bold mb-3">Community Knowledge</h3>
+        <p class="text-muted mb-4">Learn from community-created How-To guides and get answers to your questions from locals who know best.</p>
+        <ul class="feature-list">
+          <li><i class="fas fa-check text-success me-2"></i>Step-by-step guides</li>
+          <li><i class="fas fa-check text-success me-2"></i>Q&A discussions</li>
+          <li><i class="fas fa-check text-success me-2"></i>Ask questions on guide steps</li>
+          <li><i class="fas fa-check text-success me-2"></i>Verified answers</li>
+        </ul>
+        <a href="{% url 'QA:all' %}" class="btn btn-outline-info rounded-pill mt-3">
+          <i class="fas fa-lightbulb me-2"></i>Browse Knowledge Base
+        </a>
+      </div>
+    </div>
+
+    <!-- Community Posts -->
+    <div class="bento-card feature-highlight" style="grid-column: span 6;">
+      <div class="bento-card-body">
+        <div class="feature-icon-lg bg-gradient-warning mb-4">
+          <i class="fas fa-comments"></i>
+        </div>
+        <h3 class="fw-bold mb-3">Community Feed</h3>
+        <p class="text-muted mb-4">Share updates, engage in discussions, and stay connected with what's happening in your local economy.</p>
+        <ul class="feature-list">
+          <li><i class="fas fa-check text-success me-2"></i>Share posts & updates</li>
+          <li><i class="fas fa-check text-success me-2"></i>Comment & discuss</li>
+          <li><i class="fas fa-check text-success me-2"></i>Follow users & businesses</li>
+          <li><i class="fas fa-check text-success me-2"></i>Real-time notifications</li>
+        </ul>
+        <a href="{% url 'Home:home' %}" class="btn btn-outline-warning rounded-pill mt-3">
+          <i class="fas fa-stream me-2"></i>View Community Feed
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Additional Features Grid -->
+  <div class="bento-grid">
+    <div class="bento-card" style="grid-column: span 12;">
+      <div class="bento-card-header text-center">
+        <span class="badge bg-success-subtle text-success rounded-pill px-3 py-2 mb-3">MORE TOOLS</span>
+        <h2 class="fw-bold mb-2">Powerful Features for Everyone</h2>
+      </div>
+      <div class="bento-card-body">
+        <div class="row g-4">
+          <!-- Budget Tracker -->
+          <div class="col-lg-3 col-md-6">
+            <div class="mini-feature-card">
+              <div class="mini-feature-icon bg-purple">
+                <i class="fas fa-wallet"></i>
+              </div>
+              <h5 class="fw-bold">Budget Tracker</h5>
+              <p class="text-muted small mb-0">Track your spending, set budgets, and manage your expenses with our personal finance tools.</p>
+            </div>
+          </div>
+
+          <!-- Smart Search -->
+          <div class="col-lg-3 col-md-6">
+            <div class="mini-feature-card">
+              <div class="mini-feature-icon bg-teal">
+                <i class="fas fa-search"></i>
+              </div>
+              <h5 class="fw-bold">Smart Search</h5>
+              <p class="text-muted small mb-0">Find products, businesses, guides, and questions all from one powerful search interface.</p>
+            </div>
+          </div>
+
+          <!-- Location Discovery -->
+          <div class="col-lg-3 col-md-6">
+            <div class="mini-feature-card">
+              <div class="mini-feature-icon bg-orange">
+                <i class="fas fa-map-marked-alt"></i>
+              </div>
+              <h5 class="fw-bold">Location Discovery</h5>
+              <p class="text-muted small mb-0">Explore businesses and products near you with interactive maps and location filtering.</p>
+            </div>
+          </div>
+
+          <!-- Tag System -->
+          <div class="col-lg-3 col-md-6">
+            <div class="mini-feature-card">
+              <div class="mini-feature-icon bg-pink">
+                <i class="fas fa-hashtag"></i>
+              </div>
+              <h5 class="fw-bold">Smart Tags</h5>
+              <p class="text-muted small mb-0">Organize and discover content with our intelligent tagging system across all categories.</p>
+            </div>
+          </div>
+
+          <!-- Notifications -->
+          <div class="col-lg-3 col-md-6">
+            <div class="mini-feature-card">
+              <div class="mini-feature-icon bg-red">
+                <i class="fas fa-bell"></i>
+              </div>
+              <h5 class="fw-bold">Notifications</h5>
+              <p class="text-muted small mb-0">Stay updated with real-time notifications for answers, comments, and followers.</p>
+            </div>
+          </div>
+
+          <!-- Price History -->
+          <div class="col-lg-3 col-md-6">
+            <div class="mini-feature-card">
+              <div class="mini-feature-icon bg-green">
+                <i class="fas fa-chart-line"></i>
+              </div>
+              <h5 class="fw-bold">Price History</h5>
+              <p class="text-muted small mb-0">Track how prices change over time and make informed purchasing decisions.</p>
+            </div>
+          </div>
+
+          <!-- User Profiles -->
+          <div class="col-lg-3 col-md-6">
+            <div class="mini-feature-card">
+              <div class="mini-feature-icon bg-indigo">
+                <i class="fas fa-user-circle"></i>
+              </div>
+              <h5 class="fw-bold">Rich Profiles</h5>
+              <p class="text-muted small mb-0">Build your reputation with posts, questions, guides, and contributions to the community.</p>
+            </div>
+          </div>
+
+          <!-- Reporting -->
+          <div class="col-lg-3 col-md-6">
+            <div class="mini-feature-card">
+              <div class="mini-feature-icon bg-slate">
+                <i class="fas fa-flag"></i>
+              </div>
+              <h5 class="fw-bold">Safe Community</h5>
+              <p class="text-muted small mb-0">Report inappropriate content and help us maintain a safe, trustworthy platform.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- How It Works -->
+  <div class="bento-grid">
+    <div class="bento-card" style="grid-column: span 12;">
+      <div class="bento-card-header text-center">
+        <span class="badge bg-warning-subtle text-warning rounded-pill px-3 py-2 mb-3">HOW IT WORKS</span>
+        <h2 class="fw-bold mb-2">Get Started in 3 Easy Steps</h2>
+      </div>
+      <div class="bento-card-body">
+        <div class="row g-4">
+          <div class="col-md-4">
+            <div class="step-card text-center">
+              <div class="step-number">1</div>
+              <h4 class="fw-bold mb-3">Create Your Account</h4>
+              <p class="text-muted">Sign up for free and join our growing community of Papua New Guineans sharing local knowledge.</p>
+              <i class="fas fa-user-plus step-icon"></i>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="step-card text-center">
+              <div class="step-number">2</div>
+              <h4 class="fw-bold mb-3">Explore & Discover</h4>
+              <p class="text-muted">Browse businesses, compare prices, read guides, and find answers to your questions.</p>
+              <i class="fas fa-compass step-icon"></i>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="step-card text-center">
+              <div class="step-number">3</div>
+              <h4 class="fw-bold mb-3">Contribute & Connect</h4>
+              <p class="text-muted">Add products, write guides, answer questions, and help build the knowledge base.</p>
+              <i class="fas fa-hands-helping step-icon"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- For Business Owners -->
+  <div class="bento-grid">
+    <div class="bento-card" style="grid-column: span 12; background: linear-gradient(135deg, #059669 0%, #10b981 100%); color: white; border: none;">
+      <div class="bento-card-body">
+        <div class="row align-items-center">
+          <div class="col-lg-7">
+            <span class="badge bg-white text-success rounded-pill px-3 py-2 mb-3">FOR BUSINESS OWNERS</span>
+            <h2 class="fw-bold mb-3">Grow Your Business with WIKONOMI</h2>
+            <p class="opacity-90 mb-4">List your business for free and reach thousands of potential customers. Showcase your products, share guides about your services, and engage with your community.</p>
+            <ul class="list-unstyled mb-4">
+              <li class="mb-2"><i class="fas fa-check-circle me-2"></i>Free business listing</li>
+              <li class="mb-2"><i class="fas fa-check-circle me-2"></i>Manage your product catalog</li>
+              <li class="mb-2"><i class="fas fa-check-circle me-2"></i>Create official guides & documentation</li>
+              <li class="mb-2"><i class="fas fa-check-circle me-2"></i>Respond to customer questions</li>
+            </ul>
+            <a href="{% url 'Business:add' %}" class="btn btn-light btn-lg rounded-pill fw-bold">
+              <i class="fas fa-store me-2"></i>List Your Business Free
+            </a>
+          </div>
+          <div class="col-lg-5 text-center mt-4 mt-lg-0">
+            <div class="business-illustration">
+              <i class="fas fa-store-alt"></i>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 
   <!-- Mission Section -->
   <div class="bento-grid">
-    <div class="bento-card" style="grid-column: span 12;">
-      <div class="bento-card-header">
-        <h3 class="mb-0">
-          <i class="fas fa-bullseye me-2 text-primary"></i>Our Mission
-        </h3>
-      </div>
-      <div class="bento-card-body">
-        <div class="row g-4">
-          <div class="col-md-6">
-            <div class="mission-card">
-              <div class="mission-icon">
-                <i class="fas fa-chart-line"></i>
-              </div>
-              <h5>Transparent Pricing</h5>
-              <p>Living in PNG is tough, with the cost of living and prices of goods and services constantly rising. We believe you deserve to find the best products at the best prices with just a click.</p>
-            </div>
-          </div>
-          <div class="col-md-6">
-            <div class="mission-card">
-              <div class="mission-icon">
-                <i class="fas fa-users"></i>
-              </div>
-              <h5>Community-Driven</h5>
-              <p>Built by Papua New Guineans, for Papua New Guineans. This platform helps you discover the best products and services at competitive prices, making informed purchasing decisions easier.</p>
-            </div>
-          </div>
+    <div class="bento-card" style="grid-column: span 6;">
+      <div class="bento-card-body text-center">
+        <div class="mission-icon-large bg-gradient-primary mb-4">
+          <i class="fas fa-bullseye"></i>
         </div>
+        <h3 class="fw-bold mb-3">Our Mission</h3>
+        <p class="text-muted">To empower Papua New Guineans with transparent pricing information and local knowledge, making informed purchasing decisions easier for everyone.</p>
       </div>
     </div>
-  </div>
 
-  <!-- How to Help Section -->
-  <div class="bento-grid">
-    <div class="bento-card" style="grid-column: span 12;">
-      <div class="bento-card-header">
-        <h3 class="mb-0">
-          <i class="fas fa-hands-helping me-2 text-success"></i>How Can You Help?
-        </h3>
-        <p class="text-muted mb-0">We need your help to make this platform work effectively</p>
-      </div>
-      <div class="bento-card-body">
-        <div class="row g-4">
-          <div class="col-lg-3 col-md-6">
-            <div class="help-card">
-              <div class="help-icon">
-                <i class="fas fa-search"></i>
-              </div>
-              <h6>Search Products</h6>
-              <p>Look for products you want to buy and compare prices across different vendors.</p>
-            </div>
-          </div>
-          <div class="col-lg-3 col-md-6">
-            <div class="help-card">
-              <div class="help-icon">
-                <i class="fas fa-edit"></i>
-              </div>
-              <h6>Verify Information</h6>
-              <p>Edit and curate product information. If it's correct, verify it again to ensure accuracy.</p>
-            </div>
-          </div>
-          <div class="col-lg-3 col-md-6">
-            <div class="help-card">
-              <div class="help-icon">
-                <i class="fas fa-plus"></i>
-              </div>
-              <h6>Add Products</h6>
-              <p>If a product isn't listed, add it yourself to help others find it.</p>
-            </div>
-          </div>
-          <div class="col-lg-3 col-md-6">
-            <div class="help-card">
-              <div class="help-icon">
-                <i class="fas fa-share"></i>
-              </div>
-              <h6>Spread the Word</h6>
-              <p>Recommend the site to your friends so they can benefit from transparent pricing too.</p>
-            </div>
-          </div>
+    <div class="bento-card" style="grid-column: span 6;">
+      <div class="bento-card-body text-center">
+        <div class="mission-icon-large bg-gradient-success mb-4">
+          <i class="fas fa-heart"></i>
         </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Features Section -->
-  <div class="bento-grid">
-    <div class="bento-card" style="grid-column: span 12;">
-      <div class="bento-card-header">
-        <h3 class="mb-0">
-          <i class="fas fa-rocket me-2 text-warning"></i>More Features Coming Soon
-        </h3>
-        <p class="text-muted mb-0">We're constantly working to improve your experience</p>
-      </div>
-      <div class="bento-card-body">
-        <div class="row g-4">
-          <div class="col-md-4">
-            <div class="feature-card">
-              <div class="feature-icon">
-                <i class="fas fa-mobile-alt"></i>
-              </div>
-              <h6>Mobile App</h6>
-              <p>Access WIKONOMI on the go with our upcoming mobile application.</p>
-            </div>
-          </div>
-          <div class="col-md-4">
-            <div class="feature-card">
-              <div class="feature-icon">
-                <i class="fas fa-bell"></i>
-              </div>
-              <h6>Price Alerts</h6>
-              <p>Get notified when prices drop on products you're interested in.</p>
-            </div>
-          </div>
-          <div class="col-md-4">
-            <div class="feature-card">
-              <div class="feature-icon">
-                <i class="fas fa-star"></i>
-              </div>
-              <h6>Reviews & Ratings</h6>
-              <p>Share your experiences and read reviews from other community members.</p>
-            </div>
-          </div>
-        </div>
+        <h3 class="fw-bold mb-3">Community First</h3>
+        <p class="text-muted">Built by Papua New Guineans, for Papua New Guineans. Every feature is designed with our unique needs and way of life in mind.</p>
       </div>
     </div>
   </div>
 
   <!-- Call to Action -->
   <div class="bento-grid">
-    <div class="bento-card" style="grid-column: span 12; background: linear-gradient(135deg, var(--success-color) 0%, var(--accent-color) 100%); color: white; border: none;">
-      <div class="bento-card-body text-center">
-        <h3 class="mb-3">Ready to Start?</h3>
-        <p class="lead mb-4">Join our community and help build a transparent pricing ecosystem for Papua New Guinea.</p>
+    <div class="bento-card" style="grid-column: span 12; background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); color: white; border: none;">
+      <div class="bento-card-body text-center py-5">
+        <h2 class="display-5 fw-bold mb-3">Ready to Get Started?</h2>
+        <p class="lead mb-4 opacity-90">Join thousands of Papua New Guineans already using WIKONOMI</p>
         <div class="d-flex justify-content-center gap-3 flex-wrap">
-          <a href="{% url 'Product:add-general' %}" class="btn btn-light btn-bento">
-            <i class="fas fa-plus me-2"></i>Add Your First Product
+          <a href="{% url 'account_signup' %}" class="btn btn-light btn-lg btn-bento px-5">
+            <i class="fas fa-rocket me-2"></i>Create Free Account
           </a>
-          <a href="{% url 'Business:add' %}" class="btn btn-outline-light btn-bento">
-            <i class="fas fa-store me-2"></i>Add a Business
+          <a href="{% url 'Product:add-general' %}" class="btn btn-outline-light btn-lg btn-bento px-5">
+            <i class="fas fa-plus me-2"></i>Add a Product
+          </a>
+          <a href="{% url 'QA:ask' %}" class="btn btn-outline-light btn-lg btn-bento px-5">
+            <i class="fas fa-question-circle me-2"></i>Ask a Question
           </a>
         </div>
       </div>
@@ -164,106 +354,217 @@
 </div>
 
 <style>
-  .mission-card {
-    text-align: center;
-    padding: 2rem 1rem;
-    height: 100%;
+  .hero-pattern {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: 
+      radial-gradient(circle at 20% 80%, rgba(255,255,255,0.1) 0%, transparent 50%),
+      radial-gradient(circle at 80% 20%, rgba(255,255,255,0.1) 0%, transparent 50%),
+      radial-gradient(circle at 40% 40%, rgba(255,255,255,0.05) 0%, transparent 30%);
+    z-index: 1;
   }
 
-  .mission-icon {
+  .text-gradient-light {
+    background: linear-gradient(135deg, #ffffff 0%, #e0e7ff 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .hero-stats {
+    border-top: 1px solid rgba(255,255,255,0.2);
+    padding-top: 2rem;
+  }
+
+  .stat-item {
+    text-align: center;
+    padding: 0 1.5rem;
+  }
+
+  .feature-highlight {
+    transition: all 0.3s ease;
+  }
+
+  .feature-highlight:hover {
+    transform: translateY(-8px);
+    box-shadow: var(--shadow-xl);
+  }
+
+  .feature-icon-lg {
     width: 80px;
     height: 80px;
-    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-    border-radius: 50%;
+    border-radius: 20px;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: 0 auto 1.5rem;
-    color: white;
     font-size: 2rem;
+    color: white;
   }
 
-  .help-card {
-    text-align: center;
-    padding: 1.5rem 1rem;
-    height: 100%;
+  .bg-gradient-primary { background: linear-gradient(135deg, #4f46e5, #7c3aed); }
+  .bg-gradient-success { background: linear-gradient(135deg, #059669, #10b981); }
+  .bg-gradient-info { background: linear-gradient(135deg, #0891b2, #06b6d4); }
+  .bg-gradient-warning { background: linear-gradient(135deg, #d97706, #f59e0b); }
+
+  .feature-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .feature-list li {
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--gray-100);
+  }
+
+  .feature-list li:last-child {
+    border-bottom: none;
+  }
+
+  .mini-feature-card {
     background: var(--gray-50);
-    border-radius: 12px;
+    border-radius: 16px;
+    padding: 1.5rem;
+    height: 100%;
     transition: all 0.3s ease;
+    text-align: center;
   }
 
-  .help-card:hover {
+  .mini-feature-card:hover {
     transform: translateY(-4px);
     box-shadow: var(--shadow-lg);
+    background: white;
   }
 
-  .help-icon {
+  .mini-feature-icon {
     width: 60px;
     height: 60px;
-    background: var(--success-color);
-    border-radius: 50%;
+    border-radius: 16px;
     display: flex;
     align-items: center;
     justify-content: center;
     margin: 0 auto 1rem;
-    color: white;
     font-size: 1.5rem;
+    color: white;
   }
 
-  .feature-card {
-    text-align: center;
-    padding: 1.5rem 1rem;
-    height: 100%;
+  .bg-purple { background: linear-gradient(135deg, #7c3aed, #a855f7); }
+  .bg-teal { background: linear-gradient(135deg, #0d9488, #14b8a6); }
+  .bg-orange { background: linear-gradient(135deg, #ea580c, #f97316); }
+  .bg-pink { background: linear-gradient(135deg, #db2777, #ec4899); }
+  .bg-red { background: linear-gradient(135deg, #dc2626, #ef4444); }
+  .bg-green { background: linear-gradient(135deg, #16a34a, #22c55e); }
+  .bg-indigo { background: linear-gradient(135deg, #4f46e5, #6366f1); }
+  .bg-slate { background: linear-gradient(135deg, #475569, #64748b); }
+
+  .step-card {
     background: var(--gray-50);
-    border-radius: 12px;
+    border-radius: 20px;
+    padding: 2rem;
+    height: 100%;
+    position: relative;
     transition: all 0.3s ease;
   }
 
-  .feature-card:hover {
-    transform: translateY(-4px);
-    box-shadow: var(--shadow-lg);
+  .step-card:hover {
+    transform: translateY(-8px);
+    box-shadow: var(--shadow-xl);
+    background: white;
   }
 
-  .feature-icon {
+  .step-number {
     width: 60px;
     height: 60px;
-    background: var(--warning-color);
+    background: linear-gradient(135deg, #4f46e5, #7c3aed);
+    color: white;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: 0 auto 1rem;
-    color: white;
     font-size: 1.5rem;
+    font-weight: bold;
+    margin: 0 auto 1.5rem;
   }
 
-  .help-card h6, .feature-card h6 {
-    font-weight: 600;
-    margin-bottom: 0.75rem;
+  .step-icon {
+    font-size: 4rem;
+    color: var(--gray-200);
+    margin-top: 1rem;
   }
 
-  .help-card p, .feature-card p {
-    font-size: 0.875rem;
-    color: var(--gray-600);
-    margin-bottom: 0;
+  .business-illustration {
+    width: 200px;
+    height: 200px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+  }
+
+  .business-illustration i {
+    font-size: 6rem;
+    opacity: 0.9;
+  }
+
+  .mission-icon-large {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+    font-size: 2.5rem;
+    color: white;
+  }
+
+  .bg-primary-subtle { background-color: rgba(79, 70, 229, 0.1) !important; }
+  .bg-success-subtle { background-color: rgba(16, 185, 129, 0.1) !important; }
+  .bg-warning-subtle { background-color: rgba(245, 158, 11, 0.1) !important; }
+
+  @media (max-width: 991px) {
+    .bento-card[style*="span 6"] {
+      grid-column: span 12 !important;
+    }
   }
 
   @media (max-width: 767px) {
-    .bento-container {
-      padding: 0.5rem;
-    }
-    
-    .display-4 {
-      font-size: 2rem;
-    }
-    
-    .lead {
-      font-size: 1rem;
+    .display-3 {
+      font-size: 2.5rem;
     }
 
-    .mission-card, .help-card, .feature-card {
-      padding: 1rem;
+    .hero-stats {
+      flex-direction: column;
+      gap: 1.5rem !important;
+    }
+
+    .stat-item {
+      padding: 0;
+    }
+
+    .feature-icon-lg {
+      width: 60px;
+      height: 60px;
+      font-size: 1.5rem;
+    }
+
+    .step-card {
+      padding: 1.5rem;
+    }
+
+    .business-illustration {
+      width: 150px;
+      height: 150px;
+    }
+
+    .business-illustration i {
+      font-size: 4rem;
     }
   }
 </style>
-{% endblock %} 
+{% endblock %}

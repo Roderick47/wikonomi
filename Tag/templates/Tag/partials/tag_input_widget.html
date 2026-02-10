@@ -1,0 +1,80 @@
+<div class="mb-3">
+    <label class="form-label" for="visible-tag-input">Tags</label>
+    <div class="form-control d-flex flex-wrap align-items-center gap-2" style="min-height: 50px;">
+        <div id="tag-chips-container" class="d-flex flex-wrap gap-2"></div>
+        <input type="text" id="visible-tag-input" class="border-0 flex-grow-1" style="outline: none; min-width: 150px;" 
+               placeholder="Type tags (e.g. {{ placeholder|default:'organic food, cheap' }}) and press Comma"
+               hx-get="{% url 'Tag:autocomplete-htmx' %}"
+               hx-trigger="keyup changed delay:300ms"
+               hx-target="#tag-suggestions"
+               name="tags_input_visible"
+               autocomplete="off">
+    </div>
+    <!-- Hidden input for form submission -->
+    <input type="hidden" name="tags_input" id="tags-hidden-input">
+    
+    <div id="tag-suggestions" class="position-absolute w-100 bg-white border rounded shadow-sm mt-1" style="z-index: 1000; left: 0;"></div>
+</div>
+
+<script>
+    const visibleInput = document.getElementById('visible-tag-input');
+    const hiddenInput = document.getElementById('tags-hidden-input');
+    const chipsContainer = document.getElementById('tag-chips-container');
+    const suggestionsBox = document.getElementById('tag-suggestions');
+
+    visibleInput.addEventListener('keydown', function(e) {
+        if (e.key === ',' || e.key === 'Enter') {
+            e.preventDefault();
+            const val = this.value.trim().replace(',', '');
+            if (val) {
+                addTagToContainer(val);
+            }
+            this.value = '';
+            suggestionsBox.innerHTML = ''; // Clear suggestions
+        }
+    });
+
+    function addTag(tagName) {
+        addTagToContainer(tagName);
+        visibleInput.value = '';
+        visibleInput.focus();
+        suggestionsBox.innerHTML = '';
+    }
+    
+    function addTagToContainer(tagName) {
+        // Prevent duplicates
+        let currentTags = hiddenInput.value.split(',').map(s => s.trim()).filter(s => s);
+        if (currentTags.includes(tagName)) return;
+        
+        // 1. Fetch visual chip (HTMX or simple fetch)
+        fetch(`{% url 'Tag:render-tag-chip' %}?tag=${encodeURIComponent(tagName)}`)
+            .then(response => response.text())
+            .then(html => {
+                const temp = document.createElement('div');
+                temp.innerHTML = html;
+                const chip = temp.firstElementChild;
+                if(chip) {
+                    chipsContainer.appendChild(chip);
+                }
+            });
+
+        // 2. Update hidden value
+        currentTags.push(tagName);
+        hiddenInput.value = currentTags.join(',');
+    }
+
+    function removeTag(tagName) {
+         Array.from(chipsContainer.children).forEach(chip => {
+            if (chip.textContent.trim() === tagName) {
+                chip.remove();
+            }
+        });
+        
+        let currentTags = hiddenInput.value.split(',').map(s => s.trim()).filter(s => s);
+        const index = currentTags.indexOf(tagName);
+        if (index > -1) {
+            currentTags.splice(index, 1);
+            hiddenInput.value = currentTags.join(',');
+        }
+    }
+</script>

@@ -23,9 +23,25 @@ class BusinessAddForm(ModelForm):
                 'placeholder': 'e.g., "Next to the main mall, across from Starbucks"'
             }),
             'image': forms.FileInput(attrs={
-                'class': 'form-control'
+                'class': 'form-control image-preview-input'
             })
         }
+    
+    social_post = forms.CharField(
+        required=False,
+        widget=forms.Textarea(attrs={
+            'class': 'form-control',
+            'placeholder': 'Share a social post about your new business! (e.g., "We are open for business! Come visit us.")',
+            'rows': 2,
+            'maxlength': 500
+        }),
+        help_text="Optional: Create a social post to announce your business immediately."
+    )
+
+    tags_input = forms.CharField(
+        required=False, 
+        widget=forms.HiddenInput()
+    )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

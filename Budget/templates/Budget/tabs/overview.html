@@ -1,0 +1,142 @@
+<div class="row g-4 animate__animated animate__fadeIn">
+    <!-- Summary Cards -->
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100 bento-card border-start border-primary border-4">
+            <div class="card-body">
+                <div class="small text-muted text-uppercase fw-bold mb-1">Target Budget</div>
+                <div class="h3 fw-bold mb-0">K{{ budget.target_amount|floatformat:2 }}</div>
+                <div class="mt-2 small text-muted">Overall spending limit</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100 bento-card border-start border-warning border-4">
+            <div class="card-body">
+                <div class="small text-muted text-uppercase fw-bold mb-1">Estimated Spend</div>
+                <div class="h3 fw-bold mb-0 text-warning">K{{ budget.total_estimated_spend|floatformat:2 }}</div>
+                <div class="mt-2 small text-muted">Based on shopping list</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100 bento-card border-start border-success border-4">
+            <div class="card-body">
+                <div class="small text-muted text-uppercase fw-bold mb-1">Actual Spent</div>
+                <div class="h3 fw-bold mb-0 text-success">K{{ budget.total_actual_spend|floatformat:2 }}</div>
+                <div class="mt-2 small text-muted">Completed purchases</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart Section -->
+    <div class="col-lg-7">
+        <div class="card border-0 shadow-sm h-100 bento-card">
+            <div class="card-header bg-white border-0 pt-4 px-4 pb-0 d-flex justify-content-between align-items-center">
+                <h5 class="fw-bold mb-0">Spending Breakdown</h5>
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-light rounded-circle" data-bs-toggle="dropdown"><i class="fas fa-ellipsis-v"></i></button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="#">Export Data</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="card-body p-4 text-center">
+                {% if category_data and any_data %}
+                <div style="max-height: 300px; position: relative;" class="d-flex justify-content-center">
+                    <canvas id="categoryChart"></canvas>
+                </div>
+                {% else %}
+                <div class="py-5 text-muted">
+                    <i class="fas fa-chart-pie fa-3x mb-3 opacity-25"></i>
+                    <p>No category data to display. Add some items to your shopping list!</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions / Mini Stats -->
+    <div class="col-lg-5">
+        <div class="card border-0 shadow-sm h-100 bento-card">
+            <div class="card-header bg-white border-0 pt-4 px-4 pb-0">
+                <h5 class="fw-bold mb-0">Budget Health</h5>
+            </div>
+            <div class="card-body p-4">
+                <div class="mb-4">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">Budget Utilization</span>
+                        <span class="fw-bold">{{ budget.progress_percentage }}%</span>
+                    </div>
+                    <div class="progress" style="height: 12px; border-radius: 6px;">
+                        <div class="progress-bar {% if budget.progress_percentage > 90 %}bg-danger{% else %}bg-primary{% endif %}" role="progressbar" style="width: {{ budget.progress_percentage }}%"></div>
+                    </div>
+                </div>
+
+                <div class="list-group list-group-flush">
+                    <div class="list-group-item px-0 border-0 d-flex justify-content-between align-items-center mb-2">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-light p-2 rounded-3 me-3"><i class="fas fa-shopping-basket text-primary"></i></div>
+                            <div>
+                                <div class="fw-bold">Total Items</div>
+                                <div class="small text-muted">{{ total_items_count }} items in list</div>
+                            </div>
+                        </div>
+                        <span class="badge bg-primary rounded-pill">{{ total_items_count }}</span>
+                    </div>
+                    <div class="list-group-item px-0 border-0 d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-light p-2 rounded-3 me-3"><i class="fas fa-check-circle text-success"></i></div>
+                            <div>
+                                <div class="fw-bold">Completed</div>
+                                <div class="small text-muted">{{ completed_items_count }} items bought</div>
+                            </div>
+                        </div>
+                        <span class="badge bg-success rounded-pill">{{ completed_items_count }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    {% if category_data %}
+    (function() {
+        const ctx = document.getElementById('categoryChart');
+        if (ctx) {
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: {{ category_labels|safe }},
+                    datasets: [{
+                        data: {{ category_data|safe }},
+                        backgroundColor: [
+                            '#6366f1', '#10b981', '#f59e0b', '#ef4444', '#06b6d4', '#8b5cf6'
+                        ],
+                        borderWidth: 0,
+                        hoverOffset: 10
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                usePointStyle: true,
+                                padding: 20,
+                                font: {
+                                    family: "'Inter', sans-serif",
+                                    size: 11
+                                }
+                            }
+                        }
+                    },
+                    cutout: '70%'
+                }
+            });
+        }
+    })();
+    {% endif %}
+</script>

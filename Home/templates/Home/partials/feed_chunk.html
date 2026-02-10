@@ -1,0 +1,293 @@
+{% load humanize %}
+{% load thumbnail %}
+{% load post_tags %}
+{% load extra_date_filters %}
+
+{% for item in feed_items %}
+  {% if item.item_type == 'post' %}
+    {% include "Post/partials/post_card.html" with post=item %}
+  
+  {% elif item.item_type == 'product' %}
+    <!-- Standalone Product Card -->
+    <div class="card border-0 shadow-sm mb-3">
+      <div class="card-body p-3">
+        <div class="d-flex mb-2">
+          <div class="flex-shrink-0">
+            {% if item.author and item.author.profile.image %}
+              <img src="{{ item.author.profile.image.url }}" class="rounded-circle" style="width: 48px; height: 48px; object-fit: cover;">
+            {% else %}
+              <div class="rounded-circle bg-light d-flex align-items-center justify-content-center text-secondary fw-bold" style="width: 48px; height: 48px;">
+                {% if item.author %}
+                  {{ item.author.username.0|upper }}
+                {% else %}
+                   <i class="fas fa-user"></i>
+                {% endif %}
+              </div>
+            {% endif %}
+          </div>
+          <div class="ms-3">
+            <div>
+              {% if item.author %}
+                  <span class="fw-bold">{{ item.author.username }}</span>
+              {% else %}
+                  <span class="fw-bold text-muted">Anonymous</span>
+              {% endif %}
+              <span class="text-muted small">{{ item.verb }}</span>
+            </div>
+            <small class="text-muted">{{ item.sorting_date|naturaltime }}</small>
+          </div>
+        </div>
+
+        <div class="card mb-3 border rounded-3 overflow-hidden embedded-card">
+          <a href="{% url 'Product:detail' item.id %}" class="text-decoration-none text-dark">
+              <div class="row g-0">
+                  <div class="col-md-4 bg-light d-flex align-items-center justify-content-center" style="min-height: 150px;">
+                      {% if item.FirstPhoto %}
+                          {% thumbnail item.FirstPhoto.photo "400x400" crop="center" as im %}
+                              <img src="{{ im.url }}" class="img-fluid w-100 h-100" style="object-fit: cover;">
+                          {% endthumbnail %}
+                      {% else %}
+                          <i class="fas fa-box fa-3x text-secondary opacity-50"></i>
+                      {% endif %}
+                  </div>
+                  <div class="col-md-8">
+                      <div class="card-body">
+                          <small class="text-uppercase text-primary fw-bold" style="font-size: 0.7rem;">{% if 'updated' in item.verb %}Updated Product{% else %}New Product{% endif %}</small>
+                          <h5 class="card-title mb-1 text-truncate">{{ item.name }}</h5>
+                          <div class="mb-1">
+                              <span class="card-text text-success fw-bold me-2">K{{ item.price|intcomma }}</span>
+                              
+                              {% with price_stats=item.get_price_history_stats %}
+                                  {% if price_stats %}
+                                      {% if price_stats.is_increase %}
+                                          <span class="badge bg-soft-danger text-danger border-danger border-opacity-10 py-1" title="Price increased from K{{ price_stats.previous|intcomma }}">
+                                              <i class="fas fa-arrow-trend-up me-1"></i>{{ price_stats.percentage|floatformat:1 }}%
+                                          </span>
+                                      {% elif price_stats.is_decrease %}
+                                          <span class="badge bg-soft-success text-success border-success border-opacity-10 py-1" title="Price decreased from K{{ price_stats.previous|intcomma }}">
+                                              <i class="fas fa-arrow-trend-down me-1"></i>{{ price_stats.percentage|floatformat:1 }}%
+                                          </span>
+                                      {% endif %}
+                                  {% endif %}
+                              {% endwith %}
+
+                              {% with price_details=item|get_price_tag_details %}
+                                  {% for detail in price_details %}
+                                      {% if detail.label == 'Cheapest' %}
+                                          <span class="badge bg-success" title="Cheapest in {{ detail.tag.name }}">
+                                              <i class="fas fa-check-circle me-1"></i>Cheapest
+                                          </span>
+                                      {% elif detail.label == 'Cheap' %}
+                                          <span class="badge bg-info text-dark" title="Cheap in {{ detail.tag.name }}">
+                                              <i class="fas fa-percentage me-1"></i>Cheap
+                                          </span>
+                                      {% elif detail.label == 'Expensive' %}
+                                          <span class="badge bg-warning text-dark" title="Expensive in {{ detail.tag.name }}">Expensive</span>
+                                      {% elif detail.label == 'Most Expensive' %}
+                                          <span class="badge bg-danger" title="Most Expensive in {{ detail.tag.name }}">
+                                              <i class="fas fa-arrow-up me-1"></i>Most Expensive
+                                          </span>
+                                      {% endif %}
+                                  {% endfor %}
+                              {% endwith %}
+                          </div>
+                          <div class="mb-2">
+                              {% for tag in item.tags.all|slice:":3" %}
+                                  <span class="badge bg-light text-secondary border me-1">{{ tag.name }}</span>
+                              {% endfor %}
+                              {% if item.tags.count > 3 %}
+                                  <span class="badge bg-light text-secondary border">+{{ item.tags.count|add:"-3" }}</span>
+                              {% endif %}
+                          </div>
+                          <p class="card-text small text-muted text-truncate">{{ item.description|truncatechars:100 }}</p>
+                      </div>
+                  </div>
+              </div>
+          </a>
+        </div>
+        
+        <div class="d-flex justify-content-end">
+          <a href="{% url 'Post:create' %}?product={{ item.id }}" class="btn btn-sm btn-outline-primary rounded-pill">
+            <i class="far fa-comment-dots me-1"></i>Discuss
+          </a>
+        </div>
+      </div>
+    </div>
+
+  {% elif item.item_type == 'business' %}
+    <!-- Standalone Business Card -->
+    <div class="card border-0 shadow-sm mb-3">
+      <div class="card-body p-3">
+        <div class="d-flex mb-2">
+          <div class="flex-shrink-0">
+            {% if item.author and item.author.profile.image %}
+              <img src="{{ item.author.profile.image.url }}" class="rounded-circle" style="width: 48px; height: 48px; object-fit: cover;">
+            {% else %}
+              <div class="rounded-circle bg-light d-flex align-items-center justify-content-center text-secondary fw-bold" style="width: 48px; height: 48px;">
+                {% if item.author %}
+                  {{ item.author.username.0|upper }}
+                {% else %}
+                  <i class="fas fa-user"></i>
+                {% endif %}
+              </div>
+            {% endif %}
+          </div>
+          <div class="ms-3">
+            <div>
+              {% if item.author %}
+                  <span class="fw-bold">{{ item.author.username }}</span>
+              {% else %}
+                  <span class="fw-bold text-muted">Anonymous</span>
+              {% endif %}
+              <span class="text-muted small">{{ item.verb }}</span>
+            </div>
+            <small class="text-muted">{{ item.sorting_date|naturaltime }}</small>
+          </div>
+        </div>
+
+        <div class="card mb-3 border rounded-3 overflow-hidden embedded-card">
+          <a href="{% url 'Business:detail' item.id %}" class="text-decoration-none text-dark">
+              <div class="row g-0">
+                  <div class="col-md-4 bg-light d-flex align-items-center justify-content-center" style="min-height: 150px;">
+                      {% if item.image %}
+                          {% thumbnail item.image "400x400" crop="center" as im %}
+                              <img src="{{ im.url }}" class="img-fluid w-100 h-100" style="object-fit: cover;">
+                          {% endthumbnail %}
+                      {% else %}
+                          <i class="fas fa-store fa-3x text-secondary opacity-50"></i>
+                      {% endif %}
+                  </div>
+                  <div class="col-md-8">
+                      <div class="card-body">
+                          <small class="text-uppercase text-secondary fw-bold" style="font-size: 0.7rem;">{% if 'updated' in item.verb %}Updated Business{% else %}New Business{% endif %}</small>
+                          <h5 class="card-title mb-1 text-truncate">{{ item.name }}</h5>
+                          {% if item.location %}
+                          <p class="card-text small text-muted mb-1"><i class="fas fa-map-marker-alt me-1"></i>{{ item.location }}</p>
+                          {% endif %}
+                          <p class="card-text small text-muted text-truncate">{{ item.description|truncatechars:100 }}</p>
+                      </div>
+                  </div>
+              </div>
+          </a>
+        </div>
+
+        <div class="d-flex justify-content-end">
+          <a href="{% url 'Post:create' %}?business={{ item.id }}" class="btn btn-sm btn-outline-primary rounded-pill">
+            <i class="far fa-comment-dots me-1"></i>Discuss
+          </a>
+        </div>
+      </div>
+    </div>
+
+  {% elif item.item_type == 'question' %}
+    <!-- Question Card -->
+    <div class="card border-0 shadow-sm mb-3">
+      <div class="card-body p-3">
+        <div class="d-flex mb-2">
+          <div class="flex-shrink-0">
+            {% if item.author.profile.image %}
+              <img src="{{ item.author.profile.image.url }}" class="rounded-circle" style="width: 48px; height: 48px; object-fit: cover;">
+            {% else %}
+              <div class="rounded-circle bg-light d-flex align-items-center justify-content-center text-secondary fw-bold" style="width: 48px; height: 48px;">
+                  {{ item.author.username.0|upper }}
+              </div>
+            {% endif %}
+          </div>
+          <div class="ms-3">
+            <div>
+              <span class="fw-bold">{{ item.author.username }}</span>
+              <span class="text-muted small">asked a question</span>
+              {% if item.product %}
+                <a href="{% url 'Product:detail' item.product.id %}" class="text-decoration-none">
+                    <span class="badge bg-light text-dark border ms-1">Product: {{ item.product.name }}</span>
+                </a>
+              {% elif item.business %}
+                <a href="{% url 'Business:detail' item.business.id %}" class="text-decoration-none">
+                    <span class="badge bg-light text-dark border ms-1">Business: {{ item.business.name }}</span>
+                </a>
+              {% endif %}
+            </div>
+            <small class="text-muted">{{ item.sorting_date|naturaltime }}</small>
+          </div>
+        </div>
+        
+        <h5 class="card-title fw-bold mt-2">
+            <a href="{% url 'QA:detail' item.id %}" class="text-dark text-decoration-none">{{ item.title }}</a>
+        </h5>
+        <div class="card-text text-muted">{{ item.body|truncatechars:150|linebreaks }}</div>
+        
+        <div class="d-flex justify-content-end align-items-center mt-3 border-top pt-2">
+            <a href="{% url 'QA:detail' item.id %}" class="btn btn-sm btn-outline-primary rounded-pill">
+                <i class="fas fa-reply me-1"></i>
+                {% if item.answer_count > 0 %}
+                    {{ item.answer_count }} Answer{{ item.answer_count|pluralize }}
+                {% else %}
+                    Answer
+                {% endif %}
+            </a>
+        </div>
+      </div>
+    </div>
+
+  {% elif item.item_type == 'howto' %}
+    <!-- How-To Guide Card -->
+    <div class="card border-0 shadow-sm mb-3">
+      <div class="card-body p-3">
+        <div class="d-flex mb-2">
+          <div class="flex-shrink-0">
+            {% if item.feed_author.profile.image %}
+              <img src="{{ item.feed_author.profile.image.url }}" class="rounded-circle" style="width: 48px; height: 48px; object-fit: cover;">
+            {% else %}
+              <div class="rounded-circle bg-light d-flex align-items-center justify-content-center text-secondary fw-bold" style="width: 48px; height: 48px;">
+                  {{ item.feed_author.username.0|upper }}
+              </div>
+            {% endif %}
+          </div>
+          <div class="ms-3">
+            <div>
+              <span class="fw-bold">{{ item.feed_author.username }}</span>
+              <span class="text-muted small">{{ item.verb }}</span>
+              {% if item.is_official %}
+                <span class="badge bg-soft-primary text-primary border-primary border-opacity-10 ms-1" style="font-size: 0.6rem;">OFFICIAL</span>
+              {% endif %}
+            </div>
+            <small class="text-muted">{{ item.sorting_date|naturaltime }}</small>
+          </div>
+        </div>
+
+        <div class="card mb-3 border rounded-3 overflow-hidden embedded-card">
+          <a href="{% url 'HowTo:detail' item.id %}" class="text-decoration-none text-dark">
+              <div class="row g-0">
+                  <div class="col-md-4 d-flex align-items-center justify-content-center" style="min-height: 120px; background: linear-gradient(135deg, #06b6d4 0%, #6366f1 100%) !important;">
+                      <i class="fas fa-graduation-cap fa-3x text-white opacity-50"></i>
+                  </div>
+                  <div class="col-md-8">
+                      <div class="card-body">
+                          <small class="text-uppercase text-info fw-bold" style="font-size: 0.7rem;">Guide v{{ item.version }}</small>
+                          <h5 class="card-title mb-1 text-truncate">{{ item.title }}</h5>
+                          {% if item.business %}
+                            <p class="card-text small text-muted mb-1"><i class="fas fa-store me-1"></i>{{ item.business.name }}</p>
+                          {% elif item.product %}
+                            <p class="card-text small text-muted mb-1"><i class="fas fa-box me-1"></i>{{ item.product.name }}</p>
+                          {% endif %}
+                          <p class="card-text small text-muted text-truncate">{{ item.description|truncatechars:100 }}</p>
+                      </div>
+                  </div>
+              </div>
+          </a>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+
+  {% if forloop.last and feed_items.has_next %}
+     <div hx-get="{% url 'Home:home' %}?page={{ feed_items.next_page_number }}"
+          hx-trigger="revealed"
+          hx-swap="outerHTML"
+          class="text-center py-3">
+        <div class="spinner-border text-primary spinner-border-sm" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+     </div>
+  {% endif %}
+{% endfor %}

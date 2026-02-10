@@ -28,9 +28,9 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-io2q&qeldj%)slhvwm0*m
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', 'True').lower() == 'true'
 
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '*').split(',')
+#ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '*').split(',')
 
-
+ALLOWED_HOSTS=['.onrender.com','localhost','127.0.0.1']
 
 # Application definition
 
@@ -42,8 +42,7 @@ INSTALLED_APPS = [
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
-    # Temporarily disabled Google OAuth until verification is complete
-    # 'allauth.socialaccount.providers.google',
+    'allauth.socialaccount.providers.google',
     'django_htmx',
     'crispy_forms',
     'import_export',
@@ -71,25 +70,28 @@ INSTALLED_APPS = [
     'Budget.apps.BudgetConfig',
     'Information',
     'Location',
+    'Post',
+    'QA',
+    'Report',
+    'HowTo',
 ]
 
-# Temporarily disabled Google OAuth configuration
-# SOCIALACCOUNT_PROVIDERS = {
-#     "google"){
-#         "SCOPE"){
-#         "SCOPE":[
-#             "profile",
-#             "email"
-#         ],
-#         "APP":{
-#             'client_id':os.environ['CLIENT_ID'],
-#             'secret':os.environ['CLIENT_SECRET'],
-#         },
-#         "AUTH_PARAMS":{
-#             "access_type":"online",
-#         }
-#     }
-# }
+# Google OAuth configuration
+SOCIALACCOUNT_PROVIDERS = {
+    "google": {
+        "SCOPE": [
+            "profile",
+            "email"
+        ],
+        "APP": {
+            'client_id': os.environ.get('CLIENT_ID'),
+            'secret': os.environ.get('CLIENT_SECRET'),
+        },
+        "AUTH_PARAMS": {
+            "access_type": "online",
+        }
+    }
+}
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

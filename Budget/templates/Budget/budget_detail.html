@@ -1,504 +1,178 @@
 {% extends 'Home/base.html' %}
-{% load humanize %}
 {% load static %}
 
-{% block extra_head %}
-<style>
-    .product-checkbox:checked + .product-name {
-        text-decoration: line-through;
-        color: #6c757d;
-    }
-    .strikethrough {
-        text-decoration: line-through;
-        color: #6c757d;
-    }
-</style>
-{% endblock %}
+{% block title %}{{ budget.title }} - Budget Detail{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="{% url 'Budget:list' %}">My Budgets</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">{{ budget.title }}</li>
-                </ol>
-            </nav>
-            <div class="d-flex align-items-center">
-                <h2 class="mb-0 me-3">{{ budget.title }}</h2>
-                <span class="badge bg-primary">{{ budget.products.count }} items</span>
+<div class="container py-4">
+    <!-- Header Hero Section -->
+    <div class="card border-0 shadow-sm mb-4 bento-card overflow-hidden">
+        <div class="card-body p-4 p-md-5 bg-primary text-white position-relative">
+            <div class="row align-items-center">
+                <div class="col-lg-8">
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb mb-2">
+                            <li class="breadcrumb-item"><a href="{% url 'Budget:list' %}" class="text-white opacity-75 text-decoration-none">Budgets</a></li>
+                            <li class="breadcrumb-item active text-white" aria-current="page">{{ budget.title }}</li>
+                        </ol>
+                    </nav>
+                    <h1 class="display-6 fw-bold mb-2">{{ budget.title }}</h1>
+                    <p class="lead opacity-75 mb-4">{{ budget.description|default:"Plan your spending and save more." }}</p>
+                    <div class="d-flex flex-wrap gap-3">
+                        <div class="bg-white bg-opacity-10 rounded-pill px-3 py-2 border border-white border-opacity-25">
+                            <i class="fas fa-calendar-alt me-2"></i> {{ budget.start_date }} - {{ budget.end_date|default:"Ongoing" }}
+                        </div>
+                        <div class="bg-white bg-opacity-10 rounded-pill px-3 py-2 border border-white border-opacity-25">
+                            <i class="fas fa-sync-alt me-2"></i> {{ budget.get_period_type_display }}
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4 text-end d-none d-lg-block">
+                    <div class="bg-white bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center shadow-lg" style="width: 120px; height: 120px; border: 4px solid rgba(255,255,255,0.2)">
+                        <div class="text-center">
+                            <div class="h5 fw-bold mb-0">{{ budget.progress_percentage }}%</div>
+                            <small class="opacity-75">Used</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Abstract shapes for flair -->
+            <div class="position-absolute top-0 end-0 p-5 mt-n5 me-n5 opacity-25 d-none d-md-block">
+                <i class="fas fa-wallet fa-8x" style="transform: rotate(-15deg);"></i>
             </div>
         </div>
-        <div class="dropdown">
-            <button class="btn btn-outline-secondary dropdown-toggle" type="button" 
-                    id="budgetActions" data-bs-toggle="dropdown" aria-expanded="false">
-                <i class="fas fa-ellipsis-v"></i> Actions
-            </button>
-            <ul class="dropdown-menu" aria-labelledby="budgetActions">
-                <li><a class="dropdown-item" href="#">
-                    <i class="fas fa-edit me-2"></i>Edit Budget</a></li>
-                <li><a class="dropdown-item" href="#">
-                    <i class="fas fa-plus-circle me-2"></i>Add Products</a></li>
-                <li><hr class="dropdown-divider"></li>
-                <li><a class="dropdown-item text-danger" href="#">
-                    <i class="fas fa-trash-alt me-2"></i>Delete Budget</a></li>
+        
+        <!-- Tabs Navigation -->
+        <div class="bg-white">
+            <ul class="nav nav-tabs nav-fill border-0 px-2" id="budgetTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link py-3 active border-bottom border-primary border-3" 
+                            id="overview-tab" 
+                            hx-get="{% url 'Budget:hx_tab' budget.id 'overview' %}" 
+                            hx-target="#tab-content" 
+                            data-bs-toggle="tab" 
+                            data-bs-target="#tab-content">
+                        <i class="fas fa-chart-pie me-2"></i>Overview
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link py-3 text-muted" 
+                            id="categories-tab" 
+                            hx-get="{% url 'Budget:hx_tab' budget.id 'categories' %}" 
+                            hx-target="#tab-content" 
+                            data-bs-toggle="tab" 
+                            data-bs-target="#tab-content">
+                        <i class="fas fa-tags me-2"></i>Categories
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link py-3 text-muted" 
+                            id="shopping-tab" 
+                            hx-get="{% url 'Budget:hx_tab' budget.id 'shopping_list' %}" 
+                            hx-target="#tab-content" 
+                            data-bs-toggle="tab" 
+                            data-bs-target="#tab-content">
+                        <i class="fas fa-shopping-cart me-2"></i>Shopping List
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link py-3 text-muted" 
+                            id="expenses-tab" 
+                            hx-get="{% url 'Budget:hx_tab' budget.id 'expenses' %}" 
+                            hx-target="#tab-content" 
+                            data-bs-toggle="tab" 
+                            data-bs-target="#tab-content">
+                        <i class="fas fa-receipt me-2"></i>Expenses
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link py-3 text-muted" 
+                            id="forecast-tab" 
+                            hx-get="{% url 'Budget:hx_tab' budget.id 'forecast' %}" 
+                            hx-target="#tab-content" 
+                            data-bs-toggle="tab" 
+                            data-bs-target="#tab-content">
+                        <i class="fas fa-magic me-2"></i>Forecast
+                    </button>
+                </li>
             </ul>
         </div>
     </div>
 
-    <div class="card border-0 shadow-sm">
-        <div class="card-header bg-white">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <h5 class="mb-0 d-inline-block me-3">Shopping List</h5>
-                    <div class="form-check form-switch d-inline-block">
-                        <input class="form-check-input" type="checkbox" id="togglePurchased" onchange="togglePurchasedItems()">
-                        <label class="form-check-label small" for="togglePurchased">Show purchased items</label>
-                    </div>
-                </div>
-                <div class="d-flex">
-                    <div class="position-relative me-2" style="max-width: 300px;">
-                        <div class="input-group">
-                            <span class="input-group-text bg-white border-end-0"><i class="fas fa-search text-muted"></i></span>
-                            <input type="text" 
-                                   class="form-control border-start-0 budget-search-input" 
-                                   placeholder="Search products to add..." 
-                                   id="budget-search-products"
-                                   hx-get="{% url 'Search:autocomplete' %}"
-                                   hx-trigger="keyup changed delay:300ms"
-                                   hx-target="#budget-search-suggestions"
-                                   hx-params="q,budget_id"
-                                   name="q"
-                                   autocomplete="off">
-                            <input type="hidden" name="budget_id" value="{{ budget.id }}">
-                            <div id="budget-search-loading" class="htmx-indicator position-absolute" style="top: 50%; right: 10px; transform: translateY(-50%);">
-                                <div class="spinner-border spinner-border-sm text-primary" role="status">
-                                    <span class="visually-hidden">Loading...</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div id="budget-search-suggestions" class="position-absolute bg-white border rounded shadow-sm w-100" style="top: 100%; left: 0; z-index: 1000; max-height: 300px; overflow-y: auto; display: none;"></div>
-                    </div>
-                    <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addProductsModal">
-                        <i class="fas fa-plus me-1"></i> Add Items
-                    </button>
-                </div>
+    <!-- Tab Content -->
+    <div class="tab-content" id="tab-content" style="position: relative; z-index: 10;">
+        <!-- Initially load Overview -->
+        <div class="d-flex justify-content-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
             </div>
         </div>
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <thead class="table-light">
-                    <tr>
-                        <th width="40"></th>
-                        <th>Item</th>
-                        <th>Price</th>
-                        <th>Last Updated</th>
-                        <th class="text-end">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for product in budget.products.all %}
-                    <tr class="product-item" data-purchased="{{ product.purchased|default:'false'|lower }}">
-                        <td class="align-middle">
-                            <div class="form-check">
-                                <input class="form-check-input product-checkbox" type="checkbox" 
-                                       data-product-id="{{ product.id }}" 
-                                       {% if product.purchased %}checked{% endif %}
-                                       onchange="toggleProductPurchased(this, {{ product.id }})">
-                            </div>
-                        </td>
-                        <td>
-                            <div class="d-flex align-items-center">
-                                {% if product.image %}
-                                <img src="{{ product.image.url }}" alt="{{ product.name }}" 
-                                     class="rounded me-3" style="width: 40px; height: 40px; object-fit: cover;">
-                                {% else %}
-                                <div class="bg-light rounded d-flex align-items-center justify-content-center me-3" 
-                                     style="width: 40px; height: 40px;">
-                                    <i class="fas fa-box text-muted"></i>
-                                </div>
-                                {% endif %}
-                                <div>
-                                    <div class="fw-bold product-name {% if product.purchased %}strikethrough{% endif %}">
-                                        {{ product.name }}
-                                    </div>
-                                    <small class="text-muted">{{ product.business.name|default:"No business" }}</small>
-                                </div>
-                            </div>
-                        </td>
-                        <td class="fw-bold">
-                            {% if product.price %}
-                                ${{ product.price|floatformat:2 }}
-                            {% else %}
-                                N/A
-                            {% endif %}
-                        </td>
-                        <td>
-                            {{ product.date_updated|date:"M d, Y"|default:"N/A" }}
-                        </td>
-                        <td class="text-end">
-                            <div class="dropdown">
-                                <button class="btn btn-sm btn-outline-secondary" type="button" 
-                                        data-bs-toggle="dropdown" aria-expanded="false">
-                                    <i class="fas fa-ellipsis-h"></i>
-                                </button>
-                                <ul class="dropdown-menu dropdown-menu-end">
-                                    <li><a class="dropdown-item" href="{% url 'Product:detail' product.id %}">
-                                        <i class="fas fa-external-link-alt me-2"></i>View Product</a></li>
-                                    <li><a class="dropdown-item" href="#">
-                                        <i class="fas fa-bell me-2"></i>Price Alert</a></li>
-                                    <li><hr class="dropdown-divider"></li>
-                                    <li><a class="dropdown-item text-danger" href="#" onclick="event.preventDefault(); removeFromList({{ product.id }});">
-                                        <i class="fas fa-trash-alt me-2"></i>Remove</a></li>
-                                </ul>
-                            </div>
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="5" class="text-center py-5">
-                            <div class="mb-3">
-                                <i class="fas fa-shopping-cart fa-3x text-muted"></i>
-                            </div>
-                            <h5>Your shopping list is empty</h5>
-                            <p class="text-muted">Add items to create your shopping list</p>
-                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addProductsModal">
-                                <i class="fas fa-plus me-2"></i>Add Items
-                            </button>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        {% if budget.products.count > 0 %}
-        <div class="card-footer bg-white">
-            <div class="d-flex justify-content-between align-items-center">
-                <div class="text-muted small">
-                    Showing {{ budget.products.count }} item{{ budget.products.count|pluralize }}
-                </div>
-                <div>
-                    <button class="btn btn-outline-secondary btn-sm me-2">
-                        <i class="fas fa-download me-1"></i> Export
-                    </button>
-                    <button class="btn btn-primary btn-sm">
-                        <i class="fas fa-sync-alt me-1"></i> Refresh Prices
-                    </button>
-                </div>
-            </div>
-        </div>
-        {% endif %}
     </div>
+</div>
 
-    <div class="row mt-4">
-        <div class="col-md-6">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-header bg-white">
-                    <h6 class="mb-0">Recent Price Drops</h6>
-                </div>
-                <div class="card-body">
-                    <div class="text-center py-4">
-                        <i class="fas fa-tags fa-2x text-muted mb-3"></i>
-                        <p class="text-muted">Track price drops for products in this budget</p>
+<!-- Modal for Search Suggestions (Overlay style) -->
+<div id="search-overlay" class="d-none position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-50" style="z-index: 2000;">
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card border-0 shadow-lg">
+                    <div class="card-header bg-white border-0 pt-4 px-4 pb-0">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="fw-bold mb-0">Search Products</h5>
+                            <button type="button" class="btn-close" onclick="toggleSearch()"></button>
+                        </div>
+                        <input type="text" class="form-control mt-3" placeholder="Search for items, brands, or shops..." 
+                               hx-get="{% url 'Budget:product_search' %}?budget_id={{ budget.id }}" 
+                               hx-trigger="keyup changed delay:300ms" 
+                               hx-target="#search-results"
+                               id="advanced-search-input"
+                               autofocus>
                     </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-6">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-header bg-white">
-                    <h6 class="mb-0">Budget Insights</h6>
-                </div>
-                <div class="card-body">
-                    <div class="text-center py-4">
-                        <i class="fas fa-chart-pie fa-2x text-muted mb-3"></i>
-                        <p class="text-muted">View spending insights and analytics</p>
+                    <div class="card-body p-0" id="search-results" style="max-height: 400px; overflow-y: auto;">
+                        <div class="p-4 text-center text-muted">Type to search for products...</div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
-
-<!-- Add Products Modal -->
-<div class="modal fade" id="addProductsModal" tabindex="-1" aria-labelledby="addProductsModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="addProductsModalLabel">Add Items to Shopping List</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="mb-3">
-                    <div class="input-group">
-                        <span class="input-group-text"><i class="fas fa-search"></i></span>
-                        <input type="text" class="form-control" placeholder="Search products to add...">
-                    </div>
-                </div>
-                
-                <div class="row">
-                    <!-- Suggested Items -->
-                    <div class="col-md-6">
-                        <h6 class="mb-3">Suggested Items</h6>
-                        <div class="list-group">
-                            <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                                <span>Milk</span>
-                                <button class="btn btn-sm btn-outline-primary">Add</button>
-                            </a>
-                            <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                                <span>Bread</span>
-                                <button class="btn btn-sm btn-outline-primary">Add</button>
-                            </a>
-                            <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                                <span>Eggs</span>
-                                <button class="btn btn-sm btn-outline-primary">Add</button>
-                            </a>
-                        </div>
-                    </div>
-                    
-                    <!-- Recently Added -->
-                    <div class="col-md-6">
-                        <h6 class="mb-3">Recently Added</h6>
-                        <div class="list-group">
-                            <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                                <span>Apples</span>
-                                <button class="btn btn-sm btn-outline-primary">Add</button>
-                            </a>
-                            <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                                <span>Chicken Breast</span>
-                                <button class="btn btn-sm btn-outline-primary">Add</button>
-                            </a>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Quick Add Form -->
-                <div class="mt-4">
-                    <h6 class="mb-3">Quick Add</h6>
-                    <div class="input-group">
-                        <input type="text" class="form-control" placeholder="Enter item name">
-                        <input type="number" class="form-control" placeholder="Price (optional)" style="max-width: 120px;">
-                        <button class="btn btn-primary">Add</button>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary">Add Selected Items</button>
-            </div>
-        </div>
-    </div>
-</div>
-
 {% endblock %}
 
-{% block extra_js %}
-<!-- Search Suggestions Template -->
-<div id="product-suggestion-template" style="display: none;">
-    <div class="list-group list-group-flush">
-        <a href="#" class="list-group-item list-group-item-action d-flex align-items-center py-2 px-3 add-product" data-product-id="">
-            <div class="me-3">
-                <img src="" class="product-image rounded" style="width: 40px; height: 40px; object-fit: cover;">
-            </div>
-            <div class="flex-grow-1">
-                <div class="fw-semibold text-truncate product-name"></div>
-                <small class="text-muted product-price"></small>
-            </div>
-            <small class="text-muted ms-2 product-business"></small>
-        </a>
-    </div>
-</div>
-
-<!-- Empty State Template -->
-<div id="empty-state-template" style="display: none;">
-    <div class="p-3 text-center text-muted">
-        <i class="fas fa-search me-2"></i>No products found
-    </div>
-</div>
-
+{% block script %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    // Toggle purchased status of an item
-    function toggleProductPurchased(checkbox, productId) {
-        const productRow = checkbox.closest('tr');
-        const productName = productRow.querySelector('.product-name');
-        
-        if (checkbox.checked) {
-            productName.classList.add('strikethrough');
-            // Update status badge
-            const statusCell = productRow.querySelector('td:nth-child(4)');
-            statusCell.innerHTML = '<span class="badge bg-success">Purchased</span>';
-        } else {
-            productName.classList.remove('strikethrough');
-            // Update status badge
-            const statusCell = productRow.querySelector('td:nth-child(4)');
-            statusCell.innerHTML = '<span class="badge bg-warning text-dark">Needed</span>';
-        }
-        
-        // Send AJAX request to update the purchased status
-        fetch(`/api/budgets/{{ budget.id }}/products/${productId}/toggle_purchased/`, {
-            method: 'POST',
-            headers: {
-                'X-CSRFTOKEN': '{{ csrf_token }}',
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                purchased: checkbox.checked
-            })
-        });
-    }
-    
-    // Toggle visibility of purchased items
-    function togglePurchasedItems() {
-        const showPurchased = document.getElementById('togglePurchased').checked;
-        const purchasedItems = document.querySelectorAll('tr[data-purchased="true"]');
-        
-        purchasedItems.forEach(item => {
-            item.style.display = showPurchased ? 'table-row' : 'none';
-        });
-    }
-    
-    // Move item to wishlist
-    function moveToWishlist(productId) {
-        if (confirm('Move this item to your wishlist?')) {
-            // Send AJAX request to move to wishlist
-            fetch(`/api/budgets/{{ budget.id }}/products/${productId}/move_to_wishlist/`, {
-                method: 'POST',
-                headers: {
-                    'X-CSRFTOKEN': '{{ csrf_token }}',
-                    'Content-Type': 'application/json',
-                }
-            }).then(response => {
-                if (response.ok) {
-                    // Remove the row from the table
-                    document.querySelector(`tr[data-product-id="${productId}"]`).remove();
-                }
+    // Load initial tab
+    document.addEventListener('DOMContentLoaded', function() {
+        htmx.ajax('GET', '{% url "Budget:hx_tab" budget.id "overview" %}', '#tab-content');
+    });
+
+    // Handle tab switching styling
+    document.getElementById('budgetTabs').addEventListener('click', function(e) {
+        if (e.target.classList.contains('nav-link')) {
+            document.querySelectorAll('#budgetTabs .nav-link').forEach(link => {
+                link.classList.remove('active', 'border-bottom', 'border-primary', 'border-3');
+                link.classList.add('text-muted');
             });
-        }
-    }
-    
-    // Remove item from list
-    function removeFromList(productId) {
-        if (confirm('Are you sure you want to remove this item from your budget?')) {
-            // Send AJAX request to remove from list
-            fetch(`/budget/api/remove-product/{{ budget.id }}/${productId}/`, {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': '{{ csrf_token }}',
-                    'Content-Type': 'application/json',
-                },
-                credentials: 'same-origin'
-            }).then(response => {
-                if (response.ok) {
-                    return response.json();
-                }
-                throw new Error('Network response was not ok');
-            })
-            .then(data => {
-                if (data.status === 'success') {
-                    // Remove the row from the table
-                    const row = document.querySelector(`tr[data-product-id="${productId}"]`);
-                    if (row) {
-                        row.remove();
-                        // Update the item count
-                        const itemCount = document.querySelector('.badge.bg-primary');
-                        if (itemCount) {
-                            itemCount.textContent = `${data.budget.product_count} item${data.budget.product_count !== 1 ? 's' : ''}`;
-                        }
-                    }
-                } else {
-                    alert('Failed to remove item: ' + (data.message || 'Unknown error'));
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('An error occurred while removing the item');
-            });
-        }
-    }
-    
-    // Handle budget search suggestions
-    document.addEventListener('click', function(event) {
-        const budgetSearchInput = document.getElementById('budget-search-products');
-        const budgetSuggestions = document.getElementById('budget-search-suggestions');
-        const mainSearchInput = document.querySelector('#search');
-        const mainSuggestions = document.querySelector('#search-suggestions');
-        
-        // Hide budget suggestions when clicking outside
-        if (budgetSearchInput && budgetSuggestions) {
-            if (!budgetSearchInput.contains(event.target) && !budgetSuggestions.contains(event.target)) {
-                budgetSuggestions.style.display = 'none';
-            }
-        }
-        
-        // Handle add product button click in budget search
-        if (event.target.closest('.add-product')) {
-            event.preventDefault();
-            const productId = event.target.closest('.add-product').dataset.productId;
-            addProductToBudget({{ budget.id }}, productId);
-            return false;
+            e.target.classList.add('active', 'border-bottom', 'border-primary', 'border-3');
+            e.target.classList.remove('text-muted');
         }
     });
-    
-    // Show budget suggestions when search input is focused
-    const budgetSearchInput = document.getElementById('budget-search-products');
-    if (budgetSearchInput) {
-        budgetSearchInput.addEventListener('focus', function() {
-            const suggestions = document.getElementById('budget-search-suggestions');
-            if (suggestions && suggestions.innerHTML.trim()) {
-                suggestions.style.display = 'block';
-            }
-        });
-        
-        // Hide budget suggestions when search input loses focus
-        budgetSearchInput.addEventListener('blur', function() {
-            setTimeout(function() {
-                const suggestions = document.getElementById('budget-search-suggestions');
-                if (suggestions) {
-                    suggestions.style.display = 'none';
-                }
-            }, 200);
-        });
+
+    function toggleSearch() {
+        const overlay = document.getElementById('search-overlay');
+        overlay.classList.toggle('d-none');
     }
-    
-    // Handle HTMX after request to show/hide budget suggestions
-    document.body.addEventListener('htmx:afterRequest', function(event) {
-        const budgetSearchInput = document.getElementById('budget-search-products');
-        if (budgetSearchInput && event.detail.elt === budgetSearchInput) {
-            const suggestions = document.getElementById('budget-search-suggestions');
-            if (suggestions) {
-                if (suggestions.innerHTML.trim()) {
-                    suggestions.style.display = 'block';
-                } else {
-                    suggestions.style.display = 'none';
-                }
-            }
+
+    // Refresh shopping list on change
+    document.body.addEventListener('shoppingListChanged', function() {
+        // Find which tab is active and refresh it if it's the shopping list or overview
+        const activeTab = document.querySelector('#budgetTabs .active').id;
+        if (activeTab === 'shopping-tab') {
+            htmx.ajax('GET', '{% url "Budget:hx_tab" budget.id "shopping_list" %}', '#tab-content');
+        } else if (activeTab === 'overview-tab') {
+            htmx.ajax('GET', '{% url "Budget:hx_tab" budget.id "overview" %}', '#tab-content');
         }
     });
-    
-    // Function to add product to budget
-    function addProductToBudget(budgetId, productId) {
-        fetch(`/budget/api/add-product/${budgetId}/${productId}/`, {
-            method: 'POST',
-            headers: {
-                'X-CSRFTTOKEN': '{{ csrf_token }}',
-                'Content-Type': 'application/json',
-            },
-            credentials: 'same-origin'
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.status === 'success') {
-                // Reload the page to show the updated product list
-                window.location.reload();
-            } else {
-                alert(data.message || 'Failed to add product to budget');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('An error occurred while adding the product to the budget');
-        });
-    }
 </script>
 {% endblock %}

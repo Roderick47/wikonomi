@@ -1,0 +1,41 @@
+{% load humanize %}
+<div class="answer-comments-list mt-3">
+    {% for comment in answer.comments.all %}
+        <div class="d-flex mb-2 pb-2 border-bottom border-light">
+            <div class="flex-shrink-0">
+                {% if comment.user.profile.image %}
+                    <img src="{{ comment.user.profile.image.url }}" class="rounded-circle" style="width: 24px; height: 24px; object-fit: cover;">
+                {% else %}
+                    <div class="rounded-circle bg-light d-flex align-items-center justify-content-center text-secondary small fw-bold" style="width: 24px; height: 24px; font-size: 10px;">
+                        {{ comment.user.username.0|upper }}
+                    </div>
+                {% endif %}
+            </div>
+            <div class="ms-2">
+                <div class="small">
+                    <span class="fw-bold">{{ comment.user.username }}</span>
+                    <span class="text-muted ms-1">{{ comment.created_at|naturaltime }}</span>
+                </div>
+                <div class="text-muted small">
+                    {{ comment.body }}
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+</div>
+
+<!-- Comment Form (HTMX powered) -->
+{% if user.is_authenticated %}
+    <form hx-post="{% url 'QA:post_comment' answer.id %}" 
+          hx-target="closest .answer-comments-container" 
+          hx-swap="innerHTML"
+          class="mt-2">
+        {% csrf_token %}
+        <div class="input-group input-group-sm">
+            <input type="text" name="body" class="form-control form-control-sm border-0 bg-light" placeholder="Comment for clarification..." required>
+            <button class="btn btn-outline-primary" type="submit">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
+    </form>
+{% endif %}

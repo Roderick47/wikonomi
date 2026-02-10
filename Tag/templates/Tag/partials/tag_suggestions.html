@@ -1,0 +1,10 @@
+{% if tags %}
+<div class="list-group shadow-sm">
+    {% for tag in tags %}
+    <input type="button" 
+           class="list-group-item list-group-item-action cursor-pointer" 
+           value="{{ tag.name }}"
+           onclick="addTag('{{ tag.name }}')">
+    {% endfor %}
+</div>
+{% endif %}

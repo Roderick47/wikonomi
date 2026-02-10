@@ -1,0 +1,25 @@
+{% extends "Home/base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Sign In" %}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-6 col-md-8">
+    <div class="card shadow-sm mt-5">
+      <div class="card-body p-4 text-center">
+        <h2 class="mb-4">{% trans "Sign In Via Google" %}</h2>
+        
+        <p class="mb-4">{% trans "You are about to sign in using a third party account from Google." %}</p>
+
+        <form method="post">
+          {% csrf_token %}
+          <div class="d-grid gap-2">
+            <button class="btn btn-primary" type="submit">{% trans "Continue" %}</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

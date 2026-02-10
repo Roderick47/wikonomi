@@ -12,6 +12,7 @@ from .models import Product
 from Business.models import Business
 from .forms import ProductAddForm,GetOrCreateBusinessForm
 from Photo.forms import ProductPhotoAddForm
+from Post.models import Post
 from Location.forms import LocationForm
 from Location.models import Location
 from Photo.models import ProductPhoto
@@ -64,10 +65,30 @@ def ProductAddView(request,bus_id):
             
             product.save()
             
+            # Handle tags
+            tags_input = form.cleaned_data.get('tags_input', '')
+            if tags_input:
+                for tag_name in tags_input.split(','):
+                    tag_name = tag_name.strip()
+                    if tag_name:
+                        tag, created = Tag.objects.get_or_create(name=tag_name)
+                        tag.products.add(product)
+            
             if imageForm.is_bound and imageForm.cleaned_data.get('photo'):
                 ProductPhoto.objects.create(product=product, photo=imageForm.cleaned_data['photo'])
             
-            messages.success(request, 'Product added successfully!')
+            # Handle social post creation
+            social_post_body = form.cleaned_data.get('social_post')
+            if social_post_body:
+                Post.objects.create(
+                    author=request.user,
+                    body=social_post_body,
+                    product=product
+                )
+                messages.success(request, 'Product and social post created successfully!')
+            else:
+                messages.success(request, 'Product added successfully!')
+
             return redirect('Product:detail',product.id)
         
     form = ProductAddForm()
@@ -227,12 +248,36 @@ def ProductAddGeneralView(request):
             product.business = business
             product.author = request.user
             product.save()
+            
+            # Handle tags
+            tags_input = form.cleaned_data.get('tags_input', '')
+            if tags_input:
+                for tag_name in tags_input.split(','):
+                    tag_name = tag_name.strip()
+                    if tag_name:
+                        tag, created = Tag.objects.get_or_create(name=tag_name)
+                        tag.products.add(product)
+
             # create the ProductPhoto for the product if there's one.
 
             if imageForm.is_bound and imageForm.cleaned_data.get('photo'):
                 ProductPhoto.objects.create(product=product,photo=imageForm.cleaned_data['photo'])
             
-            messages.success(request, 'Product added successfully!')
+            if imageForm.is_bound and imageForm.cleaned_data.get('photo'):
+                ProductPhoto.objects.create(product=product,photo=imageForm.cleaned_data['photo'])
+            
+            # Handle social post creation
+            social_post_body = form.cleaned_data.get('social_post')
+            if social_post_body:
+                Post.objects.create(
+                    author=request.user,
+                    body=social_post_body,
+                    product=product
+                )
+                messages.success(request, 'Product and social post created successfully!')
+            else:
+                messages.success(request, 'Product added successfully!')
+
             return redirect('Product:detail',product.id)
         
     form = ProductAddForm()
@@ -445,4 +490,8 @@ def test_view(request):
     return render(request, 'Product/test.html', {})
 
 
+# Returns all products for browsing.
+def AllProductListView(request):
+    products = Product.objects.filter(date_updated__lt=datetime.now()).order_by('-date_created')
+    return render(request,'Product/allProducts.html',{'all_products':products})
 

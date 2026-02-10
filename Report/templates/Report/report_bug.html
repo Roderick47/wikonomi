@@ -1,0 +1,33 @@
+{% extends "Home/base.html" %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="bento-card">
+            <div class="bento-card-header">
+                <h4 class="mb-0"><i class="fas fa-bug me-2 text-danger"></i>Report a Bug</h4>
+            </div>
+            <div class="bento-card-body">
+                <p class="text-muted mb-4">
+                    Found an issue? Please let us know! detailed reports help us fix problems faster.
+                </p>
+                
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    {{ form|crispy }}
+                    
+                    <div class="d-grid gap-2 mt-4">
+                        <button type="submit" class="btn btn-primary-bento">
+                            <i class="fas fa-paper-plane"></i> Submit Report
+                        </button>
+                        <a href="{% url 'Home:home' %}" class="btn btn-secondary-bento">
+                            Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

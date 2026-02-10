@@ -12,6 +12,6 @@ urlpatterns = [
     path('product/list/upload/<int:bus_id>',views.ProductListUpload,name='list-upload'),
     path('product/list/template/download',views.ProductListTemplateDownload,name='template-download'),
     path('product/add/<int:bus_id>',views.ProductAddView,name='add'),
-
+    path('products/all',views.AllProductListView,name='all'),
     
 ]

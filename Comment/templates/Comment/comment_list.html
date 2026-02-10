@@ -1,25 +1,23 @@
 {% load static %}
-<div class="comment-thread">
-  {% if comments %}
-    {% for comment in comments %}
-      {% include 'Comment/comment_item.html' with comment=comment %}
-    {% endfor %}
+{% if comments %}
+  {% for comment in comments %}
+    {% include 'Comment/comment_item.html' with comment=comment %}
+  {% endfor %}
 
-    {% if has_next %}
-    <div class="text-center mt-4" id="load-more-container">
-      <button class="btn btn-outline-primary"
-              hx-get="{% url 'Comment:list' %}?content_type={{ request.GET.content_type }}&object_id={{ request.GET.object_id }}&page={{ next_page }}"
-              hx-target="#comments-container"
-              hx-swap="beforeend"
-              hx-trigger="click">
-        <i class="fas fa-chevron-down me-1"></i>Load More Comments
-      </button>
-    </div>
-    {% endif %}
-  {% else %}
-    <div class="empty-state text-center py-4">
-      <i class="fas fa-comment-slash fa-3x text-muted mb-3"></i>
-      <p class="text-muted">No comments yet. Be the first to share your thoughts!</p>
-    </div>
+  {% if has_next %}
+  <div class="text-center mt-4" id="load-more-container">
+    <button class="btn btn-outline-primary"
+            hx-get="{% url 'Comment:list' %}?content_type={{ request.GET.content_type }}&object_id={{ request.GET.object_id }}&page={{ next_page }}"
+            hx-target="#comments-container"
+            hx-swap="beforeend"
+            hx-trigger="click">
+      <i class="fas fa-chevron-down me-1"></i>Load More Comments
+    </button>
+  </div>
   {% endif %}
-</div> 
+{% else %}
+  <div class="empty-state text-center py-4">
+    <i class="fas fa-comment-slash fa-3x text-muted mb-3"></i>
+    <p class="text-muted">No comments yet. Be the first to share your thoughts!</p>
+  </div>
+{% endif %}

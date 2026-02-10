@@ -15,12 +15,30 @@ class Notification(models.Model):
     PRICE_DROP = 'price_drop'
     COMMENT_REPLY = 'comment_reply'
     NEW_COMMENT = 'new_comment'
+    NEW_ANSWER = 'new_answer'
+    ANSWER_ACCEPTED = 'answer_accepted'
+    ANSWER_COMMENT = 'answer_comment'
+    POST_COMMENT = 'post_comment'
+    POST_REPLY = 'post_reply'
+    POST_LIKE = 'post_like'
+    BUSINESS_REVIEW = 'business_review'
+    BUSINESS_REPLY = 'business_reply'
+    NEW_FOLLOWER = 'new_follower'
     
     NOTIFICATION_TYPES = [
         (PRICE_CHANGE, 'Price Change'),
         (PRICE_DROP, 'Price Drop'),
         (COMMENT_REPLY, 'Comment Reply'),
         (NEW_COMMENT, 'New Comment'),
+        (NEW_ANSWER, 'New Answer'),
+        (ANSWER_ACCEPTED, 'Answer Accepted'),
+        (ANSWER_COMMENT, 'Answer Comment'),
+        (POST_COMMENT, 'Post Comment'),
+        (POST_REPLY, 'Post Reply'),
+        (POST_LIKE, 'Post Like'),
+        (BUSINESS_REVIEW, 'Business Review'),
+        (BUSINESS_REPLY, 'Business Reply'),
+        (NEW_FOLLOWER, 'New Follower'),
     ]
 
     user = models.ForeignKey(
@@ -50,6 +68,34 @@ class Notification(models.Model):
         blank=True,
         related_name='notifications'
     )
+    question = models.ForeignKey(
+        'QA.Question', 
+        on_delete=models.CASCADE, 
+        null=True, 
+        blank=True,
+        related_name='notifications'
+    )
+    post = models.ForeignKey(
+        'Post.Post',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='notifications'
+    )
+    business = models.ForeignKey(
+        'Business.Business',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='notifications'
+    )
+    answer = models.ForeignKey(
+        'QA.Answer',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='notifications'
+    )
     
     # Additional data stored as JSON
     data = models.JSONField(default=dict, blank=True)
@@ -71,6 +117,23 @@ class Notification(models.Model):
             self.save(update_fields=['is_read'])
     
     @classmethod
+    def create_new_answer_notification(cls, answer):
+        """Create a notification for a new answer on a question."""
+        if answer.author == answer.question.author:
+            return None  # Don't notify if user answers their own question
+            
+        return cls.objects.create(
+            user=answer.question.author,
+            notification_type=cls.NEW_ANSWER,
+            question=answer.question,
+            data={
+                'answerer_username': answer.author.username,
+                'question_title': answer.question.title,
+                'answer_preview': answer.body[:100]
+            }
+        )
+    
+    @classmethod
     def create_price_change_notification(cls, user, product, old_price, new_price):
         """Create a price change notification."""
         change_percent = ((new_price - old_price) / old_price) * 100
@@ -89,18 +152,18 @@ class Notification(models.Model):
     @classmethod
     def create_comment_reply_notification(cls, comment, parent_comment):
         """Create a notification for a comment reply."""
-        if comment.author == parent_comment.author:
+        if comment.user == parent_comment.user:
             return None  # Don't notify if replying to self
             
         return cls.objects.create(
-            user=parent_comment.author,
+            user=parent_comment.user,
             notification_type=cls.COMMENT_REPLY,
             product=comment.product,
             comment=comment,
             data={
-                'replier_username': comment.author.username,
+                'replier_username': comment.user.username,
                 'product_name': comment.product.name,
-                'comment_preview': comment.content[:100]  # First 100 chars
+                'comment_preview': comment.body[:100]  # First 100 chars
             }
         )
     
@@ -112,7 +175,7 @@ class Notification(models.Model):
             
         notifications = []
         for follower in product_followers:
-            if follower.user != comment.author:  # Don't notify self
+            if follower.user != comment.user:  # Don't notify self
                 notifications.append(
                     cls(
                         user=follower.user,
@@ -120,9 +183,9 @@ class Notification(models.Model):
                         product=comment.product,
                         comment=comment,
                         data={
-                            'commenter_username': comment.author.username,
+                            'commenter_username': comment.user.username,
                             'product_name': comment.product.name,
-                            'comment_preview': comment.content[:100]
+                            'comment_preview': comment.body[:100]
                         }
                     )
                 )

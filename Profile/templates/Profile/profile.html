@@ -6,70 +6,215 @@
 {% load humanize %}
 
 {% block content %}
-<div class="col-sm-8 mx-auto">
-  <h1 class="text-center">Profile</h1>
-  <div class="card mb-2">
-    <div class="card-body">
-
-      <h3>{{request.user.username}}</h3>
-      <div class="col-sm-4 mx-auto">
-        {% thumbnail profile.image "500x500" as img %}
-          <img  class="card-img-top img" src="{{ img.url }}" alt="{{product.name}}" id="ProfImg">
-        {% empty %}
-          <img  class="img-fluid" src="{% static 'Profile/images/profile_big.png' %}" alt="profilepic" id="profThumbImg">
-        {% endthumbnail %}
-      </div>
-
-
-
+<div class="col-sm-10 mx-auto py-4">
+  <div class="card border-0 shadow-sm mb-4">
+    <div class="card-body p-4 text-center">
+        <div class="mb-3">
+            {% thumbnail profile.image "200x200" crop="center" as img %}
+                <img class="rounded-circle shadow" src="{{ img.url }}" alt="Profile Image" style="width: 150px; height: 150px; object-fit: cover;">
+            {% empty %}
+                <img class="img-fluid rounded-circle shadow" src="{% static 'Profile/images/profile_big.png' %}" alt="Default Profile" style="width: 150px; height: 150px;">
+            {% endthumbnail %}
+        </div>
+        <h2 class="fw-bold">{{ profile.user.username }}</h2>
+        <p class="text-muted">Member since {{ profile.user.date_joined|date:"F Y" }}</p>
+        
+        {% if is_own_profile %}
+            <div class="d-flex justify-content-center gap-2">
+                <a class="btn btn-outline-primary btn-sm rounded-pill" href="{% url 'Profile:update' profile.id %}">Edit Profile</a>
+                <a class="btn btn-primary btn-sm rounded-pill" href="{% url 'Business:add-private'  %}">Create Business</a>
+            </div>
+        {% endif %}
     </div>
   </div>
-  <a class="btn btn-secondary" href="{% url 'Profile:update' profile.id %}" role="button" >Edit Profile</a>
-  <a class=" btn btn-primary" href="{% url 'Business:add-private'  %}" role="button" >Create personal business</a>
-  
-  <h2>Products Tracked</h2>
-  <table class="table">
-    <tr>
-      <th>Product </th>
-      <th>Price</th>
-      <th>Price Change</th>
-    </tr>
-    
-      {% if MySubscriptions.exists %}
-        {% for subscription in MySubscriptions %}
-        <tr class="">
-          <td>
-            {{subscription}}
-          </td>
-          <td>
-            <a href={% url 'Product:detail' subscription.product.id %}>K {{subscription.product.price|floatformat:2|intcomma}}</a>
-          </td>
-          <td>
-            K {{subscription.product.price_change|floatformat:2|intcomma}}
-          </td>
-        </tr>
-        {% endfor %}
-      {% endif %}
-   
-  </table>
-        {% if user.profile.has_business %}
-      <h2>Business you have created</h2>
-        <table class="table">
-        <ul class="list-group list-group-flush">
-        {% for business in user.business_set.all %}
-        <div class="card">
-          <li class="list-group-item ">
-            <a class="stretched-link text-decoration-none text-black" href="{% url 'Business:detail' business.id %}"> {{business.name}} </a> 
-            - {{business.description|truncatewords:15}}<br>
-          </li>
+
+  <ul class="nav nav-tabs mb-4 justify-content-center border-0" id="profileTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button class="nav-link active rounded-pill px-4 me-2 border-0" id="posts-tab" data-bs-toggle="tab" data-bs-target="#posts" type="button" role="tab">Posts</button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link rounded-pill px-4 me-2 border-0" id="questions-tab" data-bs-toggle="tab" data-bs-target="#questions" type="button" role="tab">Questions</button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link rounded-pill px-4 me-2 border-0" id="businesses-tab" data-bs-toggle="tab" data-bs-target="#businesses" type="button" role="tab">Businesses</button>
+    </li>
+    {% if is_own_profile %}
+    <li class="nav-item" role="presentation">
+      <button class="nav-link rounded-pill px-4 me-2 border-0" id="tracking-tab" data-bs-toggle="tab" data-bs-target="#tracking" type="button" role="tab">Tracking</button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link rounded-pill px-4 border-0" id="history-tab" data-bs-toggle="tab" data-bs-target="#history" type="button" role="tab">Edit History</button>
+    </li>
+    {% endif %}
+  </ul>
+
+  <div class="tab-content" id="profileTabsContent">
+    <!-- Posts Tab -->
+    <div class="tab-pane fade show active" id="posts" role="tabpanel">
+        <div class="row g-4">
+            {% for item in user_posts %}
+                <div class="col-md-6">
+                    {% include "Post/partials/post_card.html" with post=item %}
+                </div>
+            {% empty %}
+                <div class="text-center py-5 text-muted">
+                    <i class="fas fa-pencil-alt fa-3x mb-3 opacity-25"></i>
+                    <p>No posts yet.</p>
+                </div>
+            {% endfor %}
         </div>
-        {% endfor %}
-        </ul>
-        </table>
-          
-      {% endif %}
+    </div>
 
+    <!-- Questions Tab -->
+    <div class="tab-pane fade" id="questions" role="tabpanel">
+        <div class="list-group list-group-flush shadow-sm rounded-3 overflow-hidden">
+            {% for question in user_questions %}
+                <a href="{% url 'QA:detail' question.id %}" class="list-group-item list-group-item-action p-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="fw-bold mb-1">{{ question.title }}</h6>
+                            <small class="text-muted">{{ question.answer_count }} answers • {{ question.created_at|naturaltime }}</small>
+                        </div>
+                        <i class="fas fa-chevron-right text-muted opacity-50"></i>
+                    </div>
+                </a>
+            {% empty %}
+                <div class="text-center py-5 text-muted bg-white">
+                    <i class="fas fa-question-circle fa-3x mb-3 opacity-25"></i>
+                    <p>No questions asked yet.</p>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
 
+    <!-- Businesses Tab -->
+    <div class="tab-pane fade" id="businesses" role="tabpanel">
+        <div class="row g-4">
+            {% for business in all_business %}
+                <div class="col-md-6">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body">
+                            <h5 class="fw-bold mb-2">
+                                <a href="{% url 'Business:detail' business.id %}" class="text-dark text-decoration-none">{{ business.name }}</a>
+                            </h5>
+                            <p class="text-muted small mb-0">{{ business.description|truncatewords:20 }}</p>
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="text-center py-5 text-muted">
+                    <i class="fas fa-store fa-3x mb-3 opacity-25"></i>
+                    <p>No businesses created yet.</p>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    {% if is_own_profile %}
+    <!-- Tracking Tab -->
+    <div class="tab-pane fade" id="tracking" role="tabpanel">
+      <div class="card border-0 shadow-sm">
+        <div class="table-responsive">
+          <table class="table table-hover mb-0">
+            <thead class="bg-light">
+              <tr>
+                <th class="border-0">Product</th>
+                <th class="border-0">Price</th>
+                <th class="border-0">Change</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for subscription in MySubscriptions %}
+              <tr>
+                <td>
+                  <a href="{% url 'Product:detail' subscription.product.id %}" class="text-dark text-decoration-none fw-bold">{{ subscription.product.name }}</a>
+                </td>
+                <td>K {{ subscription.product.price|floatformat:2|intcomma }}</td>
+                <td>
+                  {% if subscription.product.price_change > 0 %}
+                    <span class="text-danger">+K{{ subscription.product.price_change|floatformat:2 }}</span>
+                  {% elif subscription.product.price_change < 0 %}
+                    <span class="text-success">K{{ subscription.product.price_change|floatformat:2 }}</span>
+                  {% else %}
+                    <span class="text-muted">No change</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% empty %}
+              <tr><td colspan="3" class="text-center py-4 text-muted">You are not tracking any products.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Edit History Tab -->
+    <div class="tab-pane fade" id="history" role="tabpanel">
+      <div class="card border-0 shadow-sm">
+        <div class="table-responsive">
+          <table class="table table-hover mb-0">
+            <thead class="bg-light">
+              <tr>
+                <th class="border-0">Product</th>
+                <th class="border-0">Date</th>
+                <th class="border-0">Price</th>
+                <th class="border-0">Change</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for history in edit_history %}
+              <tr>
+                <td>
+                  {% if history.product %}
+                    <a href="{% url 'Product:detail' history.product.id %}" class="text-dark text-decoration-none">{{ history.name }}</a>
+                  {% else %}
+                    <span class="text-muted">{{ history.name }} (Deleted)</span>
+                  {% endif %}
+                </td>
+                <td>{{ history.date_created|date:"M d, Y" }}</td>
+                <td>K {{ history.price|floatformat:2|intcomma }}</td>
+                <td>
+                  {% with change=history.price_change %}
+                    {% if change != '-' %}
+                      {% if change > 0 %}
+                        <span class="text-danger">+{{ change|floatformat:2 }}</span>
+                      {% elif change < 0 %}
+                        <span class="text-success">{{ change|floatformat:2 }}</span>
+                      {% else %}
+                        <span class="text-muted">0.00</span>
+                      {% endif %}
+                    {% else %}
+                      <span class="text-muted">-</span>
+                    {% endif %}
+                  {% endwith %}
+                </td>
+              </tr>
+              {% empty %}
+              <tr><td colspan="4" class="text-center py-4 text-muted">No edit history found.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+  </div>
 </div>
+
+<style>
+    .nav-tabs .nav-link {
+        color: var(--gray-600);
+        transition: all 0.2s ease;
+    }
+    .nav-tabs .nav-link.active {
+        background-color: var(--primary-color) !important;
+        color: white !important;
+        font-weight: bold;
+    }
+    .nav-tabs .nav-link:hover:not(.active) {
+        background-color: var(--gray-100);
+    }
+</style>
 
 {% endblock %}

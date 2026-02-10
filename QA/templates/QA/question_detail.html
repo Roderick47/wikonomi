@@ -1,0 +1,159 @@
+{% extends 'Home/base.html' %}
+{% load humanize %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <!-- Main Content -->
+        <div class="col-lg-8">
+            <!-- Question -->
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-body p-4">
+                    <h1 class="fw-bold mb-3">{{ question.title }}</h1>
+                    
+                    <div class="d-flex align-items-center mb-3">
+                        <span class="text-muted small me-3">Asked by <strong>{{ question.author.username }}</strong></span>
+                        <span class="text-muted small">{{ question.created_at|naturaltime }}</span>
+                        {% if question.views_count > 0 %}
+                            <span class="text-muted small ms-3"><i class="fas fa-eye me-1"></i>{{ question.views_count }} views</span>
+                        {% endif %}
+                        <div class="ms-auto">
+                            <a href="{% url 'HowTo:create' %}?question={{ question.id }}{% if question.business %}&business={{ question.business.id }}{% elif question.product %}&product={{ question.product.id }}{% endif %}" 
+                               class="btn btn-sm btn-outline-primary rounded-pill">
+                                <i class="fas fa-graduation-cap me-1"></i>Designate as How-To
+                            </a>
+                        </div>
+                    </div>
+
+                    {% if question.product %}
+                        <div class="mb-3">
+                            <a href="{% url 'Product:detail' question.product.id %}" class="text-decoration-none">
+                                <span class="badge bg-primary">Product: {{ question.product.name }}</span>
+                            </a>
+                        </div>
+                    {% elif question.business %}
+                        <div class="mb-3">
+                            <a href="{% url 'Business:detail' question.business.id %}" class="text-decoration-none">
+                                <span class="badge bg-secondary">Business: {{ question.business.name }}</span>
+                            </a>
+                        </div>
+                    {% elif question.howto_step %}
+                        <div class="mb-3">
+                            <div class="d-flex align-items-center flex-wrap gap-2">
+                                <a href="{% url 'HowTo:detail' question.howto_step.how_to.id %}" class="text-decoration-none">
+                                    <span class="badge bg-info text-white">
+                                        <i class="fas fa-book-open me-1"></i>Guide: {{ question.howto_step.how_to.title }}
+                                    </span>
+                                </a>
+                                <span class="badge bg-primary rounded-pill">
+                                    Step {{ question.howto_step.order }}{% if question.howto_step.title %}: {{ question.howto_step.title }}{% endif %}
+                                </span>
+                            </div>
+                        </div>
+                    {% endif %}
+                    
+                    <div class="fs-5 text-dark">
+                        {{ question.body|linebreaks }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Answers -->
+            <h4 class="mb-4">{{ answers.count }} Answer{{ answers.count|pluralize }}</h4>
+            
+            {% for answer in answers %}
+                <div class="card shadow-sm border-0 mb-3 {% if answer.is_accepted %}border-success border-2{% endif %}">
+                    <div class="card-body p-4">
+                        {% if answer.is_accepted %}
+                            <div class="text-success fw-bold mb-2">
+                                <i class="fas fa-check-circle me-1"></i> Accepted Answer
+                            </div>
+                        {% endif %}
+                        
+                        <div class="d-flex mb-3">
+                             <div class="flex-shrink-0">
+                                {% if answer.author.profile.image %}
+                                     <img src="{{ answer.author.profile.image.url }}" class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover;">
+                                {% else %}
+                                     <div class="rounded-circle bg-light d-flex align-items-center justify-content-center fw-bold" style="width: 40px; height: 40px;">{{ answer.author.username.0|upper }}</div>
+                                {% endif %}
+                             </div>
+                             <div class="ms-3">
+                                 <div class="fw-bold">{{ answer.author.username }}</div>
+                                 <div class="text-muted small">{{ answer.created_at|naturaltime }}</div>
+                             </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ answer.body|linebreaks }}
+                        </div>
+                        
+                        <div class="d-flex justify-content-between align-items-center border-top pt-3">
+                            <!-- Like Button (HTMX) -->
+                            <div id="answer-like-{{ answer.id }}">
+                                {% include "QA/partials/answer_like_button.html" %}
+                            </div>
+                            
+                            <!-- Accept Button (OP Only) -->
+                            {% if request.user == question.author and not answer.is_accepted %}
+                                <form action="{% url 'QA:accept_answer' answer.id %}" method="post" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-outline-success btn-sm rounded-pill">
+                                        <i class="fas fa-check me-1"></i>Mark as Answer
+                                    </button>
+                                </form>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Answer Comments Section -->
+                        <div class="answer-comments-container mt-3 border-top pt-3">
+                             {% include "QA/partials/answer_comments.html" %}
+                        </div>
+                    </div>
+                </div>
+{% empty %}
+                <div class="alert alert-secondary text-center py-4">
+                    <p class="mb-0">No answers yet. Be the first to help!</p>
+                </div>
+            {% endfor %}
+            
+            <!-- Answer Form -->
+            {% if request.user.is_authenticated %}
+                <div class="card shadow-sm border-0 mt-5">
+                    <div class="card-body p-4">
+                        <h4 class="mb-3">Your Answer</h4>
+                        <form method="post">
+                            {% csrf_token %}
+                            {{ form|crispy }}
+                            <div class="d-grid mt-3">
+                                <button type="submit" class="btn btn-primary rounded-pill fw-bold">Post Answer</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            {% else %}
+                 <div class="alert alert-warning mt-5">
+                     Please <a href="{% url 'account_login' %}">login</a> to post an answer.
+                 </div>
+            {% endif %}
+            
+        </div>
+        
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Related/Sidebar content can go here -->
+             <div class="card shadow-sm border-0 mb-4 position-sticky" style="top: 20px;">
+                <div class="card-body">
+                    <h5 class="card-title fw-bold">Tips</h5>
+                    <ul class="text-muted small ps-3">
+                        <li>Be specific and succinct.</li>
+                        <li>Provide details if necessary.</li>
+                        <li>Check if the question was already asked.</li>
+                    </ul>
+                </div>
+             </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

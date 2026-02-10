@@ -7,14 +7,27 @@ from django.utils.text import slugify
 from PIL import Image
 import io
 
-def get_image_filename(instance, filename):
+def get_product_photo_filename(instance, filename):
+    ext = filename.split('.')[-1]
     slug = slugify(instance.product.name)
-    fslug = slugify(filename)
-    return 'products/{}/{}.jpg'.format(slug, fslug)
+    fslug = slugify(filename.split('.')[0])
+    return f'products/{slug}/{fslug}.{ext}'
+
+def get_business_photo_filename(instance, filename):
+    ext = filename.split('.')[-1]
+    slug = slugify(instance.business.name)
+    fslug = slugify(filename.split('.')[0])
+    return f'businesses/{slug}/{fslug}.{ext}'
+
+# Compatibility alias for old migrations
+def get_image_filename(instance, filename):
+    if hasattr(instance, 'product'):
+        return get_product_photo_filename(instance, filename)
+    return get_business_photo_filename(instance, filename)
 
 class ProductPhoto(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
-    photo = models.ImageField(upload_to=get_image_filename, null=True, blank=True)
+    photo = models.ImageField(upload_to=get_product_photo_filename, null=True, blank=True)
 
     def save(self, *args, **kwargs):
         # First save the model to ensure the file is properly saved
@@ -47,7 +60,7 @@ class ProductPhoto(models.Model):
 
 class BusinessPhoto(models.Model):
     business = models.ForeignKey(Business, on_delete=models.CASCADE)
-    photo = models.ImageField(upload_to=get_image_filename, null=True, blank=True)
+    photo = models.ImageField(upload_to=get_business_photo_filename, null=True, blank=True)
 
     def __str__(self):
         return str(self.business.name)

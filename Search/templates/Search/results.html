@@ -40,18 +40,67 @@
     </div>
   </div>
 
-  <!-- Search Results -->
-  {% if results_list.exists %}
+  <!-- Results Container -->
+  {% if products_results_list.exists or business_results_list.exists or question_results_list.exists or howto_results_list.exists or post_results_list.exists %}
+    
+    <!-- Business Results -->
+    {% if business_results_list.exists %}
     <div class="bento-grid">
       <div class="bento-card" style="grid-column: span 12;">
         <div class="bento-card-header">
           <h5 class="mb-0">
-            <i class="fas fa-list me-2"></i>Found {{products|length}} result{{products|length|pluralize}}
+            <i class="fas fa-building me-2"></i>Found {{business_results|length}} Business{{business_results|length|pluralize:"es"}}
+          </h5>
+        </div>
+        <div class="bento-card-body">
+            <div class="row g-4">
+            {% for business in business_results %}
+              <div class="col-lg-4 col-md-6">
+                <div class="bento-card h-100 product-card">
+                  <div class="bento-card-body">
+                     <div class="d-flex justify-content-between align-items-start mb-3">
+                        <h6 class="fw-bold mb-1 text-truncate">{{business.name}}</h6>
+                        {% if business.owner == user %}
+                        <span class="badge bg-success-subtle text-success">My Business</span>
+                        {% endif %}
+                     </div>
+                     <p class="text-muted small mb-3">{{business.description|truncatewords:20}}</p>
+                     
+                     {% if business.location %}
+                     <div class="location-info mb-3">
+                        <small class="text-muted">
+                        <i class="fas fa-map-marker-alt me-1"></i>{{business.location}}
+                        </small>
+                     </div>
+                     {% endif %}
+                     
+                     <div class="mt-auto">
+                        <a href="{% url 'Business:detail' business.id %}" class="btn btn-primary-bento btn-bento w-100">
+                            <i class="fas fa-store me-2"></i>Visit Store
+                        </a>
+                     </div>
+                  </div>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Product Results -->
+    {% if products_results_list.exists %}
+    <div class="bento-grid">
+      <div class="bento-card" style="grid-column: span 12;">
+        <div class="bento-card-header">
+          <h5 class="mb-0">
+            <i class="fas fa-box-open me-2"></i>Found {{products_results|length}} Product{{products_results|length|pluralize}}
           </h5>
         </div>
         <div class="bento-card-body">
           <div class="row g-4">
-            {% for product in products %}
+            {% for product in products_results %}
               <div class="col-lg-4 col-md-6">
                 <div class="bento-card h-100 product-card">
                   <div class="bento-card-body">
@@ -142,6 +191,158 @@
         </div>
       </div>
     </div>
+    {% endif %}
+
+    <!-- Q&A Results -->
+    {% if question_results_list.exists %}
+    <div class="bento-grid">
+      <div class="bento-card" style="grid-column: span 12;">
+        <div class="bento-card-header">
+          <h5 class="mb-0">
+            <i class="fas fa-question-circle me-2"></i>Found {{question_results|length}} Question{{question_results|length|pluralize}}
+          </h5>
+        </div>
+        <div class="bento-card-body">
+            <div class="row g-4">
+            {% for question in question_results %}
+              <div class="col-lg-4 col-md-6">
+                <div class="bento-card h-100 product-card">
+                  <div class="bento-card-body d-flex flex-column h-100">
+                     <div class="d-flex justify-content-between align-items-start mb-3">
+                        <h6 class="fw-bold mb-1 text-truncate" title="{{question.title}}">{{question.title}}</h6>
+                        <small class="text-muted">{{question.created_at|naturaltime}}</small>
+                     </div>
+                     <p class="text-muted small mb-3">{{question.body|truncatewords:20}}</p>
+                     
+                     <div class="d-flex gap-2 mb-3">
+                        <span class="badge bg-light text-dark border">{{question.answers.count}} Answer{{question.answers.count|pluralize}}</span>
+                        <span class="badge bg-light text-dark border">{{question.views_count}} View{{question.views_count|pluralize}}</span>
+                     </div>
+                     
+                     <div class="mt-auto">
+                        <a href="{% url 'QA:detail' question.id %}" class="btn btn-outline-primary btn-bento w-100">
+                            <i class="fas fa-eye me-2"></i>View Question
+                        </a>
+                     </div>
+                  </div>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- How-To Guide Results -->
+    {% if howto_results_list.exists %}
+    <div class="bento-grid">
+      <div class="bento-card" style="grid-column: span 12;">
+        <div class="bento-card-header">
+          <h5 class="mb-0">
+            <i class="fas fa-graduation-cap me-2"></i>Found {{howto_results|length}} Guide{{howto_results|length|pluralize}}
+          </h5>
+        </div>
+        <div class="bento-card-body">
+            <div class="row g-4">
+            {% for guide in howto_results %}
+              <div class="col-lg-4 col-md-6">
+                <div class="bento-card h-100 product-card" style="border-left: 4px solid #06b6d4;">
+                  <div class="bento-card-body d-flex flex-column h-100">
+                     <div class="d-flex justify-content-between align-items-start mb-3">
+                        <h6 class="fw-bold mb-1 text-truncate" title="{{guide.title}}">{{guide.title}}</h6>
+                        {% if guide.is_official %}
+                            <span class="badge bg-soft-primary text-primary">OFFICIAL</span>
+                        {% endif %}
+                     </div>
+                     <p class="text-muted small mb-3">{{guide.description|truncatewords:20}}</p>
+                     
+                     <div class="mb-3">
+                        <span class="badge bg-light text-muted border">v{{guide.version}}</span>
+                        <small class="text-muted ms-2">{{guide.steps.count}} steps</small>
+                     </div>
+                     
+                     <div class="mt-auto">
+                        <a href="{% url 'HowTo:detail' guide.id %}" class="btn btn-info text-white btn-bento w-100">
+                            <i class="fas fa-book-open me-2"></i>Read Guide
+                        </a>
+                     </div>
+                  </div>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Post Results -->
+    {% if post_results_list.exists %}
+    <div class="bento-grid">
+      <div class="bento-card" style="grid-column: span 12;">
+        <div class="bento-card-header">
+          <h5 class="mb-0">
+            <i class="fas fa-comments me-2"></i>Found {{post_results|length}} Post{{post_results|length|pluralize}}
+          </h5>
+        </div>
+        <div class="bento-card-body">
+            <div class="row g-4">
+            {% for post in post_results %}
+              <div class="col-lg-4 col-md-6">
+                <div class="bento-card h-100 product-card">
+                  <div class="bento-card-body d-flex flex-column h-100">
+                     <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="d-flex align-items-center">
+                          <i class="fas fa-user-circle fa-2x text-muted me-2"></i>
+                          <div>
+                            <h6 class="fw-bold mb-0">{{post.author.username}}</h6>
+                            <small class="text-muted">{{post.created_at|naturaltime}}</small>
+                          </div>
+                        </div>
+                     </div>
+                     <p class="text-muted mb-3">{{post.body|truncatewords:30}}</p>
+                     
+                     {% if post.product %}
+                     <div class="mb-2">
+                       <span class="badge bg-primary">
+                         <i class="fas fa-box me-1"></i>{{post.product.name}}
+                       </span>
+                     </div>
+                     {% endif %}
+                     
+                     {% if post.business %}
+                     <div class="mb-2">
+                       <span class="badge bg-success">
+                         <i class="fas fa-store me-1"></i>{{post.business.name}}
+                       </span>
+                     </div>
+                     {% endif %}
+                     
+                     <div class="d-flex gap-2 mb-3">
+                        <span class="badge bg-light text-dark border">
+                          <i class="fas fa-heart me-1"></i>{{post.likes.count}}
+                        </span>
+                        <span class="badge bg-light text-dark border">
+                          <i class="fas fa-comment me-1"></i>{{post.comments.count}}
+                        </span>
+                     </div>
+                     
+                     <div class="mt-auto">
+                        <a href="{% url 'Post:detail' post.id %}" class="btn btn-outline-primary btn-bento w-100">
+                            <i class="fas fa-eye me-2"></i>View Post
+                        </a>
+                     </div>
+                  </div>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
   {% else %}
     <!-- No Results -->
     <div class="bento-grid">
@@ -149,7 +350,7 @@
         <div class="empty-state">
           <i class="fas fa-search"></i>
           <h2>No Results Found</h2>
-          <p class="lead">Sorry, we couldn't find any products matching "{{query}}"</p>
+          <p class="lead">Sorry, we couldn't find any products or businesses matching "{{query}}"</p>
           <div class="d-flex justify-content-center gap-3 flex-wrap">
             <a href="{% url 'Product:add-general' %}" class="btn btn-primary-bento btn-bento">
               <i class="fas fa-plus me-2"></i>Add This Product

@@ -76,34 +76,39 @@ class Product(models.Model):
         result = ProductHistory.objects.filter(product=self).count()
         return result
 
-    def get_price_change(self):
-        """Returns the price change between the last two history records"""
+    def get_price_history_stats(self):
+        """Returns a dict with price change stats if applicable"""
         from History.models import ProductHistory
-        allPH = ProductHistory.objects.filter(product=self).order_by('-id')
-        allPHcount = allPH.count()
-        if allPHcount < 2:
+        history = ProductHistory.objects.filter(product=self).order_by('-id')[:2]
+        
+        if len(history) < 2:
             return None
-        else:
-            lastPH = allPH[0]
-            seclastPH = allPH[1]
-            if lastPH.price is not None and seclastPH.price is not None:
-                priceChange = lastPH.price - seclastPH.price 
-                return priceChange
+            
+        current = history[0].price
+        previous = history[1].price
+        
+        if current is None or previous is None:
             return None
+            
+        difference = current - previous
+        if difference == 0:
+            return None
+            
+        percentage = (difference / previous * 100) if previous != 0 else 0
+        
+        return {
+            'current': current,
+            'previous': previous,
+            'difference': difference,
+            'percentage': abs(percentage),
+            'is_increase': difference > 0,
+            'is_decrease': difference < 0
+        }
 
     def has_price_history(self):
-        """Returns True if the product has any price history"""
+        """Returns True if the product has any price history beyond the initial creation"""
         from History.models import ProductHistory
-        return ProductHistory.objects.filter(product=self).exists()
-
-    def price_change(self):
-        from History.models import ProductHistory
-        allPH = ProductHistory.objects.filter(product=self).order_by('-id')
-        if allPH.count() > 1:
-            change = allPH[1].price - allPH[0].price
-            return change
-        else:
-         return False
+        return ProductHistory.objects.filter(product=self).count() > 1
 
 
     # def is_recent_update(self):
