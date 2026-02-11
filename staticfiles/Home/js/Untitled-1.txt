@@ -1,0 +1,22 @@
+[WIKONOMI](http://127.0.0.1:8000/)
+- [Post a Product](http://127.0.0.1:8000/product/public/add)
+- 
+- [Post a Business](http://127.0.0.1:8000/Business/public/add)
+[Post a Product](http://127.0.0.1:8000/product/public/add)
+[Post a Business](http://127.0.0.1:8000/Business/public/add)
+- 
+                [Business Index](http://127.0.0.1:8000/Business/all)
+
+- 
+                  [Log In](http://127.0.0.1:8000/accounts/login/)
+
+- 
+                  [Signup](http://127.0.0.1:8000/accounts/signup/)
+
+- 
+                [What is Wikonomi?](http://127.0.0.1:8000/About)
+
+[Business Index](http://127.0.0.1:8000/Business/all)
+[Log In](http://127.0.0.1:8000/accounts/login/)
+[Signup](http://127.0.0.1:8000/accounts/signup/)
+[What is Wikonomi?](http://127.0.0.1:8000/About)
