@@ -85,8 +85,8 @@ SOCIALACCOUNT_PROVIDERS = {
             "email"
         ],
         "APP": {
-            'client_id': os.environ.get('CLIENT_ID'),
-            'secret': os.environ.get('CLIENT_SECRET'),
+            'client_id': os.environ.get('CLIENT_ID', ''),
+            'secret': os.environ.get('CLIENT_SECRET', ''),
         },
         "AUTH_PARAMS": {
             "access_type": "online",
