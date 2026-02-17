@@ -47,18 +47,15 @@ class LocationForm(forms.Form):
         use_browser_location = cleaned_data.get('use_browser_location')
         address = cleaned_data.get('address')
 
-        # If using browser location, coordinates are required
+        # Location is optional - only validate if user is trying to provide location
+        # If they have coordinates, that's fine
+        # If they have an address, that's fine
+        # If they have nothing, that's also fine (product will be saved without location)
+        
+        # Only validate if user explicitly wants browser location but didn't provide coordinates
         if use_browser_location and (latitude is None or longitude is None):
-            raise forms.ValidationError(
-                "Please allow browser location access or enter coordinates manually."
-            )
-
-        # If not using browser location, either coordinates or address is required
-        if not use_browser_location:
-            if not latitude and not longitude and not address:
-                raise forms.ValidationError(
-                    "Please provide either coordinates or an address."
-                )
+            # Don't raise error - just clear the flag since geolocation was blocked
+            cleaned_data['use_browser_location'] = False
 
         return cleaned_data
 
