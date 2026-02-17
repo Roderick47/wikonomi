@@ -3,7 +3,7 @@ services:
   - type: web
     name: wikonomi
     env: python
-    buildCommand: pip install -r requirements.txt
+    buildCommand: pip install -r requirements.txt && python manage.py collectstatic --noinput
     startCommand: gunicorn WIKONOMI.wsgi:application --bind 0.0.0.0:$PORT
     healthCheck:
       path: /
@@ -18,7 +18,7 @@ services:
       - key: DEBUG
         value: false
       - key: ALLOWED_HOSTS
-        value: .onrender.com
+        value: .onrender.com,wikonomi.com,www.wikonomi.com
     autoDeploy: true
     plan: free
 
@@ -34,12 +34,3 @@ services:
         value: wikonomi_user
       - key: POSTGRES_PASSWORD
         generateValue: true
-
-# Static file serving configuration
-staticPublish:
-  - type: static
-    name: wikonomi-static
-    plan: free
-    buildCommand: python manage.py collectstatic --noinput
-    sourceDir: staticfiles
-    # This will serve static files from a CDN
