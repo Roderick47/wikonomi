@@ -90,10 +90,14 @@ def ProductAddView(request,bus_id):
                 messages.success(request, 'Product added successfully!')
 
             return redirect('Product:detail',product.id)
-        
-    form = ProductAddForm()
-    imageForm = ProductPhotoAddForm()
-    locationForm = LocationForm()
+        else:
+            # Form validation failed - show errors
+            messages.error(request, 'Please correct the errors below.')
+    else:
+        form = ProductAddForm()
+        imageForm = ProductPhotoAddForm()
+        locationForm = LocationForm()
+    
     business = Business.objects.get(id=bus_id)
     return render(request,'Product/ProductAddForm.html',{'form':form,'business':business,'imageForm':imageForm,'locationForm':locationForm})
 
