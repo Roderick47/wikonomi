@@ -178,7 +178,12 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR,'staticfiles')
 MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+RENDER_DISK_PATH = os.environ.get('RENDER_DISK_PATH')
+if RENDER_DISK_PATH:
+    MEDIA_ROOT = os.path.join(RENDER_DISK_PATH, 'media')
+else:
+    MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+os.makedirs(MEDIA_ROOT, exist_ok=True)
 
 # Whitenoise storage configuration
 STORAGES = {
