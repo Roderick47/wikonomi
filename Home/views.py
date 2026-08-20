@@ -1,4 +1,6 @@
-from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import redirect, render
+from django.views.decorators.http import require_POST
 from Product.models import Product
 import datetime
 
@@ -10,6 +12,8 @@ from django.utils import timezone
 
 from QA.models import Question
 from HowTo.models import HowTo
+from .adapters import WELCOME_RETURN_URL_SESSION_KEY
+
 
 def HomeView(request):
     # Get all posts
@@ -82,5 +86,35 @@ def HomeView(request):
     
     return render(request, 'Home/home.html', context)
 
+
 def AboutView(request):
     return render(request,'Home/about.html')
+
+
+@login_required
+
+def WelcomeView(request):
+    """Show the mission welcome page only during a new-account signup flow."""
+    if WELCOME_RETURN_URL_SESSION_KEY not in request.session:
+        return redirect('Home:home')
+
+    return render(request, 'Home/welcome.html')
+
+
+@login_required
+@require_POST
+def WelcomeContinueView(request):
+    """Continue to the page the user was headed to before signing up."""
+    return_url = request.session.pop(
+        WELCOME_RETURN_URL_SESSION_KEY,
+        None,
+    ) or '/'
+    return redirect(return_url)
+
+
+@login_required
+@require_POST
+def WelcomeExploreView(request):
+    """Leave onboarding and start from the Wikonomi home page."""
+    request.session.pop(WELCOME_RETURN_URL_SESSION_KEY, None)
+    return redirect('Home:home')
