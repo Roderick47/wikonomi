@@ -92,7 +92,6 @@ def AboutView(request):
 
 
 @login_required
-
 def WelcomeView(request):
     """Show the mission welcome page only during a new-account signup flow."""
     if WELCOME_RETURN_URL_SESSION_KEY not in request.session:
