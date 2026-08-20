@@ -226,6 +226,7 @@ EMAIL_HOST_PASSWORD = ''
 # Django Allauth Settings
 ACCOUNT_EMAIL_VERIFICATION = 'none'
 ACCOUNT_EMAIL_SUBJECT_PREFIX = '[WIKONOMI] '
+ACCOUNT_ADAPTER = 'Home.adapters.WikonomiAccountAdapter'
 
 # New allauth settings (replaces deprecated settings)
 ACCOUNT_LOGIN_METHODS = {'email'}
