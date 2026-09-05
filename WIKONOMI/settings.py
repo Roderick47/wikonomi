@@ -214,23 +214,37 @@ SITE_ID=1
 LOGIN_REDIRECT_URL = "/"
 LOGOUT_REDIRECT_URL = "/"
 
-# Email Configuration for Development
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-EMAIL_HOST = 'localhost'
-EMAIL_PORT = 1025
-EMAIL_USE_TLS = False
-EMAIL_USE_SSL = False
-EMAIL_HOST_USER = ''
-EMAIL_HOST_PASSWORD = ''
+# Email delivery
+# Production uses Resend over SMTP when RESEND_API_KEY is configured.
+# Development falls back to Django's console backend so missing credentials
+# never break local development or signups.
+RESEND_API_KEY = os.environ.get('RESEND_API_KEY', '')
+DEFAULT_FROM_EMAIL = os.environ.get(
+    'DEFAULT_FROM_EMAIL',
+    'Wikonomi <notifications@wikonomi.com>'
+)
+SERVER_EMAIL = DEFAULT_FROM_EMAIL
+EMAIL_TIMEOUT = 10
+
+if RESEND_API_KEY:
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+    EMAIL_HOST = 'smtp.resend.com'
+    EMAIL_PORT = 587
+    EMAIL_USE_TLS = True
+    EMAIL_USE_SSL = False
+    EMAIL_HOST_USER = 'resend'
+    EMAIL_HOST_PASSWORD = RESEND_API_KEY
+else:
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 # Django Allauth Settings
-ACCOUNT_EMAIL_VERIFICATION = 'none'
+# Keep verification disabled until the Resend domain is verified and existing
+# accounts have been reviewed. It can then be enabled from Render without a
+# code change by setting ACCOUNT_EMAIL_VERIFICATION.
+ACCOUNT_EMAIL_VERIFICATION = os.environ.get('ACCOUNT_EMAIL_VERIFICATION', 'none')
 ACCOUNT_EMAIL_SUBJECT_PREFIX = '[WIKONOMI] '
 ACCOUNT_ADAPTER = 'Home.adapters.WikonomiAccountAdapter'
 
 # New allauth settings (replaces deprecated settings)
 ACCOUNT_LOGIN_METHODS = {'email'}
 ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*', 'password2*']
-
-# For development, you can also disable email verification temporarily
-# ACCOUNT_EMAIL_VERIFICATION = 'none'
