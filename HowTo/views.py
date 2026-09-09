@@ -10,6 +10,7 @@ from Business.models import Business
 from Product.models import Product
 from QA.models import Question
 from django.forms import modelformset_factory
+from django.urls import reverse
 
 @login_required
 def HowToCreateView(request):
@@ -145,7 +146,10 @@ def HowToDetailView(request, how_id):
     return render(request, 'HowTo/howto_detail.html', {
         'howto': howto,
         'can_edit': can_edit,
-        'steps_with_questions': steps_with_questions
+        'steps_with_questions': steps_with_questions,
+        'canonical_url': request.build_absolute_uri(
+            reverse('HowTo:detail', kwargs={'how_id': howto.id})
+        ),
     })
 
 @login_required
@@ -225,8 +229,27 @@ def HowToEditView(request, how_id):
 
 def HowToHistoryView(request, how_id):
     howto = get_object_or_404(HowTo, id=how_id)
+    if not howto.is_public:
+        is_authorized = request.user.is_authenticated and (
+            howto.author == request.user
+            or (howto.business and howto.business.author == request.user)
+            or (howto.product and howto.product.business.author == request.user)
+        )
+        if not is_authorized:
+            return HttpResponseForbidden("This is private documentation.")
+
     history = howto.history.all().order_by('-version')
-    return render(request, 'HowTo/howto_history.html', {'howto': howto, 'history': history})
+    response = render(request, 'HowTo/howto_history.html', {
+        'howto': howto,
+        'history': history,
+        'canonical_url': request.build_absolute_uri(
+            reverse('HowTo:detail', kwargs={'how_id': howto.id})
+        ),
+    })
+    # Search engines must not index snapshots or split ranking signals away
+    # from the current guide. The HTTP header also covers non-HTML crawlers.
+    response['X-Robots-Tag'] = 'noindex, nofollow'
+    return response
 
 @login_required
 def HowToOfficialToggle(request, how_id):

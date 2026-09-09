@@ -152,7 +152,13 @@ def BusinessEditView(request,bus_id):
 def BusinessDetailView(request,bus_id):
     business = Business.objects.get(id=bus_id)
     products = business.product_set.all()
-    return render(request,'Business/BusinessDetail.html',{'business':business,'products':products})
+    return render(request,'Business/BusinessDetail.html',{
+        'business': business,
+        'products': products,
+        'canonical_url': request.build_absolute_uri(
+            reverse('Business:detail', kwargs={'bus_id': business.id})
+        ),
+    })
 
 
 # No tests for this view yet.

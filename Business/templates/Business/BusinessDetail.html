@@ -28,6 +28,16 @@
 
 {% block title %}{{business.name}} - WIKONOMI{% endblock %}
 
+{% block seo_meta %}
+<meta name="description" content="Find {{ business.name }} in Papua New Guinea{% if business.description %}. {{ business.description|striptags|truncatechars:120 }}{% endif %}">
+{% if business.is_public %}
+<meta name="robots" content="index,follow">
+{% else %}
+<meta name="robots" content="noindex,nofollow">
+{% endif %}
+<link rel="canonical" href="{{ canonical_url }}">
+{% endblock %}
+
 {% block content %}
 <div class="bento-container">
   <!-- Hero Section -->

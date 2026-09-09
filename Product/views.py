@@ -113,6 +113,9 @@ def ProductDetailView(request,prod_id):
     context = {
         'product': product,
         'productTags': productTags,
+        'canonical_url': request.build_absolute_uri(
+            reverse('Product:detail', kwargs={'prod_id': product.id})
+        ),
     }
     return render(request,'Product/ProductDetail.html',context)
 
@@ -498,4 +501,3 @@ def test_view(request):
 def AllProductListView(request):
     products = Product.objects.filter(date_updated__lt=datetime.now()).order_by('-date_created')
     return render(request,'Product/allProducts.html',{'all_products':products})
-

@@ -38,6 +38,7 @@ ALLOWED_HOSTS=['.onrender.com','localhost','127.0.0.1','wikonomi.com','www.wikon
 
 
 INSTALLED_APPS = [
+    'django.contrib.sitemaps',
     'django.contrib.sites',
     # django-allauth
     'allauth',
