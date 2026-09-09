@@ -4,6 +4,17 @@
 {% load static %}
 {% load extra_date_filters %}
 
+{% block title %}{{ product.name }} Price at {{ product.business.name }} - WIKONOMI{% endblock %}
+
+{% block seo_meta %}
+<meta name="description" content="{{ product.name }} costs K{{ product.price|floatformat:2 }} at {{ product.business.name }}{% if product.description %}. {{ product.description|striptags|truncatechars:100 }}{% endif %}">
+{% if product.is_public and product.business.is_public %}
+<meta name="robots" content="index,follow">
+{% else %}
+<meta name="robots" content="noindex,nofollow">
+{% endif %}
+<link rel="canonical" href="{{ canonical_url }}">
+{% endblock %}
 
 
 
