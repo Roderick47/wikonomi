@@ -105,7 +105,7 @@ def seed_batch1(apps, schema_editor):
             version=1, title=title, description=description,
             change_summary="Initial PNG guide; researched 8 October 2026",
             steps_snapshot=[
-                {"order": order, "title": heading, "content": body, "image": None}
+                {"order": order, "title": heading, "content": body, "image_url": None}
                 for order, (heading, body) in enumerate(steps, 1)
             ],
         )
