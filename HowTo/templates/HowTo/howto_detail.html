@@ -94,7 +94,7 @@
                                     {% if item.step.title %}
                                         <h4 class="fw-bold mb-3">{{ item.step.title }}</h4>
                                     {% endif %}
-                                    <div class="text-secondary fs-5 mb-3">{{ item.step.content|linebreaks }}</div>
+                                    <div class="text-secondary fs-5 mb-3">{{ item.step.content|urlize|linebreaks }}</div>
                                     
                                     {% if item.step.image %}
                                         <div class="step-image mt-3">
